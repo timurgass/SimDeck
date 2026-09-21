@@ -1,0 +1,692 @@
+[
+  {
+    "section": "Control Scheme",
+    "group": "Гонка",
+    "id": "pitLimiter",
+    "label": "Пит-лимитер",
+    "key": "P",
+    "gesture": "press",
+    "source": "Pit Limiter",
+    "defaultKeys": "vk_code_0x46"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Гонка",
+    "id": "radio",
+    "label": "Радио инженера",
+    "key": "T",
+    "gesture": "press",
+    "source": "Talk",
+    "defaultKeys": "vk_code_0x54"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Гонка",
+    "id": "pushToTalk",
+    "label": "Голосовая связь",
+    "key": "Y",
+    "gesture": "hold",
+    "source": "PushToTalk",
+    "defaultKeys": "vk_code_0x53"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Гонка",
+    "id": "camera",
+    "label": "Следующая камера",
+    "key": "C",
+    "gesture": "press",
+    "source": "NextVehicleCamera",
+    "defaultKeys": "vk_code_0x43"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Гонка",
+    "id": "replay",
+    "label": "Повтор / Flashback",
+    "key": "X",
+    "gesture": "press",
+    "source": "Replay",
+    "defaultKeys": "vk_code_0x58"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Гонка",
+    "id": "reset",
+    "label": "Вернуть машину",
+    "key": "R",
+    "gesture": "press",
+    "source": "Reset Car",
+    "defaultKeys": "vk_code_0xA2"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Гонка",
+    "id": "pause",
+    "label": "Пауза",
+    "key": "Escape",
+    "gesture": "press",
+    "source": "Pause",
+    "defaultKeys": "vk_code_0x1B"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Гонка",
+    "id": "pitStop",
+    "label": "Пит-стоп · действие",
+    "key": "V",
+    "gesture": "press",
+    "source": "PitStop",
+    "defaultKeys": "vk_code_0x41"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Обзор",
+    "id": "lookUp",
+    "label": "Взгляд вверх",
+    "key": "I",
+    "gesture": "hold",
+    "source": "Look Up",
+    "defaultKeys": "vk_code_0x24"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Обзор",
+    "id": "lookDown",
+    "label": "Взгляд вниз",
+    "key": "K",
+    "gesture": "hold",
+    "source": "Look Down",
+    "defaultKeys": "vk_code_0x23"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Обзор",
+    "id": "lookLeft",
+    "label": "Взгляд влево",
+    "key": "J",
+    "gesture": "hold",
+    "source": "Look Left",
+    "defaultKeys": "vk_code_0x2E"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Обзор",
+    "id": "lookRight",
+    "label": "Взгляд вправо",
+    "key": "L",
+    "gesture": "hold",
+    "source": "Look Right",
+    "defaultKeys": "vk_code_0x22"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Обзор",
+    "id": "lookBack",
+    "label": "Взгляд назад",
+    "key": "U",
+    "gesture": "hold",
+    "source": "Look Back",
+    "defaultKeys": ""
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Обзор",
+    "id": "fovIn",
+    "label": "Угол обзора −",
+    "key": "OemSemicolon",
+    "gesture": "hold",
+    "source": "FoV Tweak In",
+    "defaultKeys": "vk_code_0xDB"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Обзор",
+    "id": "fovOut",
+    "label": "Угол обзора +",
+    "key": "OemQuotes",
+    "gesture": "hold",
+    "source": "FoV Tweak Out",
+    "defaultKeys": "vk_code_0xDD"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Обзор",
+    "id": "vrReset",
+    "label": "Центр VR",
+    "key": "Back",
+    "gesture": "press",
+    "source": "ResetVRPosition",
+    "defaultKeys": "vk_code_0x08"
+  },
+  {
+    "section": "Control Scheme",
+    "group": "Обзор",
+    "id": "headTracking",
+    "label": "Центр трекера",
+    "key": "F11",
+    "gesture": "press",
+    "source": "Head Tracking Reset",
+    "defaultKeys": "vk_code_0x7A"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfd",
+    "label": "Открыть / листать MFD",
+    "key": "B",
+    "gesture": "press",
+    "source": "MFD Button",
+    "defaultKeys": "vk_code_0x60"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfdUp",
+    "label": "Выше",
+    "key": "Up",
+    "gesture": "press",
+    "source": "MFD Menu Up",
+    "defaultKeys": "vk_code_0x26"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfdDown",
+    "label": "Ниже",
+    "key": "Down",
+    "gesture": "press",
+    "source": "MFD Menu Down",
+    "defaultKeys": "vk_code_0x28"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfdLeft",
+    "label": "Значение −",
+    "key": "Left",
+    "gesture": "press",
+    "source": "MFD Menu Left",
+    "defaultKeys": "vk_code_0x25"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfdRight",
+    "label": "Значение +",
+    "key": "Right",
+    "gesture": "press",
+    "source": "MFD Menu Right",
+    "defaultKeys": "vk_code_0x27"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfdSetup",
+    "label": "Настройки машины",
+    "key": "F1",
+    "gesture": "press",
+    "source": "MFD Open Tab One",
+    "defaultKeys": "vk_code_0x70"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfdPit",
+    "label": "Пит-стоп",
+    "key": "F2",
+    "gesture": "press",
+    "source": "MFD Open Tab Two",
+    "defaultKeys": "vk_code_0x71"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfdDamage",
+    "label": "Повреждения",
+    "key": "F3",
+    "gesture": "press",
+    "source": "MFD Open Tab Three",
+    "defaultKeys": "vk_code_0x72"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfdEngine",
+    "label": "Двигатель",
+    "key": "F4",
+    "gesture": "press",
+    "source": "MFD Open Tab Four",
+    "defaultKeys": "vk_code_0x73"
+  },
+  {
+    "section": "MFD",
+    "group": "Навигация",
+    "id": "mfdTemps",
+    "label": "Температуры",
+    "key": "F5",
+    "gesture": "press",
+    "source": "MFD Open Tab Five",
+    "defaultKeys": "vk_code_0x74"
+  },
+  {
+    "section": "MFD",
+    "group": "Быстрые настройки",
+    "id": "brakeBiasDown",
+    "label": "Баланс тормозов −",
+    "key": "D7",
+    "gesture": "press",
+    "source": "Brake Bias Down",
+    "defaultKeys": ""
+  },
+  {
+    "section": "MFD",
+    "group": "Быстрые настройки",
+    "id": "brakeBiasUp",
+    "label": "Баланс тормозов +",
+    "key": "D8",
+    "gesture": "press",
+    "source": "Brake Bias Up",
+    "defaultKeys": ""
+  },
+  {
+    "section": "MFD",
+    "group": "Быстрые настройки",
+    "id": "diffDown",
+    "label": "Дифференциал −",
+    "key": "D9",
+    "gesture": "press",
+    "source": "Differential Down",
+    "defaultKeys": ""
+  },
+  {
+    "section": "MFD",
+    "group": "Быстрые настройки",
+    "id": "diffUp",
+    "label": "Дифференциал +",
+    "key": "D0",
+    "gesture": "press",
+    "source": "Differential Up",
+    "defaultKeys": ""
+  },
+  {
+    "section": "MFD",
+    "group": "Быстрые настройки",
+    "id": "fuelDown",
+    "label": "Топливная смесь −",
+    "key": "OemMinus",
+    "gesture": "press",
+    "source": "Fuel Mix Down",
+    "defaultKeys": ""
+  },
+  {
+    "section": "MFD",
+    "group": "Быстрые настройки",
+    "id": "fuelUp",
+    "label": "Топливная смесь +",
+    "key": "OemPlus",
+    "gesture": "press",
+    "source": "Fuel Mix Up",
+    "defaultKeys": ""
+  },
+  {
+    "section": "MFD",
+    "group": "Быстрые настройки",
+    "id": "ersDown",
+    "label": "Режим ERS −",
+    "key": "OemOpenBrackets",
+    "gesture": "press",
+    "source": "ERS Mode Down",
+    "defaultKeys": ""
+  },
+  {
+    "section": "MFD",
+    "group": "Быстрые настройки",
+    "id": "ersUp",
+    "label": "Режим ERS +",
+    "key": "OemCloseBrackets",
+    "gesture": "press",
+    "source": "ERS Mode Up",
+    "defaultKeys": ""
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuAccept",
+    "label": "Подтвердить",
+    "key": "Return",
+    "gesture": "press",
+    "source": "Menu Accept",
+    "defaultKeys": "vk_code_0x0D"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuBack",
+    "label": "Назад",
+    "key": "Escape",
+    "gesture": "press",
+    "source": "Menu Back",
+    "defaultKeys": "vk_code_0x1B"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuUp",
+    "label": "Вверх",
+    "key": "Up",
+    "gesture": "press",
+    "source": "Menu Up|Menu DPad Up",
+    "defaultKeys": "vk_code_0x26|vk_code_0x26"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuDown",
+    "label": "Вниз",
+    "key": "Down",
+    "gesture": "press",
+    "source": "Menu Down|Menu DPad Down",
+    "defaultKeys": "vk_code_0x28|vk_code_0x28"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuLeft",
+    "label": "Влево",
+    "key": "Left",
+    "gesture": "press",
+    "source": "Menu Left|Menu DPad Left",
+    "defaultKeys": "vk_code_0x25|vk_code_0x25"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuRight",
+    "label": "Вправо",
+    "key": "Right",
+    "gesture": "press",
+    "source": "Menu Right|Menu DPad Right",
+    "defaultKeys": "vk_code_0x27|vk_code_0x27"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuStart",
+    "label": "Начать / вкладка",
+    "key": "Tab",
+    "gesture": "press",
+    "source": "Menu Start",
+    "defaultKeys": "vk_code_0x09"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuExtra1",
+    "label": "Доп. действие 1",
+    "key": "F1",
+    "gesture": "press",
+    "source": "Menu Extra1",
+    "defaultKeys": "vk_code_0x70"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuExtra2",
+    "label": "Доп. действие 2",
+    "key": "F2",
+    "gesture": "press",
+    "source": "Menu Extra2",
+    "defaultKeys": "vk_code_0x71"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Навигация",
+    "id": "menuSpecial",
+    "label": "Спец. действие",
+    "key": "F3",
+    "gesture": "press",
+    "source": "Menu Special",
+    "defaultKeys": "vk_code_0x72"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Страницы",
+    "id": "shoulderLeft",
+    "label": "Пред. страница · LB",
+    "key": "F5",
+    "gesture": "press",
+    "source": "Menu Shoulder Left",
+    "defaultKeys": "vk_code_0x74"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Страницы",
+    "id": "shoulderRight",
+    "label": "След. страница · RB",
+    "key": "F6",
+    "gesture": "press",
+    "source": "Menu Shoulder Right",
+    "defaultKeys": "vk_code_0x75"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Страницы",
+    "id": "triggerLeft",
+    "label": "Пред. группа · LT",
+    "key": "F7",
+    "gesture": "press",
+    "source": "Menu Trigger Left",
+    "defaultKeys": "vk_code_0x76"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Страницы",
+    "id": "triggerRight",
+    "label": "След. группа · RT",
+    "key": "F8",
+    "gesture": "press",
+    "source": "Menu Trigger Right",
+    "defaultKeys": "vk_code_0x77"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Страницы",
+    "id": "menuKey1",
+    "label": "Действие 1",
+    "key": "D1",
+    "gesture": "press",
+    "source": "Menu Key 1",
+    "defaultKeys": "vk_code_0x43"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Страницы",
+    "id": "menuKey2",
+    "label": "Действие 2",
+    "key": "D2",
+    "gesture": "press",
+    "source": "Menu Key 2",
+    "defaultKeys": "vk_code_0x47"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Страницы",
+    "id": "menuKey3",
+    "label": "Действие 3",
+    "key": "D3",
+    "gesture": "press",
+    "source": "Menu Key 3",
+    "defaultKeys": "vk_code_0x44"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Страницы",
+    "id": "menuKey4",
+    "label": "Действие 4",
+    "key": "D4",
+    "gesture": "press",
+    "source": "Menu Key 4",
+    "defaultKeys": "vk_code_0x54"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Страницы",
+    "id": "menuKey5",
+    "label": "Действие 5",
+    "key": "D5",
+    "gesture": "press",
+    "source": "Menu Key 5",
+    "defaultKeys": "vk_code_0x4C"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "lsLeft",
+    "label": "Левый стик ←",
+    "key": "A",
+    "gesture": "hold",
+    "source": "Menu Left Stick Left",
+    "defaultKeys": "vk_code_0x41"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "lsRight",
+    "label": "Левый стик →",
+    "key": "D",
+    "gesture": "hold",
+    "source": "Menu Left Stick Right",
+    "defaultKeys": "vk_code_0x44"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "lsUp",
+    "label": "Левый стик ↑",
+    "key": "W",
+    "gesture": "hold",
+    "source": "Menu Left Stick Up",
+    "defaultKeys": "vk_code_0x57"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "lsDown",
+    "label": "Левый стик ↓",
+    "key": "S",
+    "gesture": "hold",
+    "source": "Menu Left Stick Down",
+    "defaultKeys": "vk_code_0x53"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "lsClick",
+    "label": "Нажать левый стик",
+    "key": "F10",
+    "gesture": "press",
+    "source": "Menu Left Stick Click",
+    "defaultKeys": "vk_code_0x79"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "rsLeft",
+    "label": "Правый стик ←",
+    "key": "J",
+    "gesture": "hold",
+    "source": "Menu Right Stick Left",
+    "defaultKeys": "vk_code_0x2E"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "rsRight",
+    "label": "Правый стик →",
+    "key": "L",
+    "gesture": "hold",
+    "source": "Menu Right Stick Right",
+    "defaultKeys": "vk_code_0x22"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "rsUp",
+    "label": "Правый стик ↑",
+    "key": "I",
+    "gesture": "hold",
+    "source": "Menu Right Stick Up",
+    "defaultKeys": "vk_code_0x24"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "rsDown",
+    "label": "Правый стик ↓",
+    "key": "K",
+    "gesture": "hold",
+    "source": "Menu Right Stick Down",
+    "defaultKeys": "vk_code_0x23"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Стики",
+    "id": "rsClick",
+    "label": "Нажать правый стик",
+    "key": "F9",
+    "gesture": "press",
+    "source": "Menu Right Stick Click",
+    "defaultKeys": "vk_code_0x78"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Дополнительно",
+    "id": "keyInsert",
+    "label": "Действие Insert",
+    "key": "G",
+    "gesture": "press",
+    "source": "Key Insert",
+    "defaultKeys": "vk_code_0x2D"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Дополнительно",
+    "id": "keyBackspace",
+    "label": "Действие Backspace",
+    "key": "Back",
+    "gesture": "press",
+    "source": "Key Backspace",
+    "defaultKeys": "vk_code_0x08"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Дополнительно",
+    "id": "keyDelete",
+    "label": "Действие Delete",
+    "key": "Delete",
+    "gesture": "press",
+    "source": "Key Delete",
+    "defaultKeys": "vk_code_0x2E"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Дополнительно",
+    "id": "keyHome",
+    "label": "Действие Home",
+    "key": "F11",
+    "gesture": "press",
+    "source": "Key Home",
+    "defaultKeys": "vk_code_0x24"
+  },
+  {
+    "section": "Menu Controls",
+    "group": "Дополнительно",
+    "id": "keyEnd",
+    "label": "Действие End",
+    "key": "F12",
+    "gesture": "press",
+    "source": "Key End",
+    "defaultKeys": "vk_code_0x23"
+  }
+]
