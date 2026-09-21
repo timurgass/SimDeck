@@ -12,6 +12,7 @@ public sealed class Settings
     public int Port { get; set; } = 9443;
     public int UdpPort { get; set; } = 4444;
     public string CertificateThumbprint { get; set; } = "";
+    public bool UseVirtualKeyInput { get; set; }
     public Dictionary<string, string> Keys { get; set; } = BeamNgProfile.Actions.ToDictionary(x => x.Id, x => x.Key);
     public List<TrustedDevice> Devices { get; set; } = [];
     public string ActiveProfileId { get; set; } = "beamng-default";

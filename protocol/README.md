@@ -1,4 +1,4 @@
-# SimDeck wire protocol 1 — implemented subset (0.7.1)
+# SimDeck wire protocol 1 — implemented subset (0.7.2)
 
 Android transport: UTF-8 JSON over WSS. Pairing: HTTPS POST `/pair`, `{ "code": "123456", "name": "Tablet" }`; response `{ "token": "…", "protocolMajor": 1 }`. Pairing is closed until opened on the PC, expires in 120 seconds and closes after success or five failed attempts.
 
@@ -32,6 +32,8 @@ The browser UI is served over local HTTP on port 8787. Pairing uses `POST /pair`
 Android and browser clients share one controller semaphore. A successful new Safari pairing revokes previous browser cookies, cancels the active controller and waits up to two seconds for the channel to be released. This lets a new iPhone replace a stale Safari tab or a still-connected Android tablet instead of entering a 409 reconnect loop. Pairing establishes authority; it does not enable Windows input by itself.
 
 `input.state.availability` is `ready`, `disabled`, `unfocused` or `demo`. Browser action buttons are disabled unless the session exists, availability is `ready`, and no composite menu sequence is running. Telemetry can remain live while input buttons are disabled. The UI instructs the user to enable input in Companion and focus the selected game process.
+
+The Windows backend supports `Scan Code` and opt-in `Virtual-Key` injection. This is a local Companion setting and does not change the wire protocol. Scan Code remains the default. Virtual-Key exists for hosts where `SendInput` accepts the scan-code event but the game does not consume it.
 
 ## Extended BeamNG UDP (SimDeck 0.1.2)
 

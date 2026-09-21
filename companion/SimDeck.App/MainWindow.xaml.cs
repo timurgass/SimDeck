@@ -29,6 +29,7 @@ public partial class MainWindow : Window
                 host = new(directory);
                 ProfilePicker.ItemsSource = host.Store.Value.Profiles;
                 ProfilePicker.SelectedValue = host.Profile.Id;
+                CompatibleInput.IsChecked = host.Store.Value.UseVirtualKeyInput;
                 LoadEditor();
                 await host.StartAsync();
                 FingerprintText.Text = host.Fingerprint;
@@ -59,11 +60,14 @@ public partial class MainWindow : Window
         SourceLabel.Text = t.Source == "demo" ? "ДЕМОНСТРАЦИЯ · не данные игры" : host.Profile.Name + (fresh ? " · данные поступают" : " · нет свежих данных");
         SpeedLabel.Text = fresh ? (t.Data!.SpeedMps * 3.6).ToString("0") : "—";
         RpmLabel.Text = fresh ? $"{t.Data!.Rpm:0} RPM   /   {t.Data.GearDisplay}" : "— RPM   /   —";
-        TelemetryHelp.Text = fresh ? host.Profile.Id is "f1-24" or "f1-25" ? "UDP F1 · DRS / ERS / лимитер — по данным игры" : t.Data!.Headlights is null
+        TelemetryHelp.Text = fresh ? host.Profile.Id is "f1-24" or "f1-25" ? $"UDP F1 · принято {host.ReceivedPackets}, отклонено {host.InvalidPackets}" : t.Data!.Headlights is null
             ? "Старый поток без состояния кнопок. Перезапустите BeamNG после обновления мода."
             : "Состояния кнопок поступают · " + (t.Data.Headlights == 2 ? "дальний свет" : t.Data.Headlights == 1 ? "ближний свет" : "фары выключены") : host.TelemetryDiagnostic;
-        InputStatus.Text = host.Backend.Demo ? "Демонстрация · ввод отключён" : !host.Backend.Enabled ? "Выключен · установите галочку ниже" : host.Backend.CanInject ? "Готов · окно игры активно" : "Включён · ждёт активного окна игры";
-        LastCommand.Text = host.LastCommand;
+        var foreground = host.Backend.ForegroundProcessName;
+        InputStatus.Text = host.Backend.Demo ? "Демонстрация · ввод отключён" : !host.Backend.Enabled ? "Выключен · установите галочку ниже" : host.Backend.CanInject
+            ? $"Готов · {host.Profile.TargetProcess} · {host.Backend.InputModeName}"
+            : $"Ожидается {host.Profile.TargetProcess} · сейчас активно: {foreground}";
+        LastCommand.Text = host.LastCommand + (host.LastCommand.Contains("injected", StringComparison.Ordinal) ? " · " + host.Backend.LastSendStatus : "");
         if (host.Input.LastFault.Length > 0) ErrorLabel.Text = host.Input.LastFault;
     }
     static string Gear(int gear) => gear == -1 ? "R" : gear == 0 ? "N" : gear.ToString();
@@ -86,6 +90,7 @@ public partial class MainWindow : Window
     void Revoke(object sender, RoutedEventArgs e) { host?.RevokeDevices(); }
     void SourceChanged(object sender, RoutedEventArgs e) { host?.SetDemo(DemoBox.IsChecked == true); }
     void InputChanged(object sender, RoutedEventArgs e) { if (host is not null) { host.Backend.Enabled = EnableInput.IsChecked == true; if (!host.Backend.Enabled) host.Input.ReleaseAll(); } }
+    void InputModeChanged(object sender, RoutedEventArgs e) { if (host is not null) host.SetCompatibleInput(CompatibleInput.IsChecked == true); }
     void SaveBindings(object sender, RoutedEventArgs e)
     {
         if (host is null) return;

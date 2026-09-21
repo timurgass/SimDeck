@@ -67,10 +67,12 @@ static class ProfileTests
         check(host.Profile.Revision == oldRevision + 1 && host.Store.IsTrusted(token), "Profile save increments revision without revoking pairing");
         host.SelectProfile("f1-24");
         check(host.Backend.TargetProcess == "F1_24" && !host.Backend.Enabled && host.Telemetry.Read().Data is null, "Game switch changes process, disables input and clears telemetry");
+        host.SetCompatibleInput(true);
+        check(host.Backend.UseVirtualKey && host.Store.Value.UseVirtualKeyInput, "Compatible Virtual-Key input mode is applied and saved");
         host.SelectProfile("beamng-default");
         check(host.Profile.Actions.Contains(custom) && host.Profile.Actions.All(a => a.Id != "camera"), "Custom button and deletion survive profile switch");
         var reloaded = new SettingsStore(path);
-        check(reloaded.Value.ActiveProfile.Actions.Contains(custom) && reloaded.IsTrusted(token) && reloaded.Value.ActiveProfile.Actions.All(a => a.Id != "camera"), "Custom edits and pairing survive restart without restoring deleted buttons");
+        check(reloaded.Value.ActiveProfile.Actions.Contains(custom) && reloaded.IsTrusted(token) && reloaded.Value.ActiveProfile.Actions.All(a => a.Id != "camera") && reloaded.Value.UseVirtualKeyInput, "Custom edits, pairing and input compatibility mode survive restart");
         try { GameProfiles.Validate(host.Profile with { Actions = [custom, custom] }); check(false, "Duplicate actions rejected"); } catch (ArgumentException) { check(true, "Duplicate actions rejected"); }
         try { GameProfiles.Validate(host.Profile with { Actions = [custom with { Id = "ignition", Gesture = "press" }] }); check(false, "Ignition safety preserved"); } catch (ArgumentException) { check(true, "Ignition safety preserved"); }
     }

@@ -1,11 +1,11 @@
 <Window x:Class="SimDeck.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- Title="SimDeck Companion" Width="1080" Height="850" MinWidth="780" MinHeight="700" Background="#0B1115" FontFamily="Segoe UI" FontSize="14" Closing="WindowClosing">
+ Title="SimDeck Companion" Width="1080" Height="890" MinWidth="780" MinHeight="700" Background="#0B1115" FontFamily="Segoe UI" FontSize="14" Closing="WindowClosing">
 <Window.Resources>
  <Style TargetType="ComboBox"><Setter Property="Foreground" Value="#101820"/><Setter Property="Background" Value="#E8ECEE"/><Setter Property="FontSize" Value="16"/><Setter Property="Padding" Value="8,5"/></Style>
  <Style TargetType="ComboBoxItem"><Setter Property="Foreground" Value="#101820"/><Setter Property="Background" Value="#E8ECEE"/></Style>
 </Window.Resources>
 <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="32">
- <DockPanel Margin="0,0,0,25"><StackPanel><TextBlock Text="SIMDECK" FontSize="29" FontWeight="Bold"/><TextBlock Text="COMPANION / РАННЯЯ СБОРКА 0.7.1" Foreground="#8D9FA8" Margin="0,5,0,0"/></StackPanel><TextBlock Text="LOCAL CONNECTION" Foreground="#F2B84B" HorizontalAlignment="Right" VerticalAlignment="Center"/></DockPanel>
+ <DockPanel Margin="0,0,0,25"><StackPanel><TextBlock Text="SIMDECK" FontSize="29" FontWeight="Bold"/><TextBlock Text="COMPANION / РАННЯЯ СБОРКА 0.7.2" Foreground="#8D9FA8" Margin="0,5,0,0"/></StackPanel><TextBlock Text="LOCAL CONNECTION" Foreground="#F2B84B" HorizontalAlignment="Right" VerticalAlignment="Center"/></DockPanel>
  <Border Background="{StaticResource Panel}" CornerRadius="14" Padding="22" Margin="0,0,0,18"><StackPanel>
   <DockPanel><TextBlock Text="СОЕДИНЕНИЕ" Foreground="#8D9FA8"/><TextBlock x:Name="ConnectionStatus" Text="Запуск…" HorizontalAlignment="Right"/></DockPanel>
   <TextBlock x:Name="DeviceLabel" Text="Планшет не подключён" FontSize="23" Margin="0,12,0,10"/>
@@ -31,6 +31,7 @@
    <TextBlock Text="УПРАВЛЕНИЕ" Foreground="#8D9FA8"/>
    <TextBlock x:Name="InputStatus" Text="Отключено" FontSize="19" Margin="0,12,0,10"/>
    <CheckBox x:Name="EnableInput" Content="Разрешить клавиатурный ввод" Checked="InputChanged" Unchecked="InputChanged"/>
+   <CheckBox x:Name="CompatibleInput" Content="Совместимый ввод Virtual-Key · если injected не действует в игре" Checked="InputModeChanged" Unchecked="InputModeChanged"/>
    <TextBlock Text="Команды действуют только в активном окне выбранного процесса. Сначала сверьте клавиши с настройками игры." Foreground="#8D9FA8" TextWrapping="Wrap"/>
    <TextBlock x:Name="LastCommand" Text="Команд пока нет" Margin="0,18,0,0" TextWrapping="Wrap" Foreground="#F2B84B"/>
   </StackPanel></Border>
@@ -64,7 +65,7 @@
   <DockPanel><Button Content="Сохранить" Click="SaveBindings" DockPanel.Dock="Right"/><TextBox x:Name="ProcessName"/></DockPanel>
   <TextBlock x:Name="ErrorLabel" Foreground="#FF8F80" TextWrapping="Wrap" Margin="0,8,0,0"/>
  </StackPanel></Border>
- <TextBlock Text="0.7.1 / F1 24 + F1 25 · Android + Safari + Windows · данные остаются в вашей сети" Foreground="#647782" Margin="0,20,0,0"/>
+ <TextBlock Text="0.7.2 / F1 24 + F1 25 · Android + Safari + Windows · данные остаются в вашей сети" Foreground="#647782" Margin="0,20,0,0"/>
 </StackPanel></ScrollViewer></Window>
 
 

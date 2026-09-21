@@ -97,6 +97,9 @@ Check(oldKeys["recoverRoad"] == "Alt+T" && oldKeys["loadHome"] == "Home" && oldK
 Check(BeamNgProfile.Actions.All(a => WindowsInput.ParseBinding(a.Id, oldKeys[a.Id], a.Gesture).ActionId == a.Id), "Every default profile binding parses including chords and punctuation");
 Check(WindowsInput.ParseBinding("mode", "Alt+Shift+N", "press").Modifiers!.Length == 2, "Multiple modifiers are supported");
 Check(WindowsInput.ParseKey("Down") == 0xE050 && WindowsInput.ParseKey("Right") == 0xE04D, $"Arrow scan codes preserve E0 prefix: {WindowsInput.ParseKey("Down"):X4}/{WindowsInput.ParseKey("Right"):X4}");
+var scanInput = WindowsInput.DescribeInput(WindowsInput.ParseKey("Up"), true, false);
+var virtualInput = WindowsInput.DescribeInput(WindowsInput.ParseKey("Up"), true, true);
+Check(scanInput == (0, 0x48, 0x0009) && virtualInput == (0x26, 0, 0x0001), "Scan Code and Virtual-Key modes preserve the extended Up arrow");
 Check(WindowsInput.ParseKey("NumPad2") == 0x50 && WindowsInput.ParseKey("NumPad6") == 0x4D && WindowsInput.ParseKey("Return") == 0x1C, "Numpad and main Enter retain unextended scan codes");
 Check(WindowsInput.ParseKey("Delete") == 0xE053 && WindowsInput.ParseKey("RightCtrl") == 0xE01D, "Navigation and right modifiers preserve physical key identity");
 try { WindowsInput.ParseBinding("bad", "A+Q", "press"); Check(false, "Unsupported modifier rejected"); } catch (ArgumentException) { Check(true, "Unsupported modifier rejected"); }

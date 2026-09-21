@@ -9,25 +9,55 @@ public sealed class WindowsInput : IInputBackend
 {
     public volatile bool Enabled;
     public volatile bool Demo;
+    public volatile bool UseVirtualKey;
     public string TargetProcess = "BeamNG.drive.x64";
+    public string InputModeName => UseVirtualKey ? "Virtual-Key" : "Scan Code";
+    public string LastSendStatus { get; private set; } = "Команд ещё не было";
+    public string ForegroundProcessName
+    {
+        get
+        {
+            var window = GetForegroundWindow();
+            if (window == 0) return "нет активного окна";
+            GetWindowThreadProcessId(window, out var pid);
+            if (pid == 0) return "неизвестный процесс";
+            try { return Process.GetProcessById((int)pid).ProcessName; }
+            catch (ArgumentException) { return "процесс закрыт"; }
+            catch (InvalidOperationException) { return "процесс недоступен"; }
+        }
+    }
     public bool CanInject
     {
         get
         {
             if (!Enabled || Demo) return false;
-            GetWindowThreadProcessId(GetForegroundWindow(), out var pid);
-            try { return Process.GetProcessById((int)pid).ProcessName.Equals(TargetProcess, StringComparison.OrdinalIgnoreCase); }
-            catch (ArgumentException) { return false; }
-            catch (InvalidOperationException) { return false; }
+            return ForegroundProcessName.Equals(TargetProcess, StringComparison.OrdinalIgnoreCase);
         }
     }
     public bool Send(ushort code, bool down)
     {
         if (down && !CanInject) return false;
-        var input = new INPUT { type = 1, data = new InputUnion { keyboard = new KEYBDINPUT {
-            scanCode = (ushort)(code & 0xFF), flags = 0x0008u | (down ? 0u : 0x0002u) | ((code & 0xFF00) != 0 ? 0x0001u : 0u)
-        } } };
-        return SendInput(1, [input], Marshal.SizeOf<INPUT>()) == 1;
+        var fields = DescribeInput(code, down, UseVirtualKey);
+        if (UseVirtualKey && fields.VirtualKey == 0)
+        {
+            LastSendStatus = $"Virtual-Key: не удалось преобразовать scan code 0x{code:X4}";
+            return false;
+        }
+        var keyboard = new KEYBDINPUT { virtualKey = fields.VirtualKey, scanCode = fields.ScanCode, flags = fields.Flags };
+        var input = new INPUT { type = 1, data = new InputUnion { keyboard = keyboard } };
+        var sent = SendInput(1, [input], Marshal.SizeOf<INPUT>()) == 1;
+        LastSendStatus = sent
+            ? $"{InputModeName}: Windows приняла {(down ? "нажатие" : "отпускание")}"
+            : $"{InputModeName}: SendInput вернул ошибку {Marshal.GetLastWin32Error()}";
+        return sent;
+    }
+    public static (ushort VirtualKey, ushort ScanCode, uint Flags) DescribeInput(ushort code, bool down, bool useVirtualKey)
+    {
+        const uint keyUp = 0x0002, extended = 0x0001, scanCode = 0x0008;
+        var isExtended = (code & 0xFF00) != 0;
+        return useVirtualKey
+            ? ((ushort)MapVirtualKey(code, 3), 0, (down ? 0u : keyUp) | (isExtended ? extended : 0u))
+            : (0, (ushort)(code & 0xFF), scanCode | (down ? 0u : keyUp) | (isExtended ? extended : 0u));
     }
     public static ushort ParseKey(string name)
     {
