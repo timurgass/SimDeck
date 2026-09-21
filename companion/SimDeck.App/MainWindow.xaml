@@ -1,0 +1,70 @@
+<Window x:Class="SimDeck.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="SimDeck Companion" Width="1080" Height="850" MinWidth="780" MinHeight="700" Background="#0B1115" FontFamily="Segoe UI" FontSize="14" Closing="WindowClosing">
+<Window.Resources>
+ <Style TargetType="ComboBox"><Setter Property="Foreground" Value="#101820"/><Setter Property="Background" Value="#E8ECEE"/><Setter Property="FontSize" Value="16"/><Setter Property="Padding" Value="8,5"/></Style>
+ <Style TargetType="ComboBoxItem"><Setter Property="Foreground" Value="#101820"/><Setter Property="Background" Value="#E8ECEE"/></Style>
+</Window.Resources>
+<ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="32">
+ <DockPanel Margin="0,0,0,25"><StackPanel><TextBlock Text="SIMDECK" FontSize="29" FontWeight="Bold"/><TextBlock Text="COMPANION / РАННЯЯ СБОРКА 0.7.0" Foreground="#8D9FA8" Margin="0,5,0,0"/></StackPanel><TextBlock Text="LOCAL CONNECTION" Foreground="#F2B84B" HorizontalAlignment="Right" VerticalAlignment="Center"/></DockPanel>
+ <Border Background="{StaticResource Panel}" CornerRadius="14" Padding="22" Margin="0,0,0,18"><StackPanel>
+  <DockPanel><TextBlock Text="СОЕДИНЕНИЕ" Foreground="#8D9FA8"/><TextBlock x:Name="ConnectionStatus" Text="Запуск…" HorizontalAlignment="Right"/></DockPanel>
+  <TextBlock x:Name="DeviceLabel" Text="Планшет не подключён" FontSize="23" Margin="0,12,0,10"/>
+  <WrapPanel><Button x:Name="PairButton" Content="Подключить планшет" Click="OpenPairing" IsEnabled="False"/><Button Content="Отозвать доступ" Click="Revoke"/><TextBlock x:Name="PairCode" Text="" FontSize="30" Foreground="#F2B84B" VerticalAlignment="Center" Margin="16,0,0,0"/></WrapPanel>
+  <TextBlock Text="На Android найдите этот ПК и сравните полный отпечаток перед вводом кода." Foreground="#8D9FA8" Margin="0,12,0,6" TextWrapping="Wrap"/>
+  <TextBox x:Name="FingerprintText" IsReadOnly="True" TextWrapping="Wrap" FontFamily="Consolas" FontSize="13"/>
+  <TextBlock x:Name="AddressText" Foreground="#8D9FA8" TextWrapping="Wrap"/>
+  <Button Content="Подключить iPhone / Safari · тест" Click="OpenBrowser" Margin="0,14,0,0"/>
+  <TextBlock x:Name="BrowserAddress" TextWrapping="Wrap" Foreground="#F2B84B" Margin="0,8,0,0"/>
+  <TextBlock x:Name="BrowserCode" FontSize="26" Foreground="#F2B84B"/>
+  <TextBlock Text="Safari-тест: локальное HTTP-подключение без шифрования, только в доверенной домашней сети. Доступ действует до закрытия Companion, максимум 8 часов." TextWrapping="Wrap" Foreground="#8D9FA8" Margin="0,6,0,0"/>
+ </StackPanel></Border>
+ <Grid Margin="0,0,0,18"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="18"/><ColumnDefinition/></Grid.ColumnDefinitions>
+  <Border Background="{StaticResource Panel}" CornerRadius="14" Padding="22"><StackPanel>
+   <TextBlock Text="ТЕЛЕМЕТРИЯ" Foreground="#8D9FA8"/>
+   <TextBlock x:Name="SourceLabel" Text="BeamNG.drive · ожидание" FontSize="19" Margin="0,12,0,15"/>
+   <StackPanel Orientation="Horizontal"><TextBlock x:Name="SpeedLabel" Text="—" FontSize="48" FontWeight="Bold"/><TextBlock Text=" км/ч" Foreground="#8D9FA8" VerticalAlignment="Bottom" Margin="0,0,0,10"/></StackPanel>
+   <TextBlock x:Name="RpmLabel" Text="— RPM   /   —" FontSize="19" Foreground="#F2B84B" Margin="0,8,0,12"/>
+   <CheckBox x:Name="DemoBox" Content="Демонстрация · игровой ввод отключён" Checked="SourceChanged" Unchecked="SourceChanged"/>
+   <TextBlock x:Name="TelemetryHelp" Text="Мод SimDeck → UDP 127.0.0.1:4444" Foreground="#8D9FA8" TextWrapping="Wrap" Margin="0,10,0,0"/>
+  </StackPanel></Border>
+  <Border Grid.Column="2" Background="{StaticResource Panel}" CornerRadius="14" Padding="22"><StackPanel>
+   <TextBlock Text="УПРАВЛЕНИЕ" Foreground="#8D9FA8"/>
+   <TextBlock x:Name="InputStatus" Text="Отключено" FontSize="19" Margin="0,12,0,10"/>
+   <CheckBox x:Name="EnableInput" Content="Разрешить клавиатурный ввод" Checked="InputChanged" Unchecked="InputChanged"/>
+   <TextBlock Text="Команды действуют только в активном окне выбранного процесса. Сначала сверьте клавиши с настройками игры." Foreground="#8D9FA8" TextWrapping="Wrap"/>
+   <TextBlock x:Name="LastCommand" Text="Команд пока нет" Margin="0,18,0,0" TextWrapping="Wrap" Foreground="#F2B84B"/>
+  </StackPanel></Border>
+ </Grid>
+ <Border Background="{StaticResource Panel}" CornerRadius="14" Padding="22"><StackPanel>
+  <TextBlock Text="ИГРА И КНОПКИ" Foreground="#8D9FA8"/>
+  <WrapPanel Margin="0,8,0,8"><ComboBox x:Name="ProfilePicker" SelectedValuePath="Id" Width="220" VerticalContentAlignment="Center"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Foreground="#101820" FontSize="16"/></DataTemplate></ComboBox.ItemTemplate></ComboBox><Button Content="Открыть профиль" Click="ChangeProfile"/></WrapPanel>
+  <TextBlock x:Name="ProfileHelp" Foreground="#8D9FA8" TextWrapping="Wrap" Margin="0,0,0,10"/>
+  <TextBlock Text="Добавьте кнопку, укажите название, страницу и клавишу из настроек игры. Двойной щелчок по ячейке — редактирование. Сочетания: Ctrl+Q, Alt+Shift+N. Сохранение обновляет планшет автоматически." TextWrapping="Wrap" Margin="0,0,0,10"/>
+  <DataGrid x:Name="ButtonGrid" Height="300" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Single" Background="#E8ECEE" Foreground="#101820" RowBackground="#E8ECEE" AlternatingRowBackground="#D4DEE3" HeadersVisibility="Column">
+   <DataGrid.Resources>
+    <Style TargetType="TextBlock"><Setter Property="Foreground" Value="#101820"/><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Margin" Value="6,3"/></Style>
+    <Style TargetType="TextBox"><Setter Property="Foreground" Value="#101820"/><Setter Property="Background" Value="White"/><Setter Property="Padding" Value="5"/></Style>
+    <Style TargetType="DataGridColumnHeader"><Setter Property="Foreground" Value="#101820"/><Setter Property="Background" Value="#B8CAD4"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Padding" Value="6,9"/><Setter Property="ContentTemplate"><Setter.Value><DataTemplate><TextBlock Text="{Binding}" Foreground="#101820" FontSize="15" FontWeight="SemiBold"/></DataTemplate></Setter.Value></Setter></Style>
+    <Style TargetType="DataGridRow"><Setter Property="MinHeight" Value="34"/><Setter Property="FontSize" Value="15"/></Style>
+    <Style TargetType="DataGridCell"><Setter Property="BorderThickness" Value="0"/><Style.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="#ADCEDF"/><Setter Property="Foreground" Value="#101820"/></Trigger></Style.Triggers></Style>
+    <Style x:Key="GestureEditor" TargetType="ComboBox"><Setter Property="Foreground" Value="#101820"/><Setter Property="Background" Value="#E8ECEE"/><Setter Property="FontSize" Value="15"/><Setter Property="Padding" Value="5"/><Setter Property="ItemTemplate"><Setter.Value><DataTemplate><TextBlock Text="{Binding}" Foreground="#101820" FontSize="15"/></DataTemplate></Setter.Value></Setter></Style>
+    <Style x:Key="GestureDisplay" TargetType="ComboBox" BasedOn="{StaticResource GestureEditor}"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox"><TextBlock Text="{TemplateBinding SelectedItem}" Foreground="#101820" FontSize="15" Margin="6,3" VerticalAlignment="Center"/></ControlTemplate></Setter.Value></Setter></Style>
+   </DataGrid.Resources>
+   <DataGrid.Columns>
+    <DataGridTextColumn Header="Название" Binding="{Binding Label}" Width="170"/>
+    <DataGridTextColumn Header="Страница" Binding="{Binding Page}" Width="110"/>
+    <DataGridTextColumn Header="Вкладка" Binding="{Binding Group}" Width="110"/>
+    <DataGridTextColumn Header="Клавиша" Binding="{Binding Key}" Width="115"/>
+    <DataGridComboBoxColumn x:Name="GestureColumn" Header="Действие" SelectedItemBinding="{Binding GestureLabel}" Width="180" ElementStyle="{StaticResource GestureDisplay}" EditingElementStyle="{StaticResource GestureEditor}"/>
+    <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="*" MinWidth="250"/>
+   </DataGrid.Columns>
+  </DataGrid>
+  <WrapPanel><Button Content="+ Добавить кнопку" Click="AddButton"/><Button Content="Удалить выбранную" Click="DeleteButton"/><Button Content="↑" Click="MoveUp"/><Button Content="↓" Click="MoveDown"/></WrapPanel>
+  <TextBlock Text="Процесс игры без .exe" Foreground="#8D9FA8" Margin="0,5,0,0"/>
+  <DockPanel><Button Content="Сохранить" Click="SaveBindings" DockPanel.Dock="Right"/><TextBox x:Name="ProcessName"/></DockPanel>
+  <TextBlock x:Name="ErrorLabel" Foreground="#FF8F80" TextWrapping="Wrap" Margin="0,8,0,0"/>
+ </StackPanel></Border>
+ <TextBlock Text="0.7.0 / F1 24 + F1 25 · Android + Safari + Windows · данные остаются в вашей сети" Foreground="#647782" Margin="0,20,0,0"/>
+</StackPanel></ScrollViewer></Window>
+
+

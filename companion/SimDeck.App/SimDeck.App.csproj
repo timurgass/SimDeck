@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF><AssemblyName>SimDeck</AssemblyName><Version>0.7.0</Version><ApplicationManifest>app.manifest</ApplicationManifest></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../SimDeck.Core/SimDeck.Core.csproj"/><FrameworkReference Include="Microsoft.AspNetCore.App"/><PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0"/></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="F1Preset.json" LogicalName="SimDeck.F1Preset.json"/></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Browser/*" LogicalName="SimDeck.Browser.%(Filename)%(Extension)"/></ItemGroup>
+</Project>
+
+

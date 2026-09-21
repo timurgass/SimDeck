@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/build/
+**/.gradle/
+**/.kotlin/
+.idea/
+local.properties
+*.user
+*.pfx
+*.keystore
+.vs/
+artifacts/

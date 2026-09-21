@@ -1,0 +1,1 @@
+{"protocolMajor":1,"type":"telemetry.snapshot","sessionId":"fixture-session","streamId":"fixture-stream","sequence":1,"serverMonotonicMs":1000,"gameId":"beamng","source":"beamng","ageMs":0,"data":{"speedMps":40.0,"rpm":6234.0,"gear":4,"fuelFraction":0.42,"throttle":0.8,"brake":0.0,"clutch":0.0,"maxRpm":null,"fuelLiters":null}}
