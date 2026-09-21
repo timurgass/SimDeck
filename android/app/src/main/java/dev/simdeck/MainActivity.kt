@@ -108,7 +108,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.5.1 · BeamNG / F1 24 · редактор кнопок на ПК", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.7.3 · BeamNG / F1 24 / F1 25 · редактор кнопок на ПК", color = Muted, fontSize = 11.sp)
     }
 }
 
@@ -166,7 +166,7 @@ private fun Instruments(state: DeckState, data: Telemetry?) {
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(if (state.demo) "ДЕМОНСТРАЦИЯ" else "F1 24", fontSize = 14.sp, color = Muted)
+                Text(if (state.demo) "ДЕМОНСТРАЦИЯ" else gameDisplayName(state.profileId, state.profileName), fontSize = 14.sp, color = Muted)
                 Text(if (state.stale) "● НЕТ ДАННЫХ" else "● LIVE", fontSize = 12.sp, color = if (state.stale) Muted else Color(0xFF9ED8B0))
             }
             Metric("ОБОРОТЫ ДВИГАТЕЛЯ", data?.let { "%.0f".format(it.rpm) } ?: "—", "RPM")

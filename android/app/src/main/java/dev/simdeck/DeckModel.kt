@@ -268,7 +268,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
             state.value.connected && !state.value.demo && !state.value.stale && state.value.inputAvailability=="ready" &&
             state.value.profileId in setOf("f1-24","f1-25") && state.value.telemetry?.f1?.race?.sessionType==expectedType &&
             state.value.telemetry?.f1?.race?.let { it.fresh && it.drivers.any { d -> d.player && d.onTrack } } == true
-        if(!allowed()) { mutable.update { it.copy(command="Запрос доступен на трассе в тренировке или гонке F1 24") }; return }
+        if(!allowed()) { mutable.update { current -> current.copy(command="Запрос доступен на трассе в тренировке или гонке ${gameDisplayName(current.profileId, current.profileName)}") }; return }
         mutable.update { it.copy(menuBusy=true) }
         menuSequence=viewModelScope.launch {
             try {

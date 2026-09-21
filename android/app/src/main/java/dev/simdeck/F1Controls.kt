@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable internal fun F1Controls(state: DeckState, model: DeckModel) {
+    val gameName = gameDisplayName(state.profileId, state.profileName)
     val actions = state.controls
     val sections = (actions.map { it.page } + "Трасса").distinct()
     var selectedSection by rememberSaveable { mutableStateOf("Control Scheme") }
@@ -22,9 +23,9 @@ import androidx.compose.ui.unit.sp
     var panel by rememberSaveable { mutableStateOf("mfdSetup") }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(if(!state.connected) state.status else when(state.inputAvailability) {
-            "ready" -> "Ввод готов · F1 24 активно"
+            "ready" -> "Ввод готов · $gameName активно"
             "disabled" -> "Кнопки отключены: включите «Разрешить клавиатурный ввод» в Companion"
-            "unfocused" -> "Кнопки ждут активного окна F1 24"
+            "unfocused" -> "Кнопки ждут активного окна $gameName"
             "demo" -> "Демонстрация: игровой ввод отключён"
             else -> "Проверка готовности ввода…"
         }, fontSize = 15.sp)

@@ -20,10 +20,11 @@ private fun compound(value: Double?) = when(value?.toInt()) { 16, 20 -> "Soft"; 
 @Composable internal fun F1Panel(panel: String, state: DeckState, model: DeckModel) {
     val data = state.telemetry?.f1.takeUnless { state.stale }
     val v = data?.values.orEmpty()
+    val gameName = gameDisplayName(state.profileId, state.profileName)
     Surface(color = Color(0xFF202D35), shape = MaterialTheme.shapes.medium) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(when(panel) { "mfdPit" -> "ПИТ-СТОП"; "mfdDamage" -> "ШИНЫ И ПОВРЕЖДЕНИЯ"; "mfdEngine" -> "ДВИГАТЕЛЬ"; "mfdTemps" -> "ТЕМПЕРАТУРЫ И ДАВЛЕНИЕ"; "map" -> "ТРАЕКТОРИЯ"; else -> "СОСТОЯНИЕ БОЛИДА" }, fontSize = 19.sp)
-            if (data == null && panel != "map") Text("Нет свежих данных F1 24. На трассе: UDP 2024 → ПК, порт 20777.", fontSize = 15.sp, color = Color(0xFFFFCC80))
+            if (data == null && panel != "map") Text("Нет свежих данных $gameName. На трассе: UDP ${f1UdpFormat(state.profileId)} → ПК, порт 20777.", fontSize = 15.sp, color = Color(0xFFFFCC80))
             when(panel) {
                 "map" -> F1CircuitMap(state.telemetry?.f1?.race, state.stale)
                 "mfdDamage", "mfdTemps" -> {

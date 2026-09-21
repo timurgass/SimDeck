@@ -5,7 +5,7 @@
  <Style TargetType="ComboBoxItem"><Setter Property="Foreground" Value="#101820"/><Setter Property="Background" Value="#E8ECEE"/></Style>
 </Window.Resources>
 <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="32">
- <DockPanel Margin="0,0,0,25"><StackPanel><TextBlock Text="SIMDECK" FontSize="29" FontWeight="Bold"/><TextBlock Text="COMPANION / РАННЯЯ СБОРКА 0.7.2" Foreground="#8D9FA8" Margin="0,5,0,0"/></StackPanel><TextBlock Text="LOCAL CONNECTION" Foreground="#F2B84B" HorizontalAlignment="Right" VerticalAlignment="Center"/></DockPanel>
+ <DockPanel Margin="0,0,0,25"><StackPanel><TextBlock Text="SIMDECK" FontSize="29" FontWeight="Bold"/><TextBlock Text="COMPANION / РАННЯЯ СБОРКА 0.7.3" Foreground="#8D9FA8" Margin="0,5,0,0"/></StackPanel><TextBlock Text="LOCAL CONNECTION" Foreground="#F2B84B" HorizontalAlignment="Right" VerticalAlignment="Center"/></DockPanel>
  <Border Background="{StaticResource Panel}" CornerRadius="14" Padding="22" Margin="0,0,0,18"><StackPanel>
   <DockPanel><TextBlock Text="СОЕДИНЕНИЕ" Foreground="#8D9FA8"/><TextBlock x:Name="ConnectionStatus" Text="Запуск…" HorizontalAlignment="Right"/></DockPanel>
   <TextBlock x:Name="DeviceLabel" Text="Планшет не подключён" FontSize="23" Margin="0,12,0,10"/>
@@ -65,7 +65,7 @@
   <DockPanel><Button Content="Сохранить" Click="SaveBindings" DockPanel.Dock="Right"/><TextBox x:Name="ProcessName"/></DockPanel>
   <TextBlock x:Name="ErrorLabel" Foreground="#FF8F80" TextWrapping="Wrap" Margin="0,8,0,0"/>
  </StackPanel></Border>
- <TextBlock Text="0.7.2 / F1 24 + F1 25 · Android + Safari + Windows · данные остаются в вашей сети" Foreground="#647782" Margin="0,20,0,0"/>
+ <TextBlock Text="0.7.3 / F1 24 + F1 25 · Android + Safari + Windows · данные остаются в вашей сети" Foreground="#647782" Margin="0,20,0,0"/>
 </StackPanel></ScrollViewer></Window>
 
 

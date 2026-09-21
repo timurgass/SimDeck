@@ -1,4 +1,4 @@
-# SimDeck wire protocol 1 — implemented subset (0.7.2)
+# SimDeck wire protocol 1 — implemented subset (0.7.3)
 
 Android transport: UTF-8 JSON over WSS. Pairing: HTTPS POST `/pair`, `{ "code": "123456", "name": "Tablet" }`; response `{ "token": "…", "protocolMajor": 1 }`. Pairing is closed until opened on the PC, expires in 120 seconds and closes after success or five failed attempts.
 
