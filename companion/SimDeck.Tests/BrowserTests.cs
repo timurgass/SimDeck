@@ -51,6 +51,18 @@ static class BrowserTests
         check((await Pair(pin,origin)).IsSuccessStatusCode,"New browser pairing works after revocation");
         using var replacement=new ClientWebSocket();replacement.Options.Cookies=cookies;replacement.Options.SetRequestHeader("Origin",origin);replacement.Options.Proxy=new WebProxy();
         await replacement.ConnectAsync(new Uri(origin.Replace("http:","ws:")+"/ws"),timeout.Token);
-        check(replacement.State==WebSocketState.Open,"New controller connects after revocation");replacement.Abort();
+        check(replacement.State==WebSocketState.Open,"New controller connects after revocation");
+
+        var latestCookies = new CookieContainer();
+        using var latestHttp = new HttpClient(new HttpClientHandler { UseProxy=false, CookieContainer=latestCookies });
+        pin=host.Browser.Pairing.Open();
+        using(var request=new HttpRequestMessage(HttpMethod.Post,origin+"/pair") { Content=JsonContent.Create(new {code=pin}) }) {
+            request.Headers.Add("Origin",origin);
+            check((await latestHttp.SendAsync(request)).IsSuccessStatusCode,"New pairing replaces an active browser session");
+        }
+        using var latest=new ClientWebSocket();latest.Options.Cookies=latestCookies;latest.Options.SetRequestHeader("Origin",origin);latest.Options.Proxy=new WebProxy();
+        await latest.ConnectAsync(new Uri(origin.Replace("http:","ws:")+"/ws"),timeout.Token);
+        check(latest.State==WebSocketState.Open,"Replacement browser receives the released controller channel");
+        latest.Abort();replacement.Abort();
     }
 }

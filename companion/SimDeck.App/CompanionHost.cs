@@ -105,6 +105,14 @@ public sealed class CompanionHost : IAsyncDisposable
         Telemetry.Reset(value ? "demo" : GameId);
     }
     public void RevokeDevices() { Store.RevokeAll(); Browser?.Revoke(); clientStop?.Cancel(); Input.ReleaseAll(); }
+    internal async Task DisconnectControllerAsync(CancellationToken cancellationToken)
+    {
+        try { clientStop?.Cancel(); } catch (ObjectDisposedException) { }
+        Input.ReleaseAll();
+        // A newly paired browser must not lose the controller race to an old tab.
+        // Wait until ServeController has released the single-controller gate.
+        if (await controller.WaitAsync(TimeSpan.FromSeconds(2), cancellationToken)) controller.Release();
+    }
     public async Task StartAsync(X509Certificate2? serverCertificate = null, bool localOnly = false)
     {
         certificate = serverCertificate ?? Store.Certificate();

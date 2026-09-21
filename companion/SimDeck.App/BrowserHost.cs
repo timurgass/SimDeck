@@ -57,7 +57,8 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
                 if (!Pairing.Consume(doc.RootElement.GetProperty("code").GetString() ?? "")) return Results.StatusCode(403);
                 var token = PairingGate.NewToken();
                 // Only hashes in memory; never add HTTP credentials to the native trust store.
-                sessions.Clear();
+                Revoke();
+                await host.DisconnectControllerAsync(c.RequestAborted);
                 sessions[PairingGate.Hash(token)] = Environment.TickCount64 + 8 * 60 * 60 * 1000;
                 c.Response.Cookies.Append(Cookie, token, new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Strict, Path = "/", MaxAge = TimeSpan.FromHours(8) });
                 return Results.Json(new { ok = true });

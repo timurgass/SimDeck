@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [ValidateSet('F1 24', 'F1 25')]
     [string]$Game = 'F1 24',

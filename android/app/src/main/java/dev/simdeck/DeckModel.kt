@@ -152,6 +152,8 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                                 "injected" -> "Команда отправлена в Windows"
                                 "released" -> "Кнопка отпущена"
                                 "game_not_focused_or_input_disabled" -> "Включите ввод в Companion и откройте окно игры"
+                                "injection_failed" -> "Windows заблокировала ввод: запустите Companion с теми же правами, что игру"
+                                "input_fault_restart_required" -> "Перезапустите Companion после ошибки ввода"
                                 "ignition_tap_required" -> "Сначала коротко нажмите IGNITION, затем удерживайте"
                                 "ignition_busy" -> "Дождитесь завершения предыдущего нажатия"
                                 "input_busy" -> "Отпустите другую кнопку и повторите"
