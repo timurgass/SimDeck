@@ -15,10 +15,6 @@
   · <a href="TROUBLESHOOTING.md">Решение проблем</a>
 </p>
 
-<p align="center">
-  <img src="docs/images/f1-race-map.png" alt="SimDeck: телеметрия F1, карта трассы и порядок пилотов" width="900">
-</p>
-
 SimDeck превращает Android-планшет, телефон или Safari на iPhone в дополнительную панель управления для **F1 24**, **F1 25** и **BeamNG.drive**. Игра передаёт телеметрию в Windows Companion, а Companion показывает приборы и отправляет игровые команды с выбранного устройства.
 
 > [!NOTE]
