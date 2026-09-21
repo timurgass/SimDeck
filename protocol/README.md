@@ -1,10 +1,10 @@
-# SimDeck wire protocol 1 — implemented subset
+# SimDeck wire protocol 1 — implemented subset (0.7.1)
 
-Transport: UTF-8 JSON over WSS. Pairing: HTTPS POST `/pair`, `{ "code": "123456", "name": "Tablet" }`; response `{ "token": "…", "protocolMajor": 1 }`. Pairing is closed until opened on the PC, expires in 120 seconds and closes after success or five failed attempts.
+Android transport: UTF-8 JSON over WSS. Pairing: HTTPS POST `/pair`, `{ "code": "123456", "name": "Tablet" }`; response `{ "token": "…", "protocolMajor": 1 }`. Pairing is closed until opened on the PC, expires in 120 seconds and closes after success or five failed attempts.
 
 The Android user compares the complete SHA-256 certificate fingerprint with Companion before pairing. Discovery TXT data is not authenticated. TLS uses a pinned certificate; changing the certificate requires pairing again. Do not log PINs, bearer tokens or authorization headers.
 
-Connect `/ws` with `Authorization: Bearer <token>`. One controlling WebSocket is permitted. Server sends `hello` with a new `sessionId`, `profileId` (`beamng-default`), `profileRevision` (1) and capabilities. All subsequent client messages include `protocolMajor: 1` and that `sessionId`.
+Connect `/ws` with `Authorization: Bearer <token>`. One controlling WebSocket is permitted. Server sends `hello` with a new `sessionId`, the selected `profileId`, `profileRevision` and capabilities. All subsequent client messages include `protocolMajor: 1` and that `sessionId`.
 
 Client messages:
 
@@ -17,13 +17,21 @@ Server `control.ack` includes `success` and `code`; `injected` means Windows acc
 
 As of 0.1.1, `hello.capabilities.gestures.ignition` is `tapThenHold`. Server `input.state` includes `ignitionReady`, initially false. A successfully completed 100-ms ignition pulse arms one subsequent hold. Attempting a hold before that returns `ignition_tap_required`. Starting the hold consumes the permission. Releasing only emits key-up, never a second press. Reset, focus loss, session changes, and release-all disarm it. The client ignores a first contact held for >=500 ms; after receiving `ignitionReady: true`, it forwards the entire next contact's duration without adding a long-press delay. Thus the game receives a real held key, rather than a delayed short pulse at finger release. This flag is input-sequence state, not game ignition telemetry.
 
-Server emits full `telemetry.snapshot` messages at up to 30 Hz. `data: null` means there is no sample; `ageMs` is source age at send time. The client adds local elapsed time since receiving the sample. Data is stale after 500 ms. `source: demo` always labels generated values. Fields have fixed units: m/s, RPM, integer gear (-1 reverse, 0 neutral), fuel/pedals as fractions 0..1. Null `maxRpm` and `fuelLiters` must not be interpreted as zero. UI's default 8000 RPM scale is explicitly labelled a display setting.
+Server emits full `telemetry.snapshot` messages at up to 10 Hz. `data: null` means there is no sample; `ageMs` is source age at send time. The client adds local elapsed time since receiving the sample. Data is stale after 500 ms. `source: demo` always labels generated values. Fields have fixed units: m/s, RPM, integer gear (-1 reverse, 0 neutral), fuel/pedals as fractions 0..1. Null `maxRpm` and `fuelLiters` must not be interpreted as zero. UI's default 8000 RPM scale is explicitly labelled a display setting.
 
-WebSocket input messages <=8 KiB; HTTP request body <=4 KiB. A bounded acknowledgement queue precedes the latest telemetry snapshot. No telemetry history queue. Socket writes have a two-second timeout.
+WebSocket input messages <=8 KiB; HTTP request body <=4 KiB. A bounded acknowledgement queue precedes the latest telemetry snapshot. No telemetry history queue. Socket writes have an eight-second timeout.
 
 Discovery: `_simdeck._tcp`, TXT `version=1`, `fingerprint=<64 lowercase hex digits>`; port currently 9443, configurable in Companion settings JSON. OutGauge is read only from loopback UDP, default 4444. This implementation does not expose UDP telemetry reception to the LAN.
 
-Known alpha gaps: no independent process watchdog for forced Companion termination, no QR, no negotiated minor versions, no editor/profile synchronisation, no HID. Changing bindings revokes pairing so an old client cannot unknowingly run changed controls.
+Known alpha gaps: no independent process watchdog for forced Companion termination, no QR, no negotiated minor versions and no virtual HID. Companion has a profile editor; changing bindings increments the profile revision and connected clients reload before using the new catalog.
+
+## Safari / browser controller (0.7.1)
+
+The browser UI is served over local HTTP on port 8787. Pairing uses `POST /pair` with a six-digit code and creates an HttpOnly same-site session cookie valid for at most eight hours or until Companion exits. `/status` returns 401 without a valid cookie. The control channel is plain `ws://<local-host>:8787/ws`; it is intended only for a trusted home network.
+
+Android and browser clients share one controller semaphore. A successful new Safari pairing revokes previous browser cookies, cancels the active controller and waits up to two seconds for the channel to be released. This lets a new iPhone replace a stale Safari tab or a still-connected Android tablet instead of entering a 409 reconnect loop. Pairing establishes authority; it does not enable Windows input by itself.
+
+`input.state.availability` is `ready`, `disabled`, `unfocused` or `demo`. Browser action buttons are disabled unless the session exists, availability is `ready`, and no composite menu sequence is running. Telemetry can remain live while input buttons are disabled. The UI instructs the user to enable input in Companion and focus the selected game process.
 
 ## Extended BeamNG UDP (SimDeck 0.1.2)
 
