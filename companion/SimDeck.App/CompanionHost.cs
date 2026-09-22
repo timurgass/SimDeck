@@ -41,12 +41,14 @@ public sealed class CompanionHost : IAsyncDisposable
     public GameProfile Profile => Store.Value.ActiveProfile;
     bool IsF1 => Profile.Id is "f1-24" or "f1-25";
     bool IsBeamNg => Profile.Id == "beamng-default";
+    bool IsAcc => Profile.Id == "acc";
     string GameId => IsBeamNg ? "beamng" : Profile.Id;
     public string TelemetryDiagnostic => IsF1
         ? f1Udp is null ? "UDP 20777 занят. Закройте другую программу телеметрии на этом порту."
         : ReceivedPackets == 0 ? $"Нет UDP-пакетов F1. Проверьте 127.0.0.1:20777, 60 Hz, формат {(Profile.Id == "f1-25" ? "2025 или 2024" : "2024")} и выйдите на трассу. Получено: 0."
         : InvalidPackets >= ReceivedPackets ? $"Получено UDP-пакетов: {ReceivedPackets}, но все отклонены. Проверьте профиль игры и формат UDP."
         : $"Нет свежих данных. Получено: {ReceivedPackets}, отклонено: {InvalidPackets}. Вернитесь на трассу."
+        : IsAcc ? accDiagnostic
         : !IsBeamNg ? "Профиль управления готов. Телеметрия для этой игры пока не подключена."
         : udp is null ? "UDP-порт занят: закройте другой экземпляр Companion."
         : ReceivedPackets == 0 ? "Нет пакетов от игры. Установите мод SimDeck и перезагрузите машину (Ctrl+R)."
@@ -61,6 +63,11 @@ public sealed class CompanionHost : IAsyncDisposable
     UdpClient? udp;
     UdpClient? f1Udp;
     F1TelemetryParser f1Parser = new();
+    readonly AccSharedMemoryReader accReader = new();
+    int lastAccPacket = int.MinValue;
+    long lastAccPacketAt;
+    long lastAccReconnect;
+    string accDiagnostic = "Ожидание ACC Shared Memory. Запустите заезд и выйдите на трассу.";
     readonly object profileGate = new();
     ServiceDiscovery? discovery;
     X509Certificate2? certificate;
@@ -101,6 +108,8 @@ public sealed class CompanionHost : IAsyncDisposable
             Backend.Enabled = false; Input.ReleaseAll(); clientStop?.Cancel();
             Store.Value.ActiveProfileId = id; ApplyBindings(); Store.Save();
             f1Parser = new(); lastExtendedPacket = 0; ReceivedPackets = InvalidPackets = 0;
+            accReader.Reset(); lastAccPacket = int.MinValue; lastAccPacketAt = lastAccReconnect = 0;
+            accDiagnostic = "Ожидание ACC Shared Memory. Запустите заезд и выйдите на трассу.";
             Telemetry.Reset(Demo ? "demo" : GameId);
         }
     }
@@ -239,6 +248,33 @@ public sealed class CompanionHost : IAsyncDisposable
                     var wave = (Math.Sin(t * 0.5) + 1) / 2;
                     Telemetry.Publish(new(15 + 45 * wave, 1500 + 5500 * wave, 2 + (int)(wave * 4), .64, wave, 0, 0, 8000));
                 }
+                else
+                {
+                    lock (profileGate)
+                    {
+                        if (IsAcc)
+                        {
+                            if (accReader.TryRead(out var packet, out var frame, out var error))
+                            {
+                                if (packet != lastAccPacket)
+                                {
+                                    lastAccPacket = packet;
+                                    lastAccPacketAt = Environment.TickCount64;
+                                    Interlocked.Increment(ref ReceivedPackets);
+                                    Telemetry.Publish(frame!);
+                                    accDiagnostic = $"ACC Shared Memory: принято {ReceivedPackets} кадров.";
+                                }
+                                else if (lastAccPacketAt > 0 && Environment.TickCount64 - lastAccPacketAt > 3000 && Environment.TickCount64 - lastAccReconnect > 2000)
+                                {
+                                    lastAccReconnect = Environment.TickCount64;
+                                    accReader.Reset();
+                                    accDiagnostic = "ACC не обновляет данные. Вернитесь на трассу.";
+                                }
+                            }
+                            else accDiagnostic = error;
+                        }
+                    }
+                }
             }
         }
         catch (OperationCanceledException) { }
@@ -350,6 +386,7 @@ public sealed class CompanionHost : IAsyncDisposable
         if (Browser is not null) await Browser.DisposeAsync();
         udp?.Dispose();
         f1Udp?.Dispose();
+        accReader.Dispose();
         discovery?.Dispose();
         if (app is not null) { await app.StopAsync(); await app.DisposeAsync(); }
         await Task.WhenAll(loops);

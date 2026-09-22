@@ -108,7 +108,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.8.0 · 7 игровых профилей · редактор кнопок на ПК", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.8.1 · 7 игровых профилей · ACC Shared Memory", color = Muted, fontSize = 11.sp)
     }
 }
 
@@ -156,10 +156,34 @@ private fun Instruments(state: DeckState, data: Telemetry?) {
                 if (state.profileId !in setOf("f1-24","f1-25")) Metric("ОБОРОТЫ", data?.let { "%.0f".format(it.rpm) } ?: "—", "RPM")
                 Metric("ТОПЛИВО", data?.fuelFraction?.let { "%.0f".format(it * 100) } ?: "—", "% бака")
             }
+            if (state.profileId == "acc") AccWheels(data?.acc)
             if (data?.maxRpm == null) Text("Шкала RPM: 8000 · настроечный предел", fontSize = 10.sp, color = Muted, modifier = Modifier.padding(top = 16.dp))
             if (state.stale && !state.demo) Text(telemetryHint(state.profileId), fontSize = 11.sp, color = Amber, modifier = Modifier.padding(top = 10.dp))
         }
     }
+}
+
+@Composable private fun AccWheels(acc: AccData?) {
+    Spacer(Modifier.height(10.dp))
+    HorizontalDivider(color = Color(0xFF304049))
+    Text("ШИНЫ И ТОРМОЗА", fontSize = 15.sp, modifier = Modifier.padding(top = 8.dp))
+    val names = listOf("Передняя левая", "Передняя правая", "Задняя левая", "Задняя правая")
+    names.indices.chunked(2).forEach { row ->
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            row.forEach { index ->
+                val wheel = acc?.wheels?.getOrNull(index)
+                Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFF17252D))) {
+                    Column(Modifier.padding(10.dp)) {
+                        Text(names[index], fontSize = 11.sp, color = Muted)
+                        Text(wheel?.let { "%.1f PSI · %.0f °C".format(it.pressure, it.coreTemperature) } ?: "—", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        Text(wheel?.let { "Тормоз %.0f °C · износ %.0f%%".format(it.brakeTemperature, it.wear) } ?: "Тормоз — · износ —", fontSize = 10.sp, color = Muted)
+                    }
+                }
+            }
+        }
+    }
+    Text(acc?.let { "Двигатель %.0f °C · трасса %.0f °C · воздух %.0f °C · баланс %.1f%%".format(it.waterTemperature, it.roadTemperature, it.airTemperature, it.brakeBias) }
+        ?: "Двигатель — · трасса — · воздух —", fontSize = 11.sp, color = Muted)
 }
 
 @Composable private fun F1Instruments(state: DeckState, data: Telemetry?) {

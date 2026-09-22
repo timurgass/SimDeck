@@ -1,4 +1,4 @@
-# SimDeck wire protocol 1 — implemented subset (0.8.0)
+# SimDeck wire protocol 1 — implemented subset (0.8.1)
 
 Android transport: UTF-8 JSON over WSS. Pairing: HTTPS POST `/pair`, `{ "code": "123456", "name": "Tablet" }`; response `{ "token": "…", "protocolMajor": 1 }`. Pairing is closed until opened on the PC, expires in 120 seconds and closes after success or five failed attempts.
 
@@ -24,6 +24,12 @@ WebSocket input messages <=8 KiB; HTTP request body <=4 KiB. A bounded acknowled
 Discovery: `_simdeck._tcp`, TXT `version=1`, `fingerprint=<64 lowercase hex digits>`; port currently 9443, configurable in Companion settings JSON. OutGauge is read only from loopback UDP, default 4444. This implementation does not expose UDP telemetry reception to the LAN.
 
 Known alpha gaps: no independent process watchdog for forced Companion termination, no QR, no negotiated minor versions and no virtual HID. Companion has a profile editor; changing bindings increments the profile revision and connected clients reload before using the new catalog.
+
+## ACC Shared Memory (0.8.1)
+
+When the selected profile is `acc`, Companion reads the local `acpmf_physics` and `acpmf_static` memory maps. It publishes a frame only when the ACC `packetId` changes, so a paused or closed game cannot keep stale measurements fresh. The normal `data` fields carry speed in m/s, RPM, converted gear (`0` reverse, `1` neutral in ACC become `-1` and `0`), fuel fraction, pedal fractions, fuel litres and maximum RPM.
+
+`data.acc.wheels` contains four records in FL, FR, RL, RR order with `pressure` in PSI, `coreTemperature` and `brakeTemperature` in °C, `wear` and `suspensionDamage` in percent, plus ACC's pad and disc life values. `data.acc` also carries air, road and water temperature, brake bias percent and engine switch states. Confirmed `accPitLimiter`, `accIgnition` and `accStarter` values are repeated in `actionStates` so all clients use the normal latched-button rendering.
 
 ## Safari / browser controller (0.7.1)
 

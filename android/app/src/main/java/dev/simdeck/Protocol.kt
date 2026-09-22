@@ -3,7 +3,7 @@ package dev.simdeck
 import org.json.JSONObject
 
 data class Telemetry(val speedMps: Double, val rpm: Double, val gear: Int, val fuelFraction: Double?, val maxRpm: Double?, val gearboxMode: String? = null, val maxGear: Int? = null,
-    val headlights: Int? = null, val actionStates: Map<String, Boolean> = emptyMap(), val f1: F1Data? = null)
+    val headlights: Int? = null, val actionStates: Map<String, Boolean> = emptyMap(), val f1: F1Data? = null, val acc: AccData? = null)
 data class DeckAction(val id: String, val page: String, val label: String, val description: String, val key: String, val gesture: String, val group: String = "")
 data class ControlFeedback(val active: Boolean? = null, val headlights: Int? = null, val description: String? = null)
 
@@ -30,7 +30,8 @@ object Protocol {
         val lights = d.optInt("headlights", -1).takeIf { !d.isNull("headlights") && it in 0..2 }
         val states = mutableMapOf<String, Boolean>()
         d.optJSONObject("actionStates")?.let { s -> s.keys().forEach { key -> (s.opt(key) as? Boolean)?.let { states[key] = it } } }
-        return Telemetry(speed, rpm, d.getInt("gear"), fuel, maximum, mode, maxGear, lights, states, F1Data.parse(d.optJSONObject("f1")))
+        return Telemetry(speed, rpm, d.getInt("gear"), fuel, maximum, mode, maxGear, lights, states,
+            F1Data.parse(d.optJSONObject("f1")), AccData.parse(d.optJSONObject("acc")))
     }
     fun feedback(action: String, data: Telemetry?, stale: Boolean): ControlFeedback {
         if (data == null || stale) return ControlFeedback()

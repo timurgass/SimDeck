@@ -31,6 +31,15 @@ class ProtocolTest {
         assertEquals(false, Protocol.feedback("ers", t, false).active)
         assertNull(Protocol.feedback("drs", t, true).active)
     }
+    @Test fun accTelemetryCarriesFourLiveWheelsAndConfirmedSwitches() {
+        val wheels = (0..3).joinToString(",") { i -> """{"pressure":${26.5+i/10.0},"coreTemperature":${80+i},"brakeTemperature":${400+i*10},"wear":$i,"padLife":29,"discLife":32,"suspensionDamage":0}""" }
+        val t = Protocol.telemetry(JSONObject("""{"data":{"speedMps":50,"rpm":6200,"gear":4,"fuelFraction":0.5,"actionStates":{"accPitLimiter":true},"acc":{"wheels":[$wheels],"airTemperature":23,"roadTemperature":32,"waterTemperature":89,"brakeBias":61,"pitLimiter":true,"ignition":true,"starter":false,"engineRunning":true}}}"""))!!
+        assertEquals(4, t.acc!!.wheels.size)
+        assertEquals(26.7, t.acc!!.wheels[2].pressure, .001)
+        assertEquals(83.0, t.acc!!.wheels[3].coreTemperature, .001)
+        assertTrue(t.acc!!.engineRunning)
+        assertEquals(true, Protocol.feedback("accPitLimiter", t, false).active)
+    }
     @Test fun customButtonKeepsItsPageKeyAndHoldGesture() {
         val a = Protocol.controls(JSONObject("""{"controls":[{"id":"custom-1","page":"Мои кнопки","label":"ТЕСТ","description":"Удерживать","key":"Ctrl+F12","gesture":"hold"}]}"""))[0]
         assertEquals("Мои кнопки", a.page); assertEquals("Ctrl+F12", a.key); assertEquals("hold", a.gesture)

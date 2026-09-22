@@ -5,7 +5,7 @@ namespace SimDeck.Core;
 public sealed record Telemetry(double SpeedMps, double Rpm, int Gear, double? FuelFraction,
     double Throttle, double Brake, double Clutch, double? MaxRpm = null, double? FuelLiters = null,
     string? GearboxMode = null, int? MaxGear = null, int? Headlights = null,
-    IReadOnlyDictionary<string, bool>? ActionStates = null, F1Details? F1 = null)
+    IReadOnlyDictionary<string, bool>? ActionStates = null, F1Details? F1 = null, AccDetails? Acc = null)
 {
     public string GearDisplay => Gear < 0 ? "R" : Gear == 0 ? "N" : GearboxMode == "arcade" ? "D" : Gear.ToString();
 }

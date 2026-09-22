@@ -13,6 +13,17 @@ using SimDeck.App;
 using SimDeck.Core;
 
 if (args.Length >= 3 && args[0] == "--smoke-app") { await AppSmoke.Run(args[1], args[2]); return; }
+if (args.Length >= 2 && args[0] == "--acc-live")
+{
+    await using var accHost = new CompanionHost(args[1]);
+    accHost.SelectProfile("acc");
+    await accHost.StartAsync(localOnly: true);
+    await Task.Delay(500);
+    var live = accHost.Telemetry.Read();
+    Console.WriteLine(JsonSerializer.Serialize(new { live.Source, live.Age, live.Data }, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    if (live.Data?.Acc is null || live.Age >= 500) Environment.ExitCode = 2;
+    return;
+}
 if (args.Length == 2 && args[0] == "--render-editor") { RenderTest.Save(args[1]); return; }
 if (args.Length >= 2 && args[0] == "--browser-server")
 {
@@ -87,6 +98,7 @@ void Check(bool condition, string name) { if (!condition) throw new Exception("F
 await ProfileTests.Run(Check, args.Length > 0 ? args[0] : Path.Combine(Path.GetTempPath(), "simdeck-profile-tests-" + Guid.NewGuid().ToString("N")));
 F1DetailTests.Run(Check);
 F1RaceTests.Run(Check);
+AccTelemetryTests.Run(Check);
 var oldKeys = new Dictionary<string, string> { ["lights"] = "N", ["horn"] = "H", ["ignition"] = "V", ["reset"] = "F10" };
 Check(BeamNgProfile.AddMissingKeys(oldKeys) && oldKeys.Count == 22 && oldKeys["reset"] == "F10", "Profile upgrade adds 18 actions and preserves user bindings");
 Check(!BeamNgProfile.AddMissingKeys(oldKeys), "Profile migration is idempotent");
