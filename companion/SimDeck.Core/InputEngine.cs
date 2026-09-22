@@ -6,7 +6,8 @@ public interface IInputBackend
     bool Send(ushort scanCode, bool down);
 }
 
-public sealed record Binding(string ActionId, ushort ScanCode, string Gesture = "press", ushort[]? Modifiers = null);
+public sealed record Binding(string ActionId, ushort ScanCode, string Gesture = "press", ushort[]? Modifiers = null,
+    ushort[]? Sequence = null);
 public sealed record InputResult(bool Success, string Code);
 
 public sealed class InputEngine
@@ -64,6 +65,25 @@ public sealed class InputEngine
             };
             if (!allowed) return new(false, "invalid_gesture");
             if (!backend.CanInject) { ReleaseAllLocked(); return new(false, "game_not_focused_or_input_disabled"); }
+            if (binding.Sequence is { Length: > 0 } sequence)
+            {
+                if (phase != "press" || held.Count > 0) return new(false, "input_busy");
+                if (!usedPresses.Add(pressId)) return new(false, "closed_press");
+                foreach (var code in sequence)
+                {
+                    if (!backend.Send(code, true)) return new(false, "injection_failed");
+                    // ACC reads an MFD value change only while the key spans a rendered frame.
+                    Thread.Sleep(120);
+                    if (!backend.Send(code, false))
+                    {
+                        LastFault = "Не удалось отпустить клавишу последовательности. Перезапустите Companion.";
+                        return new(false, "injection_failed");
+                    }
+                    // A second gap keeps consecutive navigation steps in separate frames.
+                    Thread.Sleep(80);
+                }
+                return new(true, "sequence_injected");
+            }
             var isIgnition = binding.Gesture == "tapThenHold";
             if (isIgnition && phase == "down" && !ignitionReady) return new(false, "ignition_tap_required");
             if (isIgnition && held.Values.Any(x => x.Keys.Contains(binding.ScanCode))) return new(false, "ignition_busy");

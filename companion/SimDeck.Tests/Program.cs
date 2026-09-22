@@ -214,6 +214,17 @@ Check(!engine.Invoke("s1", "c9", "reset", "press", "p6").Success, "Unfocused inj
 backend.CanInject = true; engine.BeginSession("s2"); Check(!engine.Invoke("s1", "c10", "horn", "down", "p7").Success, "Old session rejected");
 engine.Invoke("s2", "c11", "horn", "down", "p8"); engine.EndSession("s2"); Check(engine.HeldCount == 0, "Disconnect releases hold");
 
+var sequenceBackend = new FakeInput();
+var sequences = new InputEngine(sequenceBackend, () => now);
+ushort[] ignitionOffSequence = [60, .. Enumerable.Repeat((ushort)80, 12), 75];
+sequences.Configure([new("accIgnitionOff", 60, Sequence: ignitionOffSequence)]);
+sequences.BeginSession("sequence-session");
+Check(sequences.Invoke("sequence-session", "seq1", "accIgnitionOff", "press", "seq-press").Code == "sequence_injected"
+    && sequenceBackend.Events.SequenceEqual(ignitionOffSequence.SelectMany(key => new[] { (key, true), (key, false) })),
+    "ACC ignition-off macro injects F2, twelve Down presses and Left in order");
+Check(sequences.Invoke("sequence-session", "seq2", "accIgnitionOff", "down", "seq-hold").Code == "invalid_gesture",
+    "Input sequences remain press-only");
+
 var ignitionBackend = new FakeInput();
 var ignition = new InputEngine(ignitionBackend, () => now);
 ignition.Configure([new("ignition", 47, "tapThenHold"), new("lights", 49), new("reset", 19)]);

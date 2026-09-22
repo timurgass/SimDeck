@@ -3,14 +3,14 @@
 <p align="center"><strong>Your rig. One touch.</strong></p>
 
 <p align="center">
-  <img alt="Release 0.8.2" src="https://img.shields.io/badge/release-0.8.2-7dd3c0?style=flat-square">
+  <img alt="Release 0.8.3" src="https://img.shields.io/badge/release-0.8.3-7dd3c0?style=flat-square">
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-4f8cc9?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Android" src="https://img.shields.io/badge/Android-10%2B-3ddc84?style=flat-square&logo=android&logoColor=white">
   <img alt="Safari" src="https://img.shields.io/badge/iPhone-Safari-4f8cc9?style=flat-square&logo=safari&logoColor=white">
 </p>
 
 <p align="center">
-  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.8.2"><strong>Скачать SimDeck 0.8.2</strong></a>
+  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.8.3"><strong>Скачать SimDeck 0.8.3</strong></a>
   · <a href="#быстрый-запуск">Быстрый запуск</a>
   · <a href="TROUBLESHOOTING.md">Решение проблем</a>
 </p>
@@ -24,12 +24,12 @@ SimDeck превращает Android-планшет, телефон или Safar
 
 | Файл | Для чего нужен |
 |---|---|
-| [SimDeck-0.8.2-Windows.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.2/SimDeck-0.8.2-Windows.zip) | Автономный Windows Companion x64 |
-| [SimDeck-0.8.2-debug.apk](https://github.com/timurgass/SimDeck/releases/download/v0.8.2/SimDeck-0.8.2-debug.apk) | Клиент для Android 10 и новее |
-| [SimDeck-ACC-Preset-0.8.2.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.2/SimDeck-ACC-Preset-0.8.2.zip) | Готовые 33 клавиатурные команды ACC с резервной копией |
-| [SimDeck-F1-Preset-0.7.1.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.2/SimDeck-F1-Preset-0.7.1.zip) | Установщик Keyboard Preset 2 для F1 24 и F1 25 |
-| [SimDeck-0.2.1-BeamNG.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.2/SimDeck-0.2.1-BeamNG.zip) | Мод расширенной телеметрии BeamNG.drive |
-| [SimDeck-0.8.2-SHA256SUMS.txt](https://github.com/timurgass/SimDeck/releases/download/v0.8.2/SimDeck-0.8.2-SHA256SUMS.txt) | Контрольные суммы файлов релиза |
+| [SimDeck-0.8.3-Windows.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.3/SimDeck-0.8.3-Windows.zip) | Автономный Windows Companion x64 |
+| [SimDeck-0.8.3-debug.apk](https://github.com/timurgass/SimDeck/releases/download/v0.8.3/SimDeck-0.8.3-debug.apk) | Клиент для Android 10 и новее |
+| [SimDeck-ACC-Preset-0.8.3.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.3/SimDeck-ACC-Preset-0.8.3.zip) | 33 команды ACC, ручное зажигание и резервные копии настроек |
+| [SimDeck-F1-Preset-0.7.1.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.3/SimDeck-F1-Preset-0.7.1.zip) | Установщик Keyboard Preset 2 для F1 24 и F1 25 |
+| [SimDeck-0.2.1-BeamNG.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.3/SimDeck-0.2.1-BeamNG.zip) | Мод расширенной телеметрии BeamNG.drive |
+| [SimDeck-0.8.3-SHA256SUMS.txt](https://github.com/timurgass/SimDeck/releases/download/v0.8.3/SimDeck-0.8.3-SHA256SUMS.txt) | Контрольные суммы файлов релиза |
 
 Для iPhone отдельное приложение не требуется: локальный Safari-пульт запускается из Companion.
 
@@ -84,7 +84,7 @@ Companion показывает состояние подключения, вхо
 
 ### 1. Запустите Companion
 
-1. Скачайте и полностью распакуйте `SimDeck-0.8.2-Windows.zip`.
+1. Скачайте и полностью распакуйте `SimDeck-0.8.3-Windows.zip`.
 2. Запустите `SimDeck.exe`. Переносить один EXE из папки нельзя.
 3. Выберите профиль игры и оставьте Companion запущенным.
 
@@ -134,12 +134,12 @@ Companion показывает состояние подключения, вхо
 <details>
 <summary><strong>ACC</strong></summary>
 
-1. Полностью закройте ACC и распакуйте `SimDeck-ACC-Preset-0.8.2.zip`.
-2. Запустите `Install-ACC.cmd`: он сохранит резервную копию и добавит клавиши, не меняя руль и педали.
+1. Полностью закройте ACC и распакуйте `SimDeck-ACC-Preset-0.8.3.zip`.
+2. Запустите `Install-ACC.cmd`: он сохранит резервные копии, добавит клавиши и включит ручное управление двигателем, не меняя руль и педали.
 3. Выберите профиль **Assetto Corsa Competizione** в Companion.
 4. Запустите ACC и выйдите на трассу. Дополнительные настройки телеметрии не требуются.
 
-На Android и в Safari отображаются скорость, RPM, передача, топливо, давление и температура шин, температура тормозов, температура двигателя и подтверждённые состояния пит-лимитера и зажигания.
+На Android и в Safari отображаются скорость, RPM, передача, топливо, давление и температура шин, температура тормозов, температура двигателя и подтверждённые состояния пит-лимитера и зажигания. Кнопка **ЗАЖИГАНИЕ ВЫКЛ** использует проверенную штатную страницу электроники MFD.
 
 </details>
 
@@ -151,7 +151,7 @@ Companion показывает состояние подключения, вхо
 3. Назначьте те же клавиши соответствующим действиям в настройках игры.
 4. При необходимости измените клавиши в редакторе Companion и сохраните профиль.
 
-В версии 0.8.2 эти три профиля работают как button box. Они не выдают синтетические приборы за игровую телеметрию: до подключения соответствующего адаптера значения остаются пустыми.
+В версии 0.8.3 эти три профиля работают как button box. Они не выдают синтетические приборы за игровую телеметрию: до подключения соответствующего адаптера значения остаются пустыми.
 
 </details>
 
@@ -206,9 +206,9 @@ flowchart LR
 | F1 не показывает данные | Проверьте UDP `127.0.0.1:20777`, формат и счётчики пакетов в Companion |
 | BeamNG не показывает данные | Проверьте мод, порт `4444` и перезагрузите машину через `Ctrl+R` |
 | ACC показывает прочерки | Запустите заезд и выйдите на трассу; Companion читает Shared Memory автоматически |
-| ACC выполняет другие действия | Закройте игру и установите `SimDeck-ACC-Preset-0.8.2.zip` |
-| Android переподключается | Обновите APK и Companion до 0.8.2; проверьте причину на странице подключения |
-| AMS2 / ETS2 / SnowRunner показывают прочерки | В 0.8.2 для них готово управление; адаптеры телеметрии ещё не подключены |
+| ACC выполняет другие действия | Закройте игру и установите `SimDeck-ACC-Preset-0.8.3.zip` |
+| Android переподключается | Обновите APK и Companion до 0.8.3; проверьте причину на странице подключения |
+| AMS2 / ETS2 / SnowRunner показывают прочерки | В 0.8.3 для них готово управление; адаптеры телеметрии ещё не подключены |
 | Новый профиль не реагирует на кнопку | Назначьте предложенную клавишу этому действию в самой игре и верните фокус её окну |
 | Safari долго загружается | Проверьте одну Wi-Fi-сеть и откройте новый адрес после перезапуска Companion |
 
@@ -250,6 +250,6 @@ Android SDK задаётся через `ANDROID_HOME` или локальный
 
 ## Текущий статус
 
-Версия 0.8.2 добавляет готовый пресет 33 команд ACC, отдельное выключение зажигания и восстановление Android/Safari без цикла `409` после краткого обрыва. На реальном заезде ранее проверены скорость, RPM, передача, топливо, четыре шины, тормоза и состояние двигателя ACC. Профили AMS2, ETS2 и SnowRunner пока требуют ручной сверки назначений; для F1 25 остаётся полный ручной прогон всех 69 действий.
+Версия 0.8.3 исправляет выключение зажигания ACC через штатную страницу электроники MFD и сохраняет восстановление Android/Safari без цикла `409` после краткого обрыва. На реальном заезде ранее проверены скорость, RPM, передача, топливо, четыре шины, тормоза и состояние двигателя ACC. Профили AMS2, ETS2 и SnowRunner пока требуют ручной сверки назначений; для F1 25 остаётся полный ручной прогон всех 69 действий.
 
 Настройки Companion находятся в `%LOCALAPPDATA%/SimDeck/settings.json`. Доверенные устройства можно отключить кнопкой **«Отозвать доступ»**.

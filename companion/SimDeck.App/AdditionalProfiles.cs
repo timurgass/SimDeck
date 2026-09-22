@@ -2,7 +2,7 @@ namespace SimDeck.App;
 
 public static class AdditionalProfiles
 {
-    public const int CatalogVersion = 2;
+    public const int CatalogVersion = 3;
 
     public static IReadOnlyList<GameProfile> All() =>
     [
@@ -13,7 +13,7 @@ public static class AdditionalProfiles
     [
         A("accPitLimiter", "Гонка", "ПИТ-ЛИМИТЕР", "Pit Limiter", "P", group: "Машина"),
         A("accIgnition", "Гонка", "ЗАЖИГАНИЕ ВКЛ", "Ignition Sequence On", "I", group: "Машина"),
-        A("accIgnitionOff", "Гонка", "ЗАЖИГАНИЕ ВЫКЛ", "Ignition Off", "O", group: "Машина"),
+        A("accIgnitionOff", "Гонка", "ЗАЖИГАНИЕ ВЫКЛ", "Штатно через страницу электроники MFD", "F2", group: "Машина"),
         A("accStarter", "Гонка", "СТАРТЕР", "Starter · удерживайте", "S", "hold", "Машина"),
         A("accHeadlights", "Гонка", "ФАРЫ", "Headlights", "L", group: "Машина"),
         A("accFlash", "Гонка", "МИГНУТЬ", "Flasher · удерживайте", "H", "hold", "Машина"),
@@ -46,7 +46,7 @@ public static class AdditionalProfiles
         A("accDashUp", "MFD", "ДИСПЛЕЙ +", "Display Page Up", "PageUp", group: "Страницы"),
         A("accDashDown", "MFD", "ДИСПЛЕЙ −", "Display Page Down", "PageDown", group: "Страницы"),
         A("accRequestPit", "MFD", "ОТКРЫТЬ ПИТ-СТОП", "Open Pit Stop MFD", "F1", group: "Пит-стоп")
-    ], 2);
+    ], 3);
 
     public static GameProfile UpgradeAcc(GameProfile existing)
     {

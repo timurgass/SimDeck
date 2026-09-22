@@ -85,7 +85,17 @@ public sealed class CompanionHost : IAsyncDisposable
     }
     public void ApplyBindings()
     {
-        var bindings = Profile.Actions.Select(x => WindowsInput.ParseBinding(x.Id, x.Key, x.Gesture)).ToArray();
+        var bindings = Profile.Actions.Select(x =>
+        {
+            var binding = WindowsInput.ParseBinding(x.Id, x.Key, x.Gesture);
+            if (Profile.Id == "acc" && x.Id == "accIgnitionOff")
+                binding = binding with
+                {
+                    Sequence = [WindowsInput.ParseKey("F2"),
+                        .. Enumerable.Repeat(WindowsInput.ParseKey("Down"), 12), WindowsInput.ParseKey("Left")]
+                };
+            return binding;
+        }).ToArray();
         Input.Configure(bindings);
         Backend.TargetProcess = Profile.TargetProcess;
     }

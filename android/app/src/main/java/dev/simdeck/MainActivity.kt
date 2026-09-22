@@ -108,7 +108,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.8.2 · 7 игровых профилей · ACC Shared Memory", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.8.3 · 7 игровых профилей · ACC Shared Memory", color = Muted, fontSize = 11.sp)
     }
 }
 
