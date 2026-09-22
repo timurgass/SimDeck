@@ -2,7 +2,7 @@ namespace SimDeck.App;
 
 public static class AdditionalProfiles
 {
-    public const int CatalogVersion = 1;
+    public const int CatalogVersion = 2;
 
     public static IReadOnlyList<GameProfile> All() =>
     [
@@ -12,7 +12,8 @@ public static class AdditionalProfiles
     public static GameProfile Acc() => new("acc", "Assetto Corsa Competizione", "AC2-Win64-Shipping",
     [
         A("accPitLimiter", "Гонка", "ПИТ-ЛИМИТЕР", "Pit Limiter", "P", group: "Машина"),
-        A("accIgnition", "Гонка", "ЗАЖИГАНИЕ", "Ignition", "I", group: "Машина"),
+        A("accIgnition", "Гонка", "ЗАЖИГАНИЕ ВКЛ", "Ignition Sequence On", "I", group: "Машина"),
+        A("accIgnitionOff", "Гонка", "ЗАЖИГАНИЕ ВЫКЛ", "Ignition Off", "O", group: "Машина"),
         A("accStarter", "Гонка", "СТАРТЕР", "Starter · удерживайте", "S", "hold", "Машина"),
         A("accHeadlights", "Гонка", "ФАРЫ", "Headlights", "L", group: "Машина"),
         A("accFlash", "Гонка", "МИГНУТЬ", "Flasher · удерживайте", "H", "hold", "Машина"),
@@ -26,8 +27,8 @@ public static class AdditionalProfiles
 
         A("accTcUp", "Электроника", "TC +", "Increase Traction Control", "Ctrl+T", group: "Помощники"),
         A("accTcDown", "Электроника", "TC −", "Decrease Traction Control", "Alt+T", group: "Помощники"),
-        A("accTc2Up", "Электроника", "TC2 +", "Increase Traction Control 2", "Ctrl+D2", group: "Помощники"),
-        A("accTc2Down", "Электроника", "TC2 −", "Decrease Traction Control 2", "Alt+D2", group: "Помощники"),
+        A("accTc2Up", "Электроника", "TC2 +", "Increase TC Cut", "Ctrl+D2", group: "Помощники"),
+        A("accTc2Down", "Электроника", "TC2 −", "Decrease TC Cut", "Alt+D2", group: "Помощники"),
         A("accAbsUp", "Электроника", "ABS +", "Increase ABS", "Ctrl+A", group: "Помощники"),
         A("accAbsDown", "Электроника", "ABS −", "Decrease ABS", "Alt+A", group: "Помощники"),
         A("accMapUp", "Электроника", "КАРТА +", "Increase Engine Map", "Ctrl+M", group: "Двигатель"),
@@ -41,11 +42,19 @@ public static class AdditionalProfiles
         A("accMfdRight", "MFD", "ВПРАВО", "MFD Right", "Right", group: "Навигация"),
         A("accMfdSelect", "MFD", "ВЫБРАТЬ", "MFD Select", "Return", group: "Навигация"),
         A("accMfdBack", "MFD", "НАЗАД", "MFD Back", "Back", group: "Навигация"),
-        A("accMfdCycle", "MFD", "СЛЕДУЮЩАЯ СТРАНИЦА", "Cycle MFD", "Insert", group: "Страницы"),
+        A("accMfdCycle", "MFD", "СЛЕДУЮЩАЯ СТРАНИЦА", "Cycle HUD MFD", "Insert", group: "Страницы"),
         A("accDashUp", "MFD", "ДИСПЛЕЙ +", "Display Page Up", "PageUp", group: "Страницы"),
         A("accDashDown", "MFD", "ДИСПЛЕЙ −", "Display Page Down", "PageDown", group: "Страницы"),
-        A("accRequestPit", "MFD", "ЗАПРОС ПИТ-СТОПА", "Request Pit Stop", "F1", group: "Пит-стоп")
-    ], 1);
+        A("accRequestPit", "MFD", "ОТКРЫТЬ ПИТ-СТОП", "Open Pit Stop MFD", "F1", group: "Пит-стоп")
+    ], 2);
+
+    public static GameProfile UpgradeAcc(GameProfile existing)
+    {
+        var current = Acc();
+        var factoryIds = current.Actions.Select(x => x.Id).Append("accIgnition").ToHashSet(StringComparer.Ordinal);
+        var custom = existing.Actions.Where(x => !factoryIds.Contains(x.Id)).ToList();
+        return current with { Actions = current.Actions.Concat(custom).ToList(), Revision = Math.Max(current.Revision, existing.Revision + 1) };
+    }
 
     public static GameProfile Automobilista2() => new("ams2", "Automobilista 2", "AMS2AVX",
     [

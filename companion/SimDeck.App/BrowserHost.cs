@@ -75,7 +75,8 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
             }
             using var cleanup = lifetime;
             c.RequestAborted = lifetime.Token;
-            await host.ServeController(c, "Safari / браузер");
+            var browserToken = c.Request.Cookies[Cookie]!;
+            await host.ServeController(c, "Safari / браузер", "browser:" + PairingGate.Hash(browserToken));
         });
         await app.StartAsync();
     }

@@ -324,6 +324,18 @@ do { fullPart = await f1Socket.ReceiveAsync(new ArraySegment<byte>(fullBuffer, f
 using var f1Hello = JsonDocument.Parse(fullBuffer.AsMemory(0, fullOffset));
 var wireActions = JsonSerializer.Deserialize<List<DeckAction>>(f1Hello.RootElement.GetProperty("controls"), new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
 Check(wireActions.SequenceEqual(GameProfiles.F1().Actions), "Actual WSS handshake delivers all 69 F1 bindings, groups and gestures");
+using var resumedSocket = new ClientWebSocket();
+resumedSocket.Options.Proxy = new WebProxy();
+resumedSocket.Options.RemoteCertificateValidationCallback = (_, c, _, _) => c?.GetCertHashString(HashAlgorithmName.SHA256) == expected;
+resumedSocket.Options.SetRequestHeader("Authorization", "Bearer " + token);
+await resumedSocket.ConnectAsync(new Uri(baseUrl.Replace("https:", "wss:") + "/ws"), f1Timeout.Token);
+var resumedBuffer = new byte[65536];
+var resumedLength = 0;
+WebSocketReceiveResult resumedPart;
+do { resumedPart = await resumedSocket.ReceiveAsync(new ArraySegment<byte>(resumedBuffer, resumedLength, resumedBuffer.Length - resumedLength), f1Timeout.Token); resumedLength += resumedPart.Count; } while (!resumedPart.EndOfMessage);
+using var resumedHello = JsonDocument.Parse(resumedBuffer.AsMemory(0, resumedLength));
+Check(resumedHello.RootElement.GetProperty("type").GetString() == "hello", "Same paired device replaces its stale controller socket without a 409 reconnect loop");
+resumedSocket.Abort();
 f1Socket.Abort();
 host.RevokeDevices(); Check(!host.Store.IsTrusted(token), "Device token revoked");
 ws.Abort();

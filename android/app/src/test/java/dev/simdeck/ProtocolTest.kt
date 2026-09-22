@@ -7,6 +7,7 @@ class ProtocolTest {
     @Test fun transportUsesApplicationHeartbeatWithoutCompetingPingDeadline() {
         val client = PinnedTls.client("a".repeat(64))
         assertEquals(0, client.pingIntervalMillis)
+        assertEquals(0, client.readTimeoutMillis)
         client.dispatcher.executorService.shutdown()
     }
     @Test fun fullF1CatalogHasNoTruncationAndPreservesNavigationGroups() {

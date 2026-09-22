@@ -58,7 +58,9 @@ public sealed class CompanionHost : IAsyncDisposable
     readonly CancellationTokenSource stop = new();
     static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     readonly SemaphoreSlim controller = new(1, 1);
+    readonly object controllerGate = new();
     CancellationTokenSource? clientStop;
+    string? activeControllerKey;
     WebApplication? app;
     UdpClient? udp;
     UdpClient? f1Udp;
@@ -126,10 +128,15 @@ public sealed class CompanionHost : IAsyncDisposable
         Store.Value.UseVirtualKeyInput = value;
         Store.Save();
     }
-    public void RevokeDevices() { Store.RevokeAll(); Browser?.Revoke(); clientStop?.Cancel(); Input.ReleaseAll(); }
+    public void RevokeDevices() { Store.RevokeAll(); Browser?.Revoke(); CancelActiveController(); Input.ReleaseAll(); }
+    void CancelActiveController()
+    {
+        lock (controllerGate)
+            try { clientStop?.Cancel(); } catch (ObjectDisposedException) { }
+    }
     internal async Task DisconnectControllerAsync(CancellationToken cancellationToken)
     {
-        try { clientStop?.Cancel(); } catch (ObjectDisposedException) { }
+        CancelActiveController();
         Input.ReleaseAll();
         // A newly paired browser must not lose the controller race to an old tab.
         // Wait until ServeController has released the single-controller gate.
@@ -284,14 +291,25 @@ public sealed class CompanionHost : IAsyncDisposable
         var authorization = context.Request.Headers.Authorization.ToString();
         var token = authorization.StartsWith("Bearer ", StringComparison.Ordinal) ? authorization[7..] : "";
         if (!Store.IsTrusted(token)) { context.Response.StatusCode = 401; return; }
-        await ServeController(context, "Android");
+        await ServeController(context, "Android", "android:" + PairingGate.Hash(token));
     }
-    internal async Task ServeController(HttpContext context, string device)
+    internal async Task ServeController(HttpContext context, string device, string? controllerKey = null)
     {
         if (!context.WebSockets.IsWebSocketRequest) { context.Response.StatusCode = 400; return; }
-        if (!await controller.WaitAsync(0)) { context.Response.StatusCode = 409; return; }
+        var replacingSameController = false;
+        if (controllerKey is not null)
+        {
+            lock (controllerGate)
+            {
+                replacingSameController = activeControllerKey == controllerKey && clientStop is not null;
+                if (replacingSameController)
+                    try { clientStop!.Cancel(); } catch (ObjectDisposedException) { }
+            }
+        }
+        if (!await controller.WaitAsync(replacingSameController ? TimeSpan.FromSeconds(2) : TimeSpan.Zero))
+        { context.Response.StatusCode = 409; return; }
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(stop.Token, context.RequestAborted);
-        clientStop = lifetime;
+        lock (controllerGate) { clientStop = lifetime; activeControllerKey = controllerKey; }
         var session = Guid.NewGuid().ToString("N");
         try
         {
@@ -311,7 +329,16 @@ public sealed class CompanionHost : IAsyncDisposable
         }
         catch (Exception ex) when (ex is OperationCanceledException or WebSocketException or IOException or JsonException or InvalidOperationException or KeyNotFoundException)
         { LastCommand = "Соединение закрыто · " + ex.GetType().Name; }
-        finally { Input.EndSession(session); Device = "Не подключено"; clientStop = null; controller.Release(); }
+        finally
+        {
+            Input.EndSession(session);
+            lock (controllerGate)
+            {
+                if (ReferenceEquals(clientStop, lifetime))
+                { Device = "Не подключено"; clientStop = null; activeControllerKey = null; }
+            }
+            controller.Release();
+        }
     }
     async Task SendLoop(WebSocket socket, ChannelReader<object> responses, string session, CancellationToken ct)
     {

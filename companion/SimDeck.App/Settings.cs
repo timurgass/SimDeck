@@ -66,7 +66,12 @@ public sealed class SettingsStore
         if (Value.ProfileCatalogVersion < AdditionalProfiles.CatalogVersion)
         {
             foreach (var profile in AdditionalProfiles.All())
-                if (Value.Profiles.All(existing => existing.Id != profile.Id)) Value.Profiles.Add(profile);
+            {
+                var index = Value.Profiles.FindIndex(existing => existing.Id == profile.Id);
+                if (index < 0) Value.Profiles.Add(profile);
+                else if (profile.Id == "acc" && Value.ProfileCatalogVersion < 2)
+                    Value.Profiles[index] = AdditionalProfiles.UpgradeAcc(Value.Profiles[index]);
+            }
             Value.ProfileCatalogVersion = AdditionalProfiles.CatalogVersion;
             Save();
         }

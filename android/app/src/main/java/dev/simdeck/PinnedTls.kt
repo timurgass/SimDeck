@@ -28,7 +28,7 @@ object PinnedTls {
         return OkHttpClient.Builder().proxy(java.net.Proxy.NO_PROXY).sslSocketFactory(ssl.socketFactory, trust).hostnameVerifier(verifier)
             // DeckModel watches incoming snapshots (10 s), while input leases expire in
             // 500 ms. A second 2 s ping deadline caused reconnects under tablet/PC load.
-            .connectTimeout(5, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS).pingInterval(0, TimeUnit.SECONDS).build()
+            .connectTimeout(5, TimeUnit.SECONDS).readTimeout(0, TimeUnit.SECONDS).pingInterval(0, TimeUnit.SECONDS).build()
     }
 }
 

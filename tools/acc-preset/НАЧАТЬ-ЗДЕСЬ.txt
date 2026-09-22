@@ -1,0 +1,7 @@
+SIMDECK ACC PRESET
+
+1. Полностью закройте Assetto Corsa Competizione.
+2. Дважды нажмите Install-ACC.cmd.
+3. Запустите игру и выберите профиль ACC в SimDeck Companion.
+
+Установщик сохраняет резервную копию controls.json и не меняет руль или педали.

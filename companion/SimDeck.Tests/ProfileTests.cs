@@ -18,6 +18,8 @@ static class ProfileTests
         check(full25.Actions.SequenceEqual(full.Actions) && full25.TargetProcess == "F1_25", "F1 25 reuses the verified bindings with its own process target");
         check(additional.Select(p => p.Id).SequenceEqual(new[] { "acc", "ams2", "ets2", "snowrunner" }) && additional.All(p => p.Actions.Count >= 25 && p.Actions.Select(a => a.Page).Distinct().Count() >= 3), "ACC, AMS2, ETS2 and SnowRunner ship complete multi-page button-box profiles");
         check(additional.Select(p => p.TargetProcess).SequenceEqual(new[] { "AC2-Win64-Shipping", "AMS2AVX", "eurotrucks2", "SnowRunner" }), "Additional profiles target the actual Windows game processes");
+        var acc = AdditionalProfiles.Acc();
+        check(acc.Actions.Single(a => a.Id == "accIgnition").Key == "I" && acc.Actions.Single(a => a.Id == "accIgnitionOff").Key == "O", "ACC exposes separate ignition on and ignition off controls");
         check(full.Actions.All(a => a.Id is not ("drs" or "ers") && a.Group != "Вождение"), "Removed driving and overtake buttons stay absent");
         var fixture = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "fixtures", "f1-preset.json")));
         var expectedActions = JsonSerializer.Deserialize<List<DeckAction>>(fixture.RootElement.GetProperty("controls"), new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
@@ -35,6 +37,11 @@ static class ProfileTests
         var twice = new SettingsStore(migrationPath);
         check(twice.Value.ActiveProfile.Actions.All(a => a.Id != "radio") && twice.Value.ActiveProfile.Revision == 9, "F1 migration is one-time and does not undo later edits");
         check(new ButtonRow(full.Actions.First()).ToAction() == full.Actions.First(), "Companion editor preserves subgroup metadata");
+        var accMigrationPath = Path.Combine(directory, "acc-preset-migration"); Directory.CreateDirectory(accMigrationPath);
+        var oldAcc = new GameProfile("acc", "Assetto Corsa Competizione", "AC2-Win64-Shipping", [new("accIgnition", "Гонка", "ЗАЖИГАНИЕ", "", "Z"), new("acc-custom", "Свои", "CUSTOM", "", "F12")], 4);
+        File.WriteAllText(Path.Combine(accMigrationPath, "settings.json"), JsonSerializer.Serialize(new Settings { ActiveProfileId = "acc", Profiles = [oldAcc], F1PresetVersion = 2, ProfileCatalogVersion = 1 }));
+        var accMigrated = new SettingsStore(accMigrationPath);
+        check(accMigrated.Value.ActiveProfile.Actions.Single(a => a.Id == "accIgnition").Key == "I" && accMigrated.Value.ActiveProfile.Actions.Single(a => a.Id == "accIgnitionOff").Key == "O" && accMigrated.Value.ActiveProfile.Actions.Any(a => a.Id == "acc-custom"), "ACC preset migration fixes built-in bindings and preserves user-added buttons");
         long now = 1000;
         var parser = new F1TelemetryParser(() => now);
         check(parser.TryParse(Packet(6), out var t) && t!.Gear == 7 && t.SpeedMps == 75 && t.Rpm == 11500 && t.FuelFraction is null && t.ActionStates!["drs"], "F1 selects player car and converts km/h without waiting for status");
