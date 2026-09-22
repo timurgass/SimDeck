@@ -6,6 +6,8 @@ public static class GameProfiles
 {
     public const int MaxActions = 96;
     public const int F1PresetVersion = 2;
+    public static readonly HashSet<string> KnownIds =
+    ["beamng-default", "f1-24", "f1-25", "acc", "ams2", "ets2", "snowrunner"];
     public static GameProfile F1()
     {
         using var stream = typeof(GameProfiles).Assembly.GetManifestResourceStream("SimDeck.F1Preset.json")!;
@@ -29,7 +31,7 @@ public static class GameProfiles
 
     public static void Validate(GameProfile p)
     {
-        if (p.Id is not ("beamng-default" or "f1-24" or "f1-25")) throw new ArgumentException("Неизвестный профиль.");
+        if (!KnownIds.Contains(p.Id)) throw new ArgumentException("Неизвестный профиль.");
         if (string.IsNullOrWhiteSpace(p.TargetProcess) || p.TargetProcess.IndexOfAny(['/', '\\']) >= 0) throw new ArgumentException("Введите имя процесса без пути.");
         if (p.Actions.Count is < 1 or > MaxActions) throw new ArgumentException("В профиле должно быть от 1 до 96 кнопок.");
         if (p.Actions.Select(a => a.Id).Distinct().Count() != p.Actions.Count) throw new ArgumentException("Повторяющиеся идентификаторы кнопок.");
@@ -42,4 +44,15 @@ public static class GameProfiles
             WindowsInput.ParseBinding(a.Id, a.Key, a.Gesture);
         }
     }
+
+    public static string Help(GameProfile profile) => profile.Id switch
+    {
+        "f1-24" or "f1-25" => $"{profile.Name} · SimDeck 75: выберите изменённый Keyboard Preset 2. MFD — B, лимитер — P. 69 кнопок в трёх разделах; без нампада.",
+        "beamng-default" => "BeamNG: мод SimDeck → 127.0.0.1:4444. Подсветка берётся из машины. Для новых клавиш, которых нет в телеметрии, отображается только физическое нажатие.",
+        "acc" => "ACC: назначьте клавиши SimDeck в Controls. Профиль содержит гонку, электронику и MFD; телеметрия Shared Memory будет подключена отдельно.",
+        "ams2" => "Automobilista 2: назначьте клавиши SimDeck в Controls. Для будущей телеметрии включите Shared Memory → Project CARS 2.",
+        "ets2" => "ETS2: назначьте те же клавиши в Keys & Buttons. Этот профиль пока работает как button box без телеметрии.",
+        "snowrunner" => "SnowRunner: сверьте назначения в Settings → Controls. Этот профиль пока работает как button box без телеметрии.",
+        _ => profile.Name
+    };
 }

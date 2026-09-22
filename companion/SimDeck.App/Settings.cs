@@ -18,6 +18,7 @@ public sealed class Settings
     public string ActiveProfileId { get; set; } = "beamng-default";
     public List<GameProfile> Profiles { get; set; } = [];
     public int F1PresetVersion { get; set; }
+    public int ProfileCatalogVersion { get; set; }
     [System.Text.Json.Serialization.JsonIgnore]
     public GameProfile ActiveProfile => Profiles.Single(p => p.Id == ActiveProfileId);
 }
@@ -60,6 +61,13 @@ public sealed class SettingsStore
         {
             if (Value.Profiles.All(p => p.Id != "f1-25")) Value.Profiles.Add(GameProfiles.F125());
             Value.F1PresetVersion = 2;
+            Save();
+        }
+        if (Value.ProfileCatalogVersion < AdditionalProfiles.CatalogVersion)
+        {
+            foreach (var profile in AdditionalProfiles.All())
+                if (Value.Profiles.All(existing => existing.Id != profile.Id)) Value.Profiles.Add(profile);
+            Value.ProfileCatalogVersion = AdditionalProfiles.CatalogVersion;
             Save();
         }
         foreach (var p in Value.Profiles) GameProfiles.Validate(p);

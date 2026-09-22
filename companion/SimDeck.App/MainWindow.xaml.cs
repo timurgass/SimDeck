@@ -60,9 +60,10 @@ public partial class MainWindow : Window
         SourceLabel.Text = t.Source == "demo" ? "ДЕМОНСТРАЦИЯ · не данные игры" : host.Profile.Name + (fresh ? " · данные поступают" : " · нет свежих данных");
         SpeedLabel.Text = fresh ? (t.Data!.SpeedMps * 3.6).ToString("0") : "—";
         RpmLabel.Text = fresh ? $"{t.Data!.Rpm:0} RPM   /   {t.Data.GearDisplay}" : "— RPM   /   —";
-        TelemetryHelp.Text = fresh ? host.Profile.Id is "f1-24" or "f1-25" ? $"UDP F1 · принято {host.ReceivedPackets}, отклонено {host.InvalidPackets}" : t.Data!.Headlights is null
+        TelemetryHelp.Text = fresh ? host.Profile.Id is "f1-24" or "f1-25" ? $"UDP F1 · принято {host.ReceivedPackets}, отклонено {host.InvalidPackets}" : host.Profile.Id == "beamng-default" && t.Data!.Headlights is null
             ? "Старый поток без состояния кнопок. Перезапустите BeamNG после обновления мода."
-            : "Состояния кнопок поступают · " + (t.Data.Headlights == 2 ? "дальний свет" : t.Data.Headlights == 1 ? "ближний свет" : "фары выключены") : host.TelemetryDiagnostic;
+            : host.Profile.Id == "beamng-default" ? "Состояния кнопок поступают · " + (t.Data!.Headlights == 2 ? "дальний свет" : t.Data.Headlights == 1 ? "ближний свет" : "фары выключены")
+            : "Демонстрационные данные" : host.TelemetryDiagnostic;
         var foreground = host.Backend.ForegroundProcessName;
         InputStatus.Text = host.Backend.Demo ? "Демонстрация · ввод отключён" : !host.Backend.Enabled ? "Выключен · установите галочку ниже" : host.Backend.CanInject
             ? $"Готов · {host.Profile.TargetProcess} · {host.Backend.InputModeName}"
@@ -111,9 +112,7 @@ public partial class MainWindow : Window
         if (host is null) return;
         rows.Clear(); foreach (var a in host.Profile.Actions) rows.Add(new(a));
         ProcessName.Text = host.Profile.TargetProcess;
-        ProfileHelp.Text = host.Profile.Id is "f1-24" or "f1-25"
-            ? $"{host.Profile.Name} · SimDeck 75: выберите изменённый Keyboard Preset 2. MFD — B, лимитер — P. 69 кнопок в трёх разделах; без нампада."
-            : "BeamNG: мод SimDeck → 127.0.0.1:4444. Подсветка берётся из машины. Для новых клавиш, которых нет в телеметрии, отображается только физическое нажатие.";
+        ProfileHelp.Text = GameProfiles.Help(host.Profile);
     }
     void ChangeProfile(object sender, RoutedEventArgs e)
     {

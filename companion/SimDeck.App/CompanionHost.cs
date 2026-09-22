@@ -40,12 +40,14 @@ public sealed class CompanionHost : IAsyncDisposable
     }
     public GameProfile Profile => Store.Value.ActiveProfile;
     bool IsF1 => Profile.Id is "f1-24" or "f1-25";
-    string GameId => IsF1 ? Profile.Id : "beamng";
+    bool IsBeamNg => Profile.Id == "beamng-default";
+    string GameId => IsBeamNg ? "beamng" : Profile.Id;
     public string TelemetryDiagnostic => IsF1
         ? f1Udp is null ? "UDP 20777 занят. Закройте другую программу телеметрии на этом порту."
         : ReceivedPackets == 0 ? $"Нет UDP-пакетов F1. Проверьте 127.0.0.1:20777, 60 Hz, формат {(Profile.Id == "f1-25" ? "2025 или 2024" : "2024")} и выйдите на трассу. Получено: 0."
         : InvalidPackets >= ReceivedPackets ? $"Получено UDP-пакетов: {ReceivedPackets}, но все отклонены. Проверьте профиль игры и формат UDP."
         : $"Нет свежих данных. Получено: {ReceivedPackets}, отклонено: {InvalidPackets}. Вернитесь на трассу."
+        : !IsBeamNg ? "Профиль управления готов. Телеметрия для этой игры пока не подключена."
         : udp is null ? "UDP-порт занят: закройте другой экземпляр Companion."
         : ReceivedPackets == 0 ? "Нет пакетов от игры. Установите мод SimDeck и перезагрузите машину (Ctrl+R)."
         : $"UDP {Store.Value.UdpPort}: принято {ReceivedPackets}, отклонено {InvalidPackets}";

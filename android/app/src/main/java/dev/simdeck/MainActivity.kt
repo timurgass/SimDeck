@@ -108,7 +108,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.7.3 · BeamNG / F1 24 / F1 25 · редактор кнопок на ПК", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.8.0 · 7 игровых профилей · редактор кнопок на ПК", color = Muted, fontSize = 11.sp)
     }
 }
 
@@ -157,7 +157,7 @@ private fun Instruments(state: DeckState, data: Telemetry?) {
                 Metric("ТОПЛИВО", data?.fuelFraction?.let { "%.0f".format(it * 100) } ?: "—", "% бака")
             }
             if (data?.maxRpm == null) Text("Шкала RPM: 8000 · настроечный предел", fontSize = 10.sp, color = Muted, modifier = Modifier.padding(top = 16.dp))
-            if (state.stale && !state.demo) Text(if (state.profileId in setOf("f1-24","f1-25")) "Включите UDP → 127.0.0.1:20777 и выйдите на трассу." else "Нет телеметрии от игры. Проверьте мод SimDeck в Companion.", fontSize = 11.sp, color = Amber, modifier = Modifier.padding(top = 10.dp))
+            if (state.stale && !state.demo) Text(telemetryHint(state.profileId), fontSize = 11.sp, color = Amber, modifier = Modifier.padding(top = 10.dp))
         }
     }
 }
@@ -225,7 +225,7 @@ private fun Instruments(state: DeckState, data: Telemetry?) {
             }
         }
         if (state.demo) Text("Демонстрационные данные. Команды отключены.", color = Amber, fontSize = 12.sp)
-        else Text(if (state.profileId in setOf("f1-24","f1-25")) "DRS, ERS и лимитер: ВКЛ по телеметрии. Свои кнопки добавляются в Companion." else if (page == "Возврат") "Вернуть — удержание. Сохранить — записать текущую позицию машины." else "ВКЛ и тёмная кнопка — действие включено. Ближний — зелёный, дальний — синий.", color = Muted, fontSize = 11.sp)
+        else Text(controlsHint(state.profileId, page), color = Muted, fontSize = 11.sp)
         if (state.profileId == "beamng-default" && !state.stale && !state.demo && state.telemetry?.headlights == null)
             Text("Игра присылает старый поток без состояния кнопок. Перезапустите BeamNG после обновления мода.", color = Amber, fontSize = 11.sp)
         if (state.command.isNotBlank()) Text(state.command, color = Amber, fontSize = 12.sp)

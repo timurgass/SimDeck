@@ -12,8 +12,12 @@ static class ProfileTests
         GameProfiles.Validate(full);
         var full25 = GameProfiles.F125();
         GameProfiles.Validate(full25);
+        var additional = AdditionalProfiles.All();
+        foreach (var profile in additional) GameProfiles.Validate(profile);
         check(full.Actions.Count == 69 && full.Actions.Select(a => a.Page).Distinct().Count() == 3 && full.Actions.All(a => !a.Key.Contains("NumPad")), "F1 75-percent catalog validates all 69 actions across three sections");
         check(full25.Actions.SequenceEqual(full.Actions) && full25.TargetProcess == "F1_25", "F1 25 reuses the verified bindings with its own process target");
+        check(additional.Select(p => p.Id).SequenceEqual(new[] { "acc", "ams2", "ets2", "snowrunner" }) && additional.All(p => p.Actions.Count >= 25 && p.Actions.Select(a => a.Page).Distinct().Count() >= 3), "ACC, AMS2, ETS2 and SnowRunner ship complete multi-page button-box profiles");
+        check(additional.Select(p => p.TargetProcess).SequenceEqual(new[] { "AC2-Win64-Shipping", "AMS2AVX", "eurotrucks2", "SnowRunner" }), "Additional profiles target the actual Windows game processes");
         check(full.Actions.All(a => a.Id is not ("drs" or "ers") && a.Group != "Вождение"), "Removed driving and overtake buttons stay absent");
         var fixture = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "fixtures", "f1-preset.json")));
         var expectedActions = JsonSerializer.Deserialize<List<DeckAction>>(fixture.RootElement.GetProperty("controls"), new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
@@ -60,7 +64,8 @@ static class ProfileTests
         File.WriteAllText(Path.Combine(path, "settings.json"), """{"Keys":{"lights":"F10","horn":"H","ignition":"V","reset":"R"},"Devices":[],"TargetProcess":"BeamNG.drive.x64"}""");
         await using var host = new CompanionHost(path);
         var token = PairingGate.NewToken(); host.Store.Trust("test", token);
-        check(host.Profile.Actions.Single(a => a.Id == "lights").Key == "F10" && host.Store.Value.Profiles.Count == 3, "Profile migration preserves existing user keys and adds F1 25");
+        check(host.Profile.Actions.Single(a => a.Id == "lights").Key == "F10" && host.Store.Value.Profiles.Count == 7, "Profile migration preserves existing user keys and adds all installed game profiles");
+        check(host.Store.Value.Profiles.Select(p => p.Id).ToHashSet().SetEquals(GameProfiles.KnownIds), "Profile catalog migration adds ACC, AMS2, ETS2 and SnowRunner exactly once");
         var custom = new DeckAction("custom-test", "Мои кнопки", "CUSTOM", "Test", "Ctrl+F12", "hold");
         var oldRevision = host.Profile.Revision;
         host.SaveProfile(host.Profile with { Actions = [.. host.Profile.Actions.Where(a => a.Id != "camera"), custom] });
@@ -73,6 +78,7 @@ static class ProfileTests
         check(host.Profile.Actions.Contains(custom) && host.Profile.Actions.All(a => a.Id != "camera"), "Custom button and deletion survive profile switch");
         var reloaded = new SettingsStore(path);
         check(reloaded.Value.ActiveProfile.Actions.Contains(custom) && reloaded.IsTrusted(token) && reloaded.Value.ActiveProfile.Actions.All(a => a.Id != "camera") && reloaded.Value.UseVirtualKeyInput, "Custom edits, pairing and input compatibility mode survive restart");
+        check(reloaded.Value.Profiles.Count == 7 && reloaded.Value.ProfileCatalogVersion == AdditionalProfiles.CatalogVersion, "Additional profile migration is idempotent across restart");
         try { GameProfiles.Validate(host.Profile with { Actions = [custom, custom] }); check(false, "Duplicate actions rejected"); } catch (ArgumentException) { check(true, "Duplicate actions rejected"); }
         try { GameProfiles.Validate(host.Profile with { Actions = [custom with { Id = "ignition", Gesture = "press" }] }); check(false, "Ignition safety preserved"); } catch (ArgumentException) { check(true, "Ignition safety preserved"); }
     }

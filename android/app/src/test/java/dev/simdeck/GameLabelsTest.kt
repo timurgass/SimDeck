@@ -14,4 +14,9 @@ class GameLabelsTest {
         assertEquals("2024", f1UdpFormat("f1-24"))
         assertEquals("2025", f1UdpFormat("f1-25"))
     }
+
+    @Test fun controlOnlyProfilesDoNotShowBeamNgHelp() {
+        assertEquals("Профиль управления готов. Телеметрия для этой игры пока не подключена.", telemetryHint("acc"))
+        assertEquals("Клавиши должны совпадать с назначениями в игре. Изменить их можно в Companion.", controlsHint("snowrunner", "Вождение"))
+    }
 }
