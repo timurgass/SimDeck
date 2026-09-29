@@ -3,14 +3,14 @@
 <p align="center"><strong>Your rig. One touch.</strong></p>
 
 <p align="center">
-  <img alt="Release 0.8.5" src="https://img.shields.io/badge/release-0.8.5-7dd3c0?style=flat-square">
+  <img alt="Release 0.8.6" src="https://img.shields.io/badge/release-0.8.6-7dd3c0?style=flat-square">
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-4f8cc9?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Android" src="https://img.shields.io/badge/Android-10%2B-3ddc84?style=flat-square&logo=android&logoColor=white">
   <img alt="Safari" src="https://img.shields.io/badge/iPhone-Safari-4f8cc9?style=flat-square&logo=safari&logoColor=white">
 </p>
 
 <p align="center">
-  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.8.5"><strong>Скачать SimDeck 0.8.5</strong></a>
+  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.8.6"><strong>Скачать SimDeck 0.8.6</strong></a>
   · <a href="#быстрый-запуск">Быстрый запуск</a>
   · <a href="TROUBLESHOOTING.md">Решение проблем</a>
 </p>
@@ -24,13 +24,14 @@ SimDeck превращает Android-планшет, телефон или Safar
 
 | Файл | Для чего нужен |
 |---|---|
-| [SimDeck-0.8.5-Windows.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-0.8.5-Windows.zip) | Автономный Windows Companion x64 |
-| [SimDeck-0.8.5-debug.apk](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-0.8.5-debug.apk) | Клиент для Android 10 и новее |
-| [SimDeck-ETS2-Telemetry-0.8.5.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-ETS2-Telemetry-0.8.5.zip) | Плагин телеметрии ETS2 с установщиком и лицензией |
-| [SimDeck-ACC-Preset-0.8.3.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-ACC-Preset-0.8.3.zip) | 33 команды ACC, ручное зажигание и резервные копии настроек |
-| [SimDeck-F1-Preset-0.7.1.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-F1-Preset-0.7.1.zip) | Установщик Keyboard Preset 2 для F1 24 и F1 25 |
-| [SimDeck-0.2.1-BeamNG.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-0.2.1-BeamNG.zip) | Мод расширенной телеметрии BeamNG.drive |
-| [SimDeck-0.8.5-SHA256SUMS.txt](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-0.8.5-SHA256SUMS.txt) | Контрольные суммы файлов релиза |
+| [SimDeck-0.8.6-Windows.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.6/SimDeck-0.8.6-Windows.zip) | Автономный Windows Companion x64 |
+| [SimDeck-0.8.6-debug.apk](https://github.com/timurgass/SimDeck/releases/download/v0.8.6/SimDeck-0.8.6-debug.apk) | Клиент для Android 10 и новее |
+| [SimDeck-ETS2-Telemetry-0.8.5.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.6/SimDeck-ETS2-Telemetry-0.8.5.zip) | Плагин телеметрии ETS2 с установщиком и лицензией |
+| [SimDeck-ETS2-Cruise-0.8.6.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.6/SimDeck-ETS2-Cruise-0.8.6.zip) | Назначения F8/F9 для изменения скорости круиза |
+| [SimDeck-ACC-Preset-0.8.3.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-ACC-Preset-0.8.3.zip) | 33 команды ACC, ручное зажигание и резервные копии настроек |
+| [SimDeck-F1-Preset-0.7.1.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-F1-Preset-0.7.1.zip) | Установщик Keyboard Preset 2 для F1 24 и F1 25 |
+| [SimDeck-0.2.1-BeamNG.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-0.2.1-BeamNG.zip) | Мод расширенной телеметрии BeamNG.drive |
+| [SimDeck-0.8.6-SHA256SUMS.txt](https://github.com/timurgass/SimDeck/releases/download/v0.8.6/SimDeck-0.8.6-SHA256SUMS.txt) | Контрольные суммы файлов релиза |
 
 Для iPhone отдельное приложение не требуется: локальный Safari-пульт запускается из Companion.
 
@@ -90,7 +91,7 @@ Companion показывает состояние подключения, вхо
 
 ### 1. Запустите Companion
 
-1. Скачайте и полностью распакуйте `SimDeck-0.8.5-Windows.zip`.
+1. Скачайте и полностью распакуйте `SimDeck-0.8.6-Windows.zip`.
 2. Запустите `SimDeck.exe`. Переносить один EXE из папки нельзя.
 3. Выберите профиль игры и оставьте Companion запущенным.
 

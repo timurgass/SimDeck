@@ -4,7 +4,7 @@
 
 ## Установка телеметрии
 
-1. Закройте ETS2 и полностью распакуйте [архив плагина](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-ETS2-Telemetry-0.8.5.zip).
+1. Закройте ETS2 и полностью распакуйте [архив плагина](https://github.com/timurgass/SimDeck/releases/download/v0.8.6/SimDeck-ETS2-Telemetry-0.8.5.zip).
 2. Запустите `Install-ETS2.cmd` и выберите папку игры, содержащую `bin`. Скрипт проверяет SHA-256 DLL и копирует её в `bin\win_x64\plugins`; существующий другой файл сохраняет с отметкой времени.
 3. Запустите ETS2, войдите в профиль и загрузите грузовик. В Companion выберите **Euro Truck Simulator 2**. Когда плагин отдаёт кадры, появится строка `SCS Telemetry` со счётчиком и на планшете — `LIVE`.
 
