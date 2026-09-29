@@ -71,6 +71,11 @@ public sealed class SettingsStore
                 if (index < 0) Value.Profiles.Add(profile);
                 else if (profile.Id == "acc" && Value.ProfileCatalogVersion < 3)
                     Value.Profiles[index] = AdditionalProfiles.UpgradeAcc(Value.Profiles[index]);
+                else if (profile.Id == "ets2" && Value.ProfileCatalogVersion < 5)
+                {
+                    Backup("before-ets2-bindings");
+                    Value.Profiles[index] = AdditionalProfiles.UpgradeEts2(Value.Profiles[index]);
+                }
             }
             Value.ProfileCatalogVersion = AdditionalProfiles.CatalogVersion;
             Save();

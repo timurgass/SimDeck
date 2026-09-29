@@ -66,6 +66,7 @@ public partial class MainWindow : Window
             ? "Старый поток без состояния кнопок. Перезапустите BeamNG после обновления мода."
             : host.Profile.Id == "beamng-default" ? "Состояния кнопок поступают · " + (t.Data!.Headlights == 2 ? "дальний свет" : t.Data.Headlights == 1 ? "ближний свет" : "фары выключены")
             : host.Profile.Id == "acc" ? $"ACC Shared Memory · принято {host.ReceivedPackets} кадров · шины и тормоза доступны на пульте"
+            : host.Profile.Id == "ets2" ? $"SCS Telemetry · принято {host.ReceivedPackets} кадров · состояния кнопок поступают на пульт"
             : "Демонстрационные данные" : host.TelemetryDiagnostic;
         var foreground = host.Backend.ForegroundProcessName;
         InputStatus.Text = host.Backend.Demo ? "Демонстрация · ввод отключён" : !host.Backend.Enabled ? "Выключен · установите галочку ниже" : host.Backend.CanInject

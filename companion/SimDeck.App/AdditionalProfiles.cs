@@ -2,7 +2,7 @@ namespace SimDeck.App;
 
 public static class AdditionalProfiles
 {
-    public const int CatalogVersion = 4;
+    public const int CatalogVersion = 5;
 
     public static IReadOnlyList<GameProfile> All() =>
     [
@@ -98,12 +98,11 @@ public static class AdditionalProfiles
         A("etsEngine", "Вождение", "ДВИГАТЕЛЬ", "Start / Stop Engine", "E", group: "Грузовик"),
         A("etsParkingBrake", "Вождение", "РУЧНИК", "Parking Brake", "Space", group: "Грузовик"),
         A("etsEngineBrake", "Вождение", "МОТОРНЫЙ ТОРМОЗ", "Engine Brake", "B", group: "Грузовик"),
-        A("etsRetarderUp", "Вождение", "РЕТАРДЕР +", "Retarder Increase", "Ctrl+R", group: "Грузовик"),
-        A("etsRetarderDown", "Вождение", "РЕТАРДЕР −", "Retarder Decrease", "Alt+R", group: "Грузовик"),
+        A("etsRetarderUp", "Вождение", "РЕТАРДЕР +", "Retarder Increase", "OemSemicolon", group: "Грузовик"),
+        A("etsRetarderDown", "Вождение", "РЕТАРДЕР −", "Retarder Decrease", "OemQuotes", group: "Грузовик"),
         A("etsDifferential", "Вождение", "БЛОКИРОВКА", "Differential Lock", "V", group: "Грузовик"),
         A("etsAttachTrailer", "Вождение", "ПРИЦЕП", "Attach / Detach Trailer", "T", group: "Грузовик"),
         A("etsLiftAxle", "Вождение", "ПОДЪЁМНАЯ ОСЬ", "Lift Truck Axle", "U", group: "Грузовик"),
-        A("etsLiftTrailerAxle", "Вождение", "ОСЬ ПРИЦЕПА", "Lift Trailer Axle", "J", group: "Грузовик"),
         A("etsHorn", "Вождение", "СИГНАЛ", "Horn · удерживайте", "H", "hold", "Сигналы"),
         A("etsAirHorn", "Вождение", "ПНЕВМОСИГНАЛ", "Air Horn · удерживайте", "N", "hold", "Сигналы"),
 
@@ -111,25 +110,45 @@ public static class AdditionalProfiles
         A("etsHighBeam", "Свет", "ДАЛЬНИЙ", "High Beam", "K", group: "Свет"),
         A("etsBeacon", "Свет", "МАЯЧКИ", "Beacon", "O", group: "Свет"),
         A("etsHazards", "Свет", "АВАРИЙКА", "Hazard Warning", "F", group: "Свет"),
-        A("etsLeftSignal", "Свет", "ЛЕВЫЙ", "Left Turn Indicator", "OemComma", group: "Поворотники"),
-        A("etsRightSignal", "Свет", "ПРАВЫЙ", "Right Turn Indicator", "OemPeriod", group: "Поворотники"),
-        A("etsWipers", "Свет", "ДВОРНИКИ +", "Wipers Increase", "P", group: "Дворники"),
-        A("etsWipersDown", "Свет", "ДВОРНИКИ −", "Wipers Decrease", "Shift+P", group: "Дворники"),
+        A("etsLeftSignal", "Свет", "ЛЕВЫЙ", "Left Turn Indicator", "OemOpenBrackets", group: "Поворотники"),
+        A("etsRightSignal", "Свет", "ПРАВЫЙ", "Right Turn Indicator", "OemCloseBrackets", group: "Поворотники"),
+        A("etsWipers", "Свет", "ДВОРНИКИ", "Wipers Increase", "P", group: "Дворники"),
 
         A("etsCruise", "Круиз", "КРУИЗ", "Cruise Control", "C", group: "Круиз-контроль"),
-        A("etsCruiseResume", "Круиз", "ВОЗОБНОВИТЬ", "Cruise Resume", "Ctrl+C", group: "Круиз-контроль"),
-        A("etsCruiseUp", "Круиз", "СКОРОСТЬ +", "Cruise Increase", "OemPlus", group: "Круиз-контроль"),
-        A("etsCruiseDown", "Круиз", "СКОРОСТЬ −", "Cruise Decrease", "OemMinus", group: "Круиз-контроль"),
 
         A("etsMap", "Интерфейс", "КАРТА", "World Map", "M", group: "Навигация"),
         A("etsRouteAdvisor", "Интерфейс", "МАРШРУТНЫЙ СОВЕТНИК", "Route Advisor", "F3", group: "Навигация"),
         A("etsMirrors", "Интерфейс", "ЗЕРКАЛА", "Virtual Mirrors", "F2", group: "Кабина"),
-        A("etsDashboard", "Интерфейс", "ДИСПЛЕЙ", "Dashboard Display", "D", group: "Кабина"),
-        A("etsCamera", "Интерфейс", "КАМЕРА", "Next Camera", "D1", group: "Кабина"),
-        A("etsQuickSave", "Интерфейс", "БЫСТРОЕ СОХРАНЕНИЕ", "Quick Save", "F5", group: "Система"),
-        A("etsQuickLoad", "Интерфейс", "БЫСТРАЯ ЗАГРУЗКА", "Quick Load", "F9", group: "Система"),
+        A("etsDashboard", "Интерфейс", "ДИСПЛЕЙ", "Dashboard Display", "I", group: "Кабина"),
+        A("etsCamera", "Интерфейс", "КАМЕРА", "Next Camera", "D9", group: "Кабина"),
+        A("etsQuickSave", "Интерфейс", "БЫСТРОЕ СОХРАНЕНИЕ", "Quick Save", "Scroll", group: "Система"),
         A("etsPause", "Интерфейс", "ПАУЗА", "Pause", "Escape", group: "Система")
-    ], 1);
+    ], 2);
+
+    public static GameProfile UpgradeEts2(GameProfile existing)
+    {
+        var current = Ets2();
+        var oldDefaults = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["etsRetarderUp"] = "Ctrl+R", ["etsRetarderDown"] = "Alt+R",
+            ["etsLeftSignal"] = "OemComma", ["etsRightSignal"] = "OemPeriod",
+            ["etsDashboard"] = "D", ["etsCamera"] = "D1", ["etsQuickSave"] = "F5",
+            ["etsLiftTrailerAxle"] = "J", ["etsWipersDown"] = "Shift+P",
+            ["etsCruiseResume"] = "Ctrl+C", ["etsCruiseUp"] = "OemPlus",
+            ["etsCruiseDown"] = "OemMinus", ["etsQuickLoad"] = "F9"
+        };
+        var oldById = existing.Actions.ToDictionary(a => a.Id, StringComparer.Ordinal);
+        var currentIds = current.Actions.Select(a => a.Id).ToHashSet(StringComparer.Ordinal);
+        var updated = current.Actions.Select(action =>
+        {
+            if (!oldById.TryGetValue(action.Id, out var old)) return action;
+            var original = oldDefaults.GetValueOrDefault(action.Id, action.Key);
+            return old.Key == original ? action : action with { Key = old.Key };
+        }).ToList();
+        updated.AddRange(existing.Actions.Where(a => !currentIds.Contains(a.Id) &&
+            (!oldDefaults.TryGetValue(a.Id, out var oldKey) || a.Key != oldKey)));
+        return current with { Actions = updated, Revision = Math.Max(current.Revision, existing.Revision + 1) };
+    }
 
     public static GameProfile SnowRunner() => new("snowrunner", "SnowRunner", "SnowRunner",
     [

@@ -3,14 +3,14 @@
 <p align="center"><strong>Your rig. One touch.</strong></p>
 
 <p align="center">
-  <img alt="Release 0.8.4" src="https://img.shields.io/badge/release-0.8.4-7dd3c0?style=flat-square">
+  <img alt="Release 0.8.5" src="https://img.shields.io/badge/release-0.8.5-7dd3c0?style=flat-square">
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-4f8cc9?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Android" src="https://img.shields.io/badge/Android-10%2B-3ddc84?style=flat-square&logo=android&logoColor=white">
   <img alt="Safari" src="https://img.shields.io/badge/iPhone-Safari-4f8cc9?style=flat-square&logo=safari&logoColor=white">
 </p>
 
 <p align="center">
-  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.8.4"><strong>Скачать SimDeck 0.8.4</strong></a>
+  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.8.5"><strong>Скачать SimDeck 0.8.5</strong></a>
   · <a href="#быстрый-запуск">Быстрый запуск</a>
   · <a href="TROUBLESHOOTING.md">Решение проблем</a>
 </p>
@@ -24,12 +24,13 @@ SimDeck превращает Android-планшет, телефон или Safar
 
 | Файл | Для чего нужен |
 |---|---|
-| [SimDeck-0.8.4-Windows.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-0.8.4-Windows.zip) | Автономный Windows Companion x64 |
-| [SimDeck-0.8.4-debug.apk](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-0.8.4-debug.apk) | Клиент для Android 10 и новее |
-| [SimDeck-ACC-Preset-0.8.3.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-ACC-Preset-0.8.3.zip) | 33 команды ACC, ручное зажигание и резервные копии настроек |
-| [SimDeck-F1-Preset-0.7.1.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-F1-Preset-0.7.1.zip) | Установщик Keyboard Preset 2 для F1 24 и F1 25 |
-| [SimDeck-0.2.1-BeamNG.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-0.2.1-BeamNG.zip) | Мод расширенной телеметрии BeamNG.drive |
-| [SimDeck-0.8.4-SHA256SUMS.txt](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-0.8.4-SHA256SUMS.txt) | Контрольные суммы файлов релиза |
+| [SimDeck-0.8.5-Windows.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-0.8.5-Windows.zip) | Автономный Windows Companion x64 |
+| [SimDeck-0.8.5-debug.apk](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-0.8.5-debug.apk) | Клиент для Android 10 и новее |
+| [SimDeck-ETS2-Telemetry-0.8.5.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-ETS2-Telemetry-0.8.5.zip) | Плагин телеметрии ETS2 с установщиком и лицензией |
+| [SimDeck-ACC-Preset-0.8.3.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-ACC-Preset-0.8.3.zip) | 33 команды ACC, ручное зажигание и резервные копии настроек |
+| [SimDeck-F1-Preset-0.7.1.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-F1-Preset-0.7.1.zip) | Установщик Keyboard Preset 2 для F1 24 и F1 25 |
+| [SimDeck-0.2.1-BeamNG.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-0.2.1-BeamNG.zip) | Мод расширенной телеметрии BeamNG.drive |
+| [SimDeck-0.8.5-SHA256SUMS.txt](https://github.com/timurgass/SimDeck/releases/download/v0.8.5/SimDeck-0.8.5-SHA256SUMS.txt) | Контрольные суммы файлов релиза |
 
 Для iPhone отдельное приложение не требуется: локальный Safari-пульт запускается из Companion.
 
@@ -55,7 +56,7 @@ SimDeck превращает Android-планшет, телефон или Safar
 | **BeamNG.drive** | Мод SimDeck, резервный OutGauge | 22 действия | Реальная передача, режим коробки, свет, привод и возврат машины |
 | **Assetto Corsa Competizione** | Shared Memory | 33 действия + готовый пресет | Приборы, четыре колеса, тормоза, двигатель и подтверждённые переключатели |
 | **Automobilista 2** | Запланирована Shared Memory | 31 действие | Гонка, электроника, ICM и HUD |
-| **Euro Truck Simulator 2** | Запланирован SCS Telemetry SDK | 31 действие | Грузовик, свет, круиз-контроль и интерфейс |
+| **Euro Truck Simulator 2** | SCS Telemetry SDK через плагин | 25 действий | Скорость, RPM, передача, топливо, педали и состояния переключателей |
 | **SnowRunner** | Нет подтверждённого штатного потока | 26 действий | Трансмиссия, лебёдка, оборудование и навигация |
 | **Farming Simulator 25** | Пока нет | 54 действия | Импорт клавиш игрока из `inputBinding.xml`; фермерские экраны пока в макете |
 
@@ -89,7 +90,7 @@ Companion показывает состояние подключения, вхо
 
 ### 1. Запустите Companion
 
-1. Скачайте и полностью распакуйте `SimDeck-0.8.4-Windows.zip`.
+1. Скачайте и полностью распакуйте `SimDeck-0.8.5-Windows.zip`.
 2. Запустите `SimDeck.exe`. Переносить один EXE из папки нельзя.
 3. Выберите профиль игры и оставьте Companion запущенным.
 
@@ -149,14 +150,26 @@ Companion показывает состояние подключения, вхо
 </details>
 
 <details>
-<summary><strong>Automobilista 2 / ETS2 / SnowRunner</strong></summary>
+<summary><strong>Euro Truck Simulator 2</strong></summary>
+
+1. Полностью закройте ETS2 и распакуйте `SimDeck-ETS2-Telemetry-0.8.5.zip`.
+2. Запустите `Install-ETS2.cmd` и укажите папку установленной игры. Скрипт проверит DLL, сохранит прежний плагин при необходимости и скопирует новый в `bin/win_x64/plugins`.
+3. Запустите ETS2, загрузите грузовик и выберите профиль **Euro Truck Simulator 2** в Companion.
+4. Для кнопок включите клавиатурный ввод и вернитесь в игру. Профиль содержит 25 назначений, сверенных с текущим `controls.sii`. Если вы меняли управление в игре, измените соответствующие клавиши в Companion.
+
+При активном грузовике отображаются скорость, RPM, передача, топливо, педали и доступные состояния двигателя, света, ручника и других переключателей. [Подробнее об установке и назначениях](ETS2-PROFILE.md).
+
+</details>
+
+<details>
+<summary><strong>Automobilista 2 / SnowRunner</strong></summary>
 
 1. Выберите профиль игры в Companion.
 2. Нажмите **«Открыть профиль»** и посмотрите предложенные клавиши.
 3. Назначьте те же клавиши соответствующим действиям в настройках игры.
 4. При необходимости измените клавиши в редакторе Companion и сохраните профиль.
 
-Эти три профиля работают как button box. Они не выдают синтетические приборы за игровую телеметрию: до подключения соответствующего адаптера значения остаются пустыми.
+Эти два профиля работают как button box. До подключения адаптеров телеметрии значения приборов остаются пустыми.
 
 </details>
 
@@ -176,7 +189,7 @@ Companion показывает состояние подключения, вхо
 
 1. В Companion включите **«Разрешить клавиатурный ввод»**.
 2. Вернитесь в окно игры: команды работают только когда выбранная игра активна.
-3. Если Companion показывает `injected`, но игра не реагирует, включите **«Совместимый ввод Virtual-Key»**.
+3. Если Companion показывает `injected`, но игра не реагирует, попробуйте **«Совместимый ввод Virtual-Key»**. Для проверенной установки ETS2 работает обычный Scan Code; оставьте Virtual-Key выключенным, если он не помогает.
 
 Телеметрия и управление работают независимо. Приборы могут обновляться, пока кнопки серые из-за выключенного ввода или неактивного окна игры.
 
@@ -184,7 +197,7 @@ Companion показывает состояние подключения, вхо
 
 ```mermaid
 flowchart LR
-    TelemetryGames["F1 24 / F1 25 / BeamNG / ACC"] -->|"телеметрия"| PC["SimDeck Companion<br/>Windows"]
+    TelemetryGames["F1 24 / F1 25 / BeamNG / ACC / ETS2"] -->|"телеметрия"| PC["SimDeck Companion<br/>Windows"]
     PC -->|"WSS"| Android["Android"]
     PC -->|"локальный HTTP"| Safari["iPhone / Safari"]
     Android -->|"команды"| PC
@@ -212,8 +225,9 @@ flowchart LR
 | BeamNG не показывает данные | Проверьте мод, порт `4444` и перезагрузите машину через `Ctrl+R` |
 | ACC показывает прочерки | Запустите заезд и выйдите на трассу; Companion читает Shared Memory автоматически |
 | ACC выполняет другие действия | Закройте игру и установите `SimDeck-ACC-Preset-0.8.3.zip` |
-| Android переподключается | Обновите APK и Companion до 0.8.4; проверьте причину на странице подключения |
-| AMS2 / ETS2 / SnowRunner показывают прочерки | В 0.8.3 для них готово управление; адаптеры телеметрии ещё не подключены |
+| Android переподключается | Обновите APK и Companion до 0.8.5; проверьте причину на странице подключения |
+| ETS2 показывает прочерки | Установите Win64-плагин из архива, перезапустите ETS2 и загрузите грузовик |
+| AMS2 / SnowRunner показывают прочерки | Для них пока готово только управление; адаптеры телеметрии ещё не подключены |
 | Новый профиль не реагирует на кнопку | Назначьте предложенную клавишу этому действию в самой игре и верните фокус её окну |
 | Safari долго загружается | Проверьте одну Wi-Fi-сеть и откройте новый адрес после перезапуска Companion |
 
@@ -255,6 +269,6 @@ Android SDK задаётся через `ANDROID_HOME` или локальный
 
 ## Текущий статус
 
-Версия 0.8.4 добавляет пульт FS25 и импорт клавиш игрока. Фермерская телеметрия и экраны пока доступны только как проект и макет. Из предыдущих версий сохранены проверенное в игре выключение зажигания ACC и восстановление Android/Safari после краткого обрыва. Профили AMS2, ETS2 и SnowRunner пока требуют ручной сверки назначений; для F1 25 остаётся полный ручной прогон всех 69 действий.
+Версия 0.8.5 добавляет живую телеметрию ETS2 и исправляет его типовые кнопки по активному `controls.sii`. На подключённом планшете проверены передача, RPM, топливо и запуск двигателя. Для AMS2 и SnowRunner пока требуется ручная сверка назначений и адаптеры телеметрии; для F1 25 остаётся полный ручной прогон всех 69 действий.
 
 Настройки Companion находятся в `%LOCALAPPDATA%/SimDeck/settings.json`. Доверенные устройства можно отключить кнопкой **«Отозвать доступ»**.

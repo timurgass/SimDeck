@@ -42,6 +42,7 @@ public sealed class CompanionHost : IAsyncDisposable
     bool IsF1 => Profile.Id is "f1-24" or "f1-25";
     bool IsBeamNg => Profile.Id == "beamng-default";
     bool IsAcc => Profile.Id == "acc";
+    bool IsEts2 => Profile.Id == "ets2";
     string GameId => IsBeamNg ? "beamng" : Profile.Id;
     public string TelemetryDiagnostic => IsF1
         ? f1Udp is null ? "UDP 20777 занят. Закройте другую программу телеметрии на этом порту."
@@ -49,6 +50,7 @@ public sealed class CompanionHost : IAsyncDisposable
         : InvalidPackets >= ReceivedPackets ? $"Получено UDP-пакетов: {ReceivedPackets}, но все отклонены. Проверьте профиль игры и формат UDP."
         : $"Нет свежих данных. Получено: {ReceivedPackets}, отклонено: {InvalidPackets}. Вернитесь на трассу."
         : IsAcc ? accDiagnostic
+        : IsEts2 ? scsDiagnostic
         : !IsBeamNg ? "Профиль управления готов. Телеметрия для этой игры пока не подключена."
         : udp is null ? "UDP-порт занят: закройте другой экземпляр Companion."
         : ReceivedPackets == 0 ? "Нет пакетов от игры. Установите мод SimDeck и перезагрузите машину (Ctrl+R)."
@@ -66,6 +68,10 @@ public sealed class CompanionHost : IAsyncDisposable
     UdpClient? f1Udp;
     F1TelemetryParser f1Parser = new();
     readonly AccSharedMemoryReader accReader = new();
+    readonly ScsSharedMemoryReader scsReader = new();
+    ulong lastScsTimestamp;
+    long lastScsPacketAt;
+    string scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите ETS2.";
     int lastAccPacket = int.MinValue;
     long lastAccPacketAt;
     long lastAccReconnect;
@@ -122,6 +128,8 @@ public sealed class CompanionHost : IAsyncDisposable
             f1Parser = new(); lastExtendedPacket = 0; ReceivedPackets = InvalidPackets = 0;
             accReader.Reset(); lastAccPacket = int.MinValue; lastAccPacketAt = lastAccReconnect = 0;
             accDiagnostic = "Ожидание ACC Shared Memory. Запустите заезд и выйдите на трассу.";
+            scsReader.Reset(); lastScsTimestamp = 0; lastScsPacketAt = 0;
+            scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите ETS2.";
             Telemetry.Reset(Demo ? "demo" : GameId);
         }
     }
@@ -290,6 +298,23 @@ public sealed class CompanionHost : IAsyncDisposable
                             }
                             else accDiagnostic = error;
                         }
+                        else if (IsEts2)
+                        {
+                            if (scsReader.TryRead(out var timestamp, out var frame, out var error))
+                            {
+                                if (timestamp != lastScsTimestamp)
+                                {
+                                    lastScsTimestamp = timestamp;
+                                    lastScsPacketAt = Environment.TickCount64;
+                                    Interlocked.Increment(ref ReceivedPackets);
+                                    Telemetry.Publish(frame!);
+                                    scsDiagnostic = $"SCS Telemetry: принято {ReceivedPackets} кадров.";
+                                }
+                                else if (lastScsPacketAt > 0 && Environment.TickCount64 - lastScsPacketAt > 1000)
+                                    scsDiagnostic = "ETS2 не обновляет телеметрию. Вернитесь в грузовик.";
+                            }
+                            else scsDiagnostic = error;
+                        }
                     }
                 }
             }
@@ -424,6 +449,7 @@ public sealed class CompanionHost : IAsyncDisposable
         udp?.Dispose();
         f1Udp?.Dispose();
         accReader.Dispose();
+        scsReader.Dispose();
         discovery?.Dispose();
         if (app is not null) { await app.StopAsync(); await app.DisposeAsync(); }
         await Task.WhenAll(loops);
