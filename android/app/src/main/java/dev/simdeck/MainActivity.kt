@@ -108,7 +108,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.8.6 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.8.7 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
     }
 }
 
