@@ -108,7 +108,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.8.5 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.8.6 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
     }
 }
 
@@ -157,10 +157,23 @@ private fun Instruments(state: DeckState, data: Telemetry?) {
                 Metric("ТОПЛИВО", data?.fuelFraction?.let { "%.0f".format(it * 100) } ?: "—", "% бака")
             }
             if (state.profileId == "acc") AccWheels(data?.acc)
+            if (state.profileId == "ets2") Ets2Route(data?.ets2Navigation)
             if (data?.maxRpm == null) Text("Шкала RPM: 8000 · настроечный предел", fontSize = 10.sp, color = Muted, modifier = Modifier.padding(top = 16.dp))
             if (state.stale && !state.demo) Text(telemetryHint(state.profileId), fontSize = 11.sp, color = Amber, modifier = Modifier.padding(top = 10.dp))
         }
     }
+}
+
+@Composable private fun Ets2Route(route: Ets2Navigation?) {
+    Spacer(Modifier.height(14.dp))
+    HorizontalDivider(color = Color(0xFF304049))
+    Text("МАРШРУТ", fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
+    Row(Modifier.fillMaxWidth().padding(top = 9.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Metric("ОСТАЛОСЬ", route?.remainingKm?.let { "%.0f".format(it) } ?: "—", "км")
+        Metric("В ПУТИ", route?.remainingMinutes?.let { "%.0f".format(it) } ?: "—", "мин")
+        Metric("ЛИМИТ", route?.speedLimitKmh?.let { "%.0f".format(it) } ?: "—", "км/ч")
+    }
+    Text("Карта дорог открывается кнопкой «Карта». Маршрут и время — из игры.", fontSize = 11.sp, color = Muted, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
 }
 
 @Composable private fun AccWheels(acc: AccData?) {
@@ -262,8 +275,24 @@ private fun Instruments(state: DeckState, data: Telemetry?) {
     val enabled = state.connected && !state.demo
     val feedback = Protocol.feedback(action, state.telemetry, state.stale || state.demo || !state.connected)
     val active = feedback.active == true
-    val accent = when(feedback.headlights) { 1 -> Color(0xFF5CDD8E); 2 -> Color(0xFF62A6FF); else -> if (active) Amber else White }
-    val fill = when { feedback.headlights == 1 -> Color(0xFF145C35); feedback.headlights == 2 -> Color(0xFF123F8C); down -> Color(0xFF373020); active -> Color(0xFF070D11); else -> Panel }
+    val ets2 = state.profileId == "ets2"
+    val accent = when {
+        ets2 && active && action == "etsHighBeam" || feedback.headlights == 2 -> Color(0xFF62A6FF)
+        ets2 && active && action == "etsParkingBrake" -> Color(0xFFFF7770)
+        ets2 && active && action == "etsCruise" -> Color(0xFF69D9CE)
+        feedback.headlights == 1 -> Color(0xFF5CDD8E)
+        active -> Amber
+        else -> White
+    }
+    val fill = when {
+        feedback.headlights == 1 -> Color(0xFF145C35)
+        feedback.headlights == 2 || ets2 && active && action == "etsHighBeam" -> Color(0xFF123F8C)
+        ets2 && active && action == "etsParkingBrake" -> Color(0xFF4B2528)
+        ets2 && active && action == "etsCruise" -> Color(0xFF164B4B)
+        active -> Color(0xFF182F35)
+        down -> Color(0xFF373020)
+        else -> Panel
+    }
     val displaySubtitle = feedback.description ?: subtitle
     Box(modifier.height(heightDp.dp).background(fill, RoundedCornerShape(14.dp))
         .border(if (active) 2.dp else 1.dp, if (active) accent else if (down) Amber else Color(0xFF304049), RoundedCornerShape(14.dp))
@@ -292,6 +321,7 @@ private fun Instruments(state: DeckState, data: Telemetry?) {
             })
         }, contentAlignment = Alignment.Center) {
         Column(Modifier.padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (ets2) Ets2Icon(action, if (enabled) accent else Muted)
             if (active) Text("● ВКЛ", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = accent)
             Text(label, fontSize = if (state.profileId in setOf("f1-24","f1-25")) { if (label in listOf("↑", "←", "↓", "→")) 30.sp else 16.sp } else 14.sp, maxLines = 2, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, color = if (enabled) accent else Muted)
             Text(if (startingIgnition && down) "Запуск · держите кнопку" else displaySubtitle, fontSize = if (state.profileId in setOf("f1-24","f1-25")) 13.sp else 11.sp, textAlign = TextAlign.Center, color = if (active) Color(0xFFBDD0D8) else Muted, modifier = Modifier.padding(top = 6.dp))

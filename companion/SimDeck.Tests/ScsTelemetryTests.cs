@@ -20,13 +20,18 @@ internal static class ScsTelemetryTests
         F32(980, .1f);
         F32(984, 0);
         F32(1000, 300);
+        F32(1060, 309630);
+        F32(1064, 18420);
+        F32(1068, 13.8889f);
         bytes[1576] = 1; // engine
         bytes[1583] = 1; // low beam
         bytes[1588] = 1; // hazard
         check(ScsTelemetryParser.TryParse(bytes, out var stamp, out var frame) && stamp == 123456 &&
               frame is { Gear: 6, Rpm: 1450, Headlights: 1, MaxGear: 12 } &&
               Math.Abs(frame.SpeedMps - 22.5) < .001 && frame.FuelFraction == .5 &&
-              frame.ActionStates!["etsEngine"] && frame.ActionStates["etsHazards"],
+              frame.ActionStates!["etsEngine"] && frame.ActionStates["etsHazards"] &&
+              Math.Abs(frame.Ets2Navigation!.RemainingKm!.Value - 309.63) < .01 &&
+              Math.Abs(frame.Ets2Navigation.SpeedLimitKmh!.Value - 50) < .01,
             "SCS revision 12 memory exposes ETS2 speed, RPM, gear, fuel and switch states");
         bytes[1584] = 1;
         check(ScsTelemetryParser.TryParse(bytes, out _, out frame) && frame!.Headlights == 2,

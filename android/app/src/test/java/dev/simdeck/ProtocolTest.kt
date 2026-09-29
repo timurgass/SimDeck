@@ -52,6 +52,14 @@ class ProtocolTest {
         assertEquals(2, Protocol.feedback("lights", t.copy(headlights = 2), false).headlights)
         assertEquals(false, Protocol.feedback("lights", t.copy(headlights = 0), false).active)
     }
+    @Test fun ets2RouteAndSwitchStatesUseLiveTelemetry() {
+        val t = Protocol.telemetry(JSONObject("""{"data":{"speedMps":0,"rpm":550,"gear":0,"fuelFraction":0.35,"headlights":2,"actionStates":{"etsParkingBrake":true,"etsHighBeam":true},"ets2Navigation":{"remainingKm":272.4,"remainingMinutes":267.0,"speedLimitKmh":80.0}}}"""))!!
+        assertEquals(272.4, t.ets2Navigation!!.remainingKm!!, .001)
+        assertEquals(80.0, t.ets2Navigation!!.speedLimitKmh!!, .001)
+        assertEquals(2, Protocol.feedback("etsLights", t, false).headlights)
+        assertEquals(true, Protocol.feedback("etsParkingBrake", t, false).active)
+        assertNull(Protocol.feedback("etsParkingBrake", t, true).active)
+    }
     @Test fun knownToggleStaysLatchedUntilTelemetryTurnsItOff() {
         val t = Telemetry(0.0, 900.0, 0, .5, null, actionStates = mapOf("hazards" to true, "fogLights" to false))
         assertEquals(true, Protocol.feedback("hazards", t, false).active)

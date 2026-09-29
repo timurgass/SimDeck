@@ -50,9 +50,16 @@ public static class ScsTelemetryParser
             ["etsWipers"] = On(data, 1577),
             ["etsCruise"] = On(data, 1589)
         };
+        var remainingMetres = F(data, 1060);
+        var remainingSeconds = F(data, 1064);
+        var speedLimitMps = F(data, 1068);
+        var navigation = new Ets2Navigation(
+            Finite(remainingMetres, 0, 10_000_000) && remainingMetres > 0 ? remainingMetres / 1000.0 : null,
+            Finite(remainingSeconds, 0, 10_000_000) && remainingSeconds > 0 ? remainingSeconds / 60.0 : null,
+            Finite(speedLimitMps, 0, 100) && speedLimitMps > 0 ? speedLimitMps * 3.6 : null);
         telemetry = new(Math.Abs(speed), rpm, gear, Math.Clamp(fuelLiters / fuelCapacity, 0, 1),
             throttle, brake, clutch, maxRpm, fuelLiters, "realistic", (int)forwardGears,
-            highBeam ? 2 : lowBeam ? 1 : 0, states);
+            highBeam ? 2 : lowBeam ? 1 : 0, states, Ets2Navigation: navigation);
         return true;
     }
 

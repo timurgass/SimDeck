@@ -69,7 +69,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                     else s.copy(pitCursor=null,pitTyre=null,pitRepair=null,pitSent=false)
                 }
                 if (session != null) {
-                    send("input.renew") { put("pressIds", JSONArray(presses.keys.toList())) }
+                    if (presses.isNotEmpty()) send("input.renew") { put("pressIds", JSONArray(presses.keys.toList())) }
                     if (now - lastMessage > 10000) {
                         failed(generation,"Companion не ответил за 10 с",true)
                     }

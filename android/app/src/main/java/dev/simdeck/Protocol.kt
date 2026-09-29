@@ -2,8 +2,10 @@ package dev.simdeck
 
 import org.json.JSONObject
 
+data class Ets2Navigation(val remainingKm: Double?, val remainingMinutes: Double?, val speedLimitKmh: Double?)
 data class Telemetry(val speedMps: Double, val rpm: Double, val gear: Int, val fuelFraction: Double?, val maxRpm: Double?, val gearboxMode: String? = null, val maxGear: Int? = null,
-    val headlights: Int? = null, val actionStates: Map<String, Boolean> = emptyMap(), val f1: F1Data? = null, val acc: AccData? = null)
+    val headlights: Int? = null, val actionStates: Map<String, Boolean> = emptyMap(), val f1: F1Data? = null, val acc: AccData? = null,
+    val ets2Navigation: Ets2Navigation? = null)
 data class DeckAction(val id: String, val page: String, val label: String, val description: String, val key: String, val gesture: String, val group: String = "")
 data class ControlFeedback(val active: Boolean? = null, val headlights: Int? = null, val description: String? = null)
 
@@ -30,12 +32,16 @@ object Protocol {
         val lights = d.optInt("headlights", -1).takeIf { !d.isNull("headlights") && it in 0..2 }
         val states = mutableMapOf<String, Boolean>()
         d.optJSONObject("actionStates")?.let { s -> s.keys().forEach { key -> (s.opt(key) as? Boolean)?.let { states[key] = it } } }
+        val nav = d.optJSONObject("ets2Navigation")?.let { n ->
+            fun metric(name: String, max: Double) = n.optDouble(name, Double.NaN).takeIf { it.isFinite() && it > 0 && it < max }
+            Ets2Navigation(metric("remainingKm", 10000.0), metric("remainingMinutes", 200000.0), metric("speedLimitKmh", 360.0))
+        }
         return Telemetry(speed, rpm, d.getInt("gear"), fuel, maximum, mode, maxGear, lights, states,
-            F1Data.parse(d.optJSONObject("f1")), AccData.parse(d.optJSONObject("acc")))
+            F1Data.parse(d.optJSONObject("f1")), AccData.parse(d.optJSONObject("acc")), nav)
     }
     fun feedback(action: String, data: Telemetry?, stale: Boolean): ControlFeedback {
         if (data == null || stale) return ControlFeedback()
-        if (action == "lights") return data.headlights?.let { ControlFeedback(it > 0, it, when(it) { 1 -> "Ближний свет"; 2 -> "Дальний свет"; else -> "Фары выключены" }) } ?: ControlFeedback()
+        if (action == "lights" || action == "etsLights") return data.headlights?.let { ControlFeedback(it > 0, it, when(it) { 1 -> "Ближний свет"; 2 -> "Дальний свет"; else -> "Фары выключены" }) } ?: ControlFeedback()
         if (action == "gearbox") return ControlFeedback(description = when(data.gearboxMode) { "arcade" -> "Аркада"; "realistic" -> "Реализм"; else -> null })
         val active = data.actionStates[action] ?: return ControlFeedback()
         val description = when(action) {
@@ -44,6 +50,12 @@ object Protocol {
             "range" -> if (active) "Низкий ряд" else "Высокий ряд"
             "differentials" -> if (active) "Есть блокировка" else "Блокировки сняты"
             "couplers" -> if (active) "Соединено" else "Отсоединено"
+            "etsEngine" -> if (active) "Двигатель работает" else "Двигатель выключен"
+            "etsParkingBrake" -> if (active) "Ручник включён" else "Ручник выключен"
+            "etsDifferential" -> if (active) "Блокировка включена" else "Блокировка выключена"
+            "etsHighBeam" -> if (active) "Дальний свет" else "Дальний выключен"
+            "etsHazards" -> if (active) "Аварийка включена" else "Аварийка выключена"
+            "etsCruise" -> if (active) "Круиз активен" else "Круиз выключен"
             else -> if (active) "Включено" else "Выключено"
         }
         return ControlFeedback(active = active, description = description)

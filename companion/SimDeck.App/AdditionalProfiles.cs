@@ -2,7 +2,7 @@ namespace SimDeck.App;
 
 public static class AdditionalProfiles
 {
-    public const int CatalogVersion = 5;
+    public const int CatalogVersion = 6;
 
     public static IReadOnlyList<GameProfile> All() =>
     [
@@ -104,7 +104,7 @@ public static class AdditionalProfiles
         A("etsAttachTrailer", "Вождение", "ПРИЦЕП", "Attach / Detach Trailer", "T", group: "Грузовик"),
         A("etsLiftAxle", "Вождение", "ПОДЪЁМНАЯ ОСЬ", "Lift Truck Axle", "U", group: "Грузовик"),
         A("etsHorn", "Вождение", "СИГНАЛ", "Horn · удерживайте", "H", "hold", "Сигналы"),
-        A("etsAirHorn", "Вождение", "ПНЕВМОСИГНАЛ", "Air Horn · удерживайте", "N", "hold", "Сигналы"),
+        A("etsAirHorn", "Вождение", "ПНЕВМОСИГНАЛ", "Нужен установленный пневмосигнал · удерживайте", "N", "hold", "Сигналы"),
 
         A("etsLights", "Свет", "ФАРЫ", "Light Modes", "L", group: "Свет"),
         A("etsHighBeam", "Свет", "ДАЛЬНИЙ", "High Beam", "K", group: "Свет"),
@@ -115,15 +115,19 @@ public static class AdditionalProfiles
         A("etsWipers", "Свет", "ДВОРНИКИ", "Wipers Increase", "P", group: "Дворники"),
 
         A("etsCruise", "Круиз", "КРУИЗ", "Cruise Control", "C", group: "Круиз-контроль"),
+        A("etsCruiseUp", "Круиз", "СКОРОСТЬ +", "Cruise Control Increase · F8 после установки пресета", "F8", group: "Круиз-контроль"),
+        A("etsCruiseDown", "Круиз", "СКОРОСТЬ −", "Cruise Control Decrease · F9 после установки пресета", "F9", group: "Круиз-контроль"),
 
         A("etsMap", "Интерфейс", "КАРТА", "World Map", "M", group: "Навигация"),
         A("etsRouteAdvisor", "Интерфейс", "МАРШРУТНЫЙ СОВЕТНИК", "Route Advisor", "F3", group: "Навигация"),
         A("etsMirrors", "Интерфейс", "ЗЕРКАЛА", "Virtual Mirrors", "F2", group: "Кабина"),
         A("etsDashboard", "Интерфейс", "ДИСПЛЕЙ", "Dashboard Display", "I", group: "Кабина"),
         A("etsCamera", "Интерфейс", "КАМЕРА", "Next Camera", "D9", group: "Кабина"),
+        A("etsCabCamera", "Интерфейс", "КАБИНА", "Камера из кабины", "D1", group: "Кабина"),
+        A("etsOutsideCamera", "Интерфейс", "СНАРУЖИ", "Внешняя камера", "D2", group: "Кабина"),
         A("etsQuickSave", "Интерфейс", "БЫСТРОЕ СОХРАНЕНИЕ", "Quick Save", "Scroll", group: "Система"),
         A("etsPause", "Интерфейс", "ПАУЗА", "Pause", "Escape", group: "Система")
-    ], 2);
+    ], 3);
 
     public static GameProfile UpgradeEts2(GameProfile existing)
     {

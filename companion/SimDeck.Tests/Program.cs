@@ -106,16 +106,22 @@ var oldEts2 = AdditionalProfiles.Ets2() with { Revision = 1, Actions = Additiona
         "etsRetarderUp" => a with { Key = "Ctrl+R" },
         "etsLeftSignal" => a with { Key = "OemComma" },
         "etsCamera" => a with { Key = "D1" },
-        "etsHazards" => a with { Key = "F8" },
+        "etsHazards" => a with { Key = "F6" },
         _ => a
     }).Append(new DeckAction("etsQuickLoad", "Интерфейс", "БЫСТРАЯ ЗАГРУЗКА", "Quick Load", "F9", "press", "Система")).ToList() };
 var updatedEts2 = AdditionalProfiles.UpgradeEts2(oldEts2);
 Check(updatedEts2.Actions.Single(a => a.Id == "etsRetarderUp").Key == "OemSemicolon" &&
       updatedEts2.Actions.Single(a => a.Id == "etsLeftSignal").Key == "OemOpenBrackets" &&
       updatedEts2.Actions.Single(a => a.Id == "etsCamera").Key == "D9" &&
-      updatedEts2.Actions.Single(a => a.Id == "etsHazards").Key == "F8" &&
+      updatedEts2.Actions.Single(a => a.Id == "etsHazards").Key == "F6" &&
       updatedEts2.Actions.All(a => a.Id != "etsQuickLoad"),
     "ETS2 binding migration fixes defaults, preserves custom bindings and removes unassigned actions");
+Check(AdditionalProfiles.Ets2().Actions.Count == 29 &&
+      AdditionalProfiles.Ets2().Actions.Select(a => a.Key).Distinct(StringComparer.OrdinalIgnoreCase).Count() == 29 &&
+      updatedEts2.Actions.Single(a => a.Id == "etsCruiseUp").Key == "F8" &&
+      updatedEts2.Actions.Single(a => a.Id == "etsCruiseDown").Key == "F9" &&
+      updatedEts2.Actions.Single(a => a.Id == "etsCabCamera").Key == "D1",
+    "ETS2 includes distinct keys for cruise speed and direct cabin camera");
 var oldKeys = new Dictionary<string, string> { ["lights"] = "N", ["horn"] = "H", ["ignition"] = "V", ["reset"] = "F10" };
 Check(BeamNgProfile.AddMissingKeys(oldKeys) && oldKeys.Count == 22 && oldKeys["reset"] == "F10", "Profile upgrade adds 18 actions and preserves user bindings");
 Check(!BeamNgProfile.AddMissingKeys(oldKeys), "Profile migration is idempotent");
