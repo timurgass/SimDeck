@@ -87,6 +87,16 @@ public sealed class SettingsStore
             File.Move(temp, path, true);
         }
     }
+    public string Backup(string label)
+    {
+        lock (gate)
+        {
+            if (!File.Exists(path)) throw new FileNotFoundException("Настройки SimDeck не найдены.", path);
+            var backup = Path.Combine(Path.GetDirectoryName(path)!, $"settings.{label}-{DateTime.UtcNow:yyyyMMddHHmmssfff}.json");
+            File.Copy(path, backup);
+            return backup;
+        }
+    }
     public bool IsTrusted(string token)
     {
         if (token.Length != 64) return false;

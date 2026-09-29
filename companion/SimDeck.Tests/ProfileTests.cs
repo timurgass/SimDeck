@@ -16,10 +16,45 @@ static class ProfileTests
         foreach (var profile in additional) GameProfiles.Validate(profile);
         check(full.Actions.Count == 69 && full.Actions.Select(a => a.Page).Distinct().Count() == 3 && full.Actions.All(a => !a.Key.Contains("NumPad")), "F1 75-percent catalog validates all 69 actions across three sections");
         check(full25.Actions.SequenceEqual(full.Actions) && full25.TargetProcess == "F1_25", "F1 25 reuses the verified bindings with its own process target");
-        check(additional.Select(p => p.Id).SequenceEqual(new[] { "acc", "ams2", "ets2", "snowrunner" }) && additional.All(p => p.Actions.Count >= 25 && p.Actions.Select(a => a.Page).Distinct().Count() >= 3), "ACC, AMS2, ETS2 and SnowRunner ship complete multi-page button-box profiles");
-        check(additional.Select(p => p.TargetProcess).SequenceEqual(new[] { "AC2-Win64-Shipping", "AMS2AVX", "eurotrucks2", "SnowRunner" }), "Additional profiles target the actual Windows game processes");
+        check(additional.Select(p => p.Id).SequenceEqual(new[] { "acc", "ams2", "ets2", "snowrunner", "fs25" }) && additional.All(p => p.Actions.Count >= 25 && p.Actions.Select(a => a.Page).Distinct().Count() >= 3), "ACC, AMS2, ETS2, SnowRunner and FS25 ship complete multi-page button-box profiles");
+        check(additional.Select(p => p.TargetProcess).SequenceEqual(new[] { "AC2-Win64-Shipping", "AMS2AVX", "eurotrucks2", "SnowRunner", "FarmingSimulator2025Game" }), "Additional profiles target the actual Windows game processes");
         var acc = AdditionalProfiles.Acc();
         check(acc.Actions.Single(a => a.Id == "accIgnition").Key == "I" && acc.Actions.Single(a => a.Id == "accIgnitionOff").Key == "F2", "ACC exposes ignition on and a supported MFD-based ignition off control");
+
+        // FS25 reads the player's own key map, so the token translation carries the profile.
+        static string? Fs25Key(string token) => Fs25Bindings.TryTranslate(token, out var k) ? k : null;
+        check(Fs25Key("KEY_v") == "V" && Fs25Key("KEY_3") == "D3" && Fs25Key("KEY_f1") == "F1"
+            && Fs25Key("KEY_comma") == "OemComma" && Fs25Key("KEY_esc") == "Escape",
+            "FS25 plain keys, digits and punctuation map to the names ParseKey accepts");
+        check(Fs25Key("KEY_KP_1") == "NumPad1" && Fs25Key("KEY_KP_plus") == "Add" && Fs25Key("KEY_KP_minus") == "Subtract",
+            "FS25 numpad bindings survive, unlike the numpad-free F1 preset");
+        check(Fs25Key("KEY_lctrl KEY_b") == "Ctrl+B" && Fs25Key("KEY_lshift KEY_f") == "Shift+F"
+            && Fs25Key("KEY_lshift KEY_lctrl KEY_k") == "Shift+Ctrl+K" && Fs25Key("KEY_rctrl KEY_q") == "Ctrl+Q",
+            "FS25 modifier combinations become the Ctrl/Alt/Shift syntax, right-hand keys folding onto left");
+        check(Fs25Key("KEY_lshift") is null && Fs25Key("MOUSE_BUTTON_LEFT") is null
+            && Fs25Key("MOUSE_BUTTON_MIDDLE AXIS_X-") is null && Fs25Key("KEY_a KEY_b") is null && Fs25Key("") is null,
+            "FS25 rejects what a deck cannot press: bare modifiers, mouse buttons, axes and two-key bindings");
+        foreach (var key in Fs25Profile.Default().Actions.Select(a => a.Key))
+            WindowsInput.ParseBinding("probe", key, "press");
+        var fs25 = Fs25Profile.Default();
+        check(fs25.Actions.Count == 54 && fs25.Actions.Select(a => a.Page).Distinct().Count() == 5
+            && fs25.Actions.All(a => a.Id != "ignition") && fs25.TargetProcess == "FarmingSimulator2025Game",
+            "FS25 ships 54 buttons over five pages with every fallback key parseable");
+        var reboundSample = Fs25Bindings.Read(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(
+            """<inputBinding><actionBinding action="LOWER_IMPLEMENT"><binding device="KB_MOUSE_DEFAULT" input="KEY_k"/></actionBinding></inputBinding>""")));
+        check(Fs25Profile.Build(reboundSample).Actions.Single(a => a.Id == "fs25Lower").Key == "K"
+            && Fs25Profile.Build(reboundSample).Actions.Single(a => a.Id == "fs25Attach").Key == "Q",
+            "FS25 profile follows a rebound key and keeps factory defaults for the rest");
+        var fs25Custom = new GameProfile("fs25", "Farming Simulator 25", "FarmingSimulator2025Game",
+            [new("fs25Lower", "Орудие", "ОПУСТИТЬ", "", "V"), new("fs25-mine", "Свои", "CUSTOM", "", "F12")], 1);
+        var fs25Upgraded = Fs25Profile.Upgrade(fs25Custom, Fs25Bindings.Empty);
+        check(fs25Upgraded.Actions.Any(a => a.Id == "fs25-mine") && fs25Upgraded.Actions.Count == 55
+            && fs25Upgraded.Revision == 2, "FS25 upgrade restores the shipped buttons and keeps user-added ones");
+        var imported = Fs25Profile.ApplyPlayerBindings(fs25Custom, reboundSample);
+        check(imported.Actions.Single(a => a.Id == "fs25Lower").Key == "K"
+            && imported.Actions.Single(a => a.Id == "fs25-mine").Key == "F12"
+            && imported.Actions.Count == fs25Custom.Actions.Count,
+            "FS25 import changes mapped keys without deleting personal buttons");
         check(full.Actions.All(a => a.Id is not ("drs" or "ers") && a.Group != "Вождение"), "Removed driving and overtake buttons stay absent");
         var fixture = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "fixtures", "f1-preset.json")));
         var expectedActions = JsonSerializer.Deserialize<List<DeckAction>>(fixture.RootElement.GetProperty("controls"), new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
@@ -71,8 +106,8 @@ static class ProfileTests
         File.WriteAllText(Path.Combine(path, "settings.json"), """{"Keys":{"lights":"F10","horn":"H","ignition":"V","reset":"R"},"Devices":[],"TargetProcess":"BeamNG.drive.x64"}""");
         await using var host = new CompanionHost(path);
         var token = PairingGate.NewToken(); host.Store.Trust("test", token);
-        check(host.Profile.Actions.Single(a => a.Id == "lights").Key == "F10" && host.Store.Value.Profiles.Count == 7, "Profile migration preserves existing user keys and adds all installed game profiles");
-        check(host.Store.Value.Profiles.Select(p => p.Id).ToHashSet().SetEquals(GameProfiles.KnownIds), "Profile catalog migration adds ACC, AMS2, ETS2 and SnowRunner exactly once");
+        check(host.Profile.Actions.Single(a => a.Id == "lights").Key == "F10" && host.Store.Value.Profiles.Count == 8, "Profile migration preserves existing user keys and adds all installed game profiles");
+        check(host.Store.Value.Profiles.Select(p => p.Id).ToHashSet().SetEquals(GameProfiles.KnownIds), "Profile catalog migration adds ACC, AMS2, ETS2, SnowRunner and FS25 exactly once");
         var custom = new DeckAction("custom-test", "Мои кнопки", "CUSTOM", "Test", "Ctrl+F12", "hold");
         var oldRevision = host.Profile.Revision;
         host.SaveProfile(host.Profile with { Actions = [.. host.Profile.Actions.Where(a => a.Id != "camera"), custom] });
@@ -85,7 +120,7 @@ static class ProfileTests
         check(host.Profile.Actions.Contains(custom) && host.Profile.Actions.All(a => a.Id != "camera"), "Custom button and deletion survive profile switch");
         var reloaded = new SettingsStore(path);
         check(reloaded.Value.ActiveProfile.Actions.Contains(custom) && reloaded.IsTrusted(token) && reloaded.Value.ActiveProfile.Actions.All(a => a.Id != "camera") && reloaded.Value.UseVirtualKeyInput, "Custom edits, pairing and input compatibility mode survive restart");
-        check(reloaded.Value.Profiles.Count == 7 && reloaded.Value.ProfileCatalogVersion == AdditionalProfiles.CatalogVersion, "Additional profile migration is idempotent across restart");
+        check(reloaded.Value.Profiles.Count == 8 && reloaded.Value.ProfileCatalogVersion == AdditionalProfiles.CatalogVersion, "Additional profile migration is idempotent across restart");
         try { GameProfiles.Validate(host.Profile with { Actions = [custom, custom] }); check(false, "Duplicate actions rejected"); } catch (ArgumentException) { check(true, "Duplicate actions rejected"); }
         try { GameProfiles.Validate(host.Profile with { Actions = [custom with { Id = "ignition", Gesture = "press" }] }); check(false, "Ignition safety preserved"); } catch (ArgumentException) { check(true, "Ignition safety preserved"); }
     }

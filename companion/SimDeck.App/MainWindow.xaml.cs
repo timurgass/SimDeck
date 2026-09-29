@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using Microsoft.Win32;
+using SimDeck.Core;
 
 namespace SimDeck.App;
 public partial class MainWindow : Window
@@ -114,6 +116,40 @@ public partial class MainWindow : Window
         rows.Clear(); foreach (var a in host.Profile.Actions) rows.Add(new(a));
         ProcessName.Text = host.Profile.TargetProcess;
         ProfileHelp.Text = GameProfiles.Help(host.Profile);
+        ImportFs25Button.Visibility = host.Profile.Id == "fs25" ? Visibility.Visible : Visibility.Collapsed;
+    }
+    void ImportFs25Bindings(object sender, RoutedEventArgs e)
+    {
+        if (host?.Profile.Id != "fs25") return;
+        try
+        {
+            ButtonGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+            ButtonGrid.CommitEdit(DataGridEditingUnit.Row, true);
+            if (!rows.Select(r => r.ToAction()).SequenceEqual(host.Profile.Actions) || ProcessName.Text != host.Profile.TargetProcess)
+                throw new InvalidOperationException("Сначала сохраните изменения текущего профиля.");
+            var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var suggested = Path.Combine(documents, "My Games", "FarmingSimulator2025", "inputBinding.xml");
+            var picker = new OpenFileDialog
+            {
+                Title = "Выберите inputBinding.xml Farming Simulator 25",
+                Filter = "Настройки клавиш FS25 (inputBinding.xml)|inputBinding.xml|XML (*.xml)|*.xml",
+                FileName = "inputBinding.xml",
+                InitialDirectory = Path.GetDirectoryName(suggested) is { } folder && Directory.Exists(folder) ? folder : documents
+            };
+            if (picker.ShowDialog(this) != true) return;
+            var bindings = Fs25Bindings.Load(picker.FileName);
+            if (bindings.Count == 0) throw new InvalidDataException("В файле не найдены клавиши FS25. Выберите inputBinding.xml из папки игры.");
+            var updated = Fs25Profile.ApplyPlayerBindings(host.Profile, bindings);
+            GameProfiles.Validate(updated);
+            var changed = updated.Actions.Zip(host.Profile.Actions).Count(pair => pair.First.Key != pair.Second.Key);
+            if (changed == 0) { ErrorLabel.Text = "Клавиши FS25 уже совпадают с профилем. Изменений нет."; return; }
+            host.Store.Backup("before-fs25-import");
+            EnableInput.IsChecked = false;
+            host.SaveProfile(updated);
+            LoadEditor();
+            ErrorLabel.Text = $"Клавиши FS25 обновлены: {changed}. Пользовательские кнопки сохранены; резервная копия настроек создана. Включите ввод после проверки.";
+        }
+        catch (Exception ex) { ErrorLabel.Text = "Импорт FS25: " + ex.Message; }
     }
     void ChangeProfile(object sender, RoutedEventArgs e)
     {

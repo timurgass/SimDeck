@@ -1,0 +1,1401 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SimDeck · Farming Simulator 25 — макет</title>
+<style>
+/* Палитра SimDeck, сдвинутая в землистые тона. Гоночные игры своего вида не теряют:
+   всё ниже действует только внутри раздела FS25. */
+:root{
+  color-scheme:dark;
+  --bg:#12150f; --card:#1c2117; --card2:#171b13; --line:#2f3a26;
+  --ink:#eef1e6; --mute:#a9b39a;
+  --gold:#d9b74a; --green:#7ea653; --mint:#9dd6a8;
+  --warn:#e0a04a; --danger:#d4703f;
+  --paper:#e8dfc8; --paperInk:#3a3226;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg); color:var(--ink); font-size:16px;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #1d2416 0%, transparent 60%),
+    var(--bg);}
+header{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+header strong{font-size:22px;letter-spacing:1px}
+header small{display:block;color:var(--mute);font-size:10px;letter-spacing:1.6px;text-transform:uppercase}
+#conn{font-size:12px;text-align:right;color:var(--mint);max-width:46%}
+main{max-width:1180px;margin:auto;padding:16px 20px 40px}
+nav{display:flex;gap:8px;overflow-x:auto;padding:12px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;
+  background:#12150fe6;backdrop-filter:blur(8px);z-index:10;-webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:#4a5a3c transparent}
+/* На телефоне прокрутка пальцем работает, мышью — нет. Поэтому полоса видимая,
+   а на широком экране вкладки просто переносятся на вторую строку. */
+nav::-webkit-scrollbar{height:6px}
+nav::-webkit-scrollbar-thumb{background:#4a5a3c;border-radius:6px}
+nav::-webkit-scrollbar-track{background:transparent}
+@media(min-width:620px){ nav{flex-wrap:wrap;overflow:visible} }
+nav button{white-space:nowrap;font:inherit;font-size:14px;padding:10px 15px;color:var(--mute);
+  border:1px solid var(--line);background:var(--card2);border-radius:13px;cursor:pointer}
+nav button.on{background:var(--gold);color:#1a1a12;border-color:var(--gold);font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:16px}
+.card.tight{padding:14px}
+h2{font-size:20px;margin:0 0 4px}
+h3{font-size:16px;margin:18px 0 8px;color:var(--mute);letter-spacing:.5px;text-transform:uppercase;font-size:12px}
+p{line-height:1.55;margin:8px 0}
+.eyebrow{display:block;font-size:11px;letter-spacing:1.4px;color:var(--mute);text-transform:uppercase;margin-bottom:6px}
+small{display:block;color:var(--mute);font-size:13px;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid #4a5a3c;background:#26301f;border-radius:13px;
+  padding:14px 16px;min-height:52px;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button:active,button.down{background:#38452c;transform:translateY(1px)}
+/* Брифинг */
+.hero{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between}
+.hero .day{font-size:44px;font-weight:700;line-height:1;letter-spacing:-1px}
+.hero .day span{color:var(--gold)}
+.wx{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--mute)}
+.wx b{color:var(--ink);font-weight:600}
+.money{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.money div{background:var(--card2);border-radius:12px;padding:12px}
+.money strong{display:block;font-size:22px;font-variant-numeric:tabular-nums;margin-top:3px}
+.money .loan strong{color:var(--warn)}
+/* Задачи */
+.task{display:grid;grid-template-columns:8px 1fr;gap:12px;background:var(--card2);border-radius:14px;
+  padding:14px;margin:10px 0;align-items:start}
+.task .bar{width:8px;border-radius:8px;align-self:stretch;min-height:44px}
+.task.urgent .bar{background:var(--danger)} .task.soon .bar{background:var(--warn)}
+.task.ok .bar{background:var(--green)} .task.done .bar{background:#4a5a3c}
+.task b{display:block;font-size:16px;margin-bottom:4px}
+.task.done b{text-decoration:line-through;color:var(--mute)}
+.chip{display:inline-block;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;
+  border-radius:20px;border:1px solid var(--line);color:var(--mute);margin-top:8px}
+.chip.plan{border-color:#5a6a45;color:var(--mint)}
+.chip.fix{border-color:var(--warn);color:var(--warn)}
+.taskFoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.taskFoot .chip{margin-top:0}
+.jump{font-size:11px;padding:5px 10px;min-height:auto;border-radius:20px;color:var(--mute);
+  background:transparent;border:1px solid var(--line)}
+.jump:active{background:#2b3524}
+.grp{margin:22px 0 4px;padding-left:12px;border-left:4px solid var(--line)}
+.grp h3{margin:0 0 2px;font-size:13px;letter-spacing:.6px;color:var(--ink)}
+.grp small{font-size:12px}
+.grp.urgent{border-left-color:var(--danger)} .grp.soon{border-left-color:var(--warn)}
+.grp.ok{border-left-color:var(--green)} .grp.done{border-left-color:#4a5a3c;opacity:.65}
+.dont{background:#241a16;border:1px solid #4a3128;border-radius:14px;padding:14px;margin:10px 0}
+.dont b{display:block;color:#f0a98a;margin-bottom:5px}
+.countdown{margin-top:16px;padding:14px;border-radius:14px;background:#2a2113;border:1px solid #5c4a24}
+.countdown b{display:block;color:var(--gold);margin-bottom:4px}
+.planCard{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.planCard.warnCard{background:#241f13;border-color:#5c4a24}
+.planTop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.planTop b{font-size:17px}
+.steps{display:grid;gap:8px;margin:10px 0 16px}
+.steps div{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:center;
+  background:var(--card2);border-radius:11px;padding:12px;font-size:14px}
+.steps b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  background:var(--gold);color:#1a1a12;font-size:13px}
+.wideBtn{width:100%;background:var(--gold);color:#1a1a12;border-color:var(--gold);font-weight:700}
+.wideBtn.done{background:var(--mint);border-color:var(--mint)}
+.copyHint{display:block;margin-top:10px;font-size:12px;line-height:1.55}
+.fmt{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.fmtHead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.fmtHead span{font-size:14px} .fmtHead b{color:var(--gold)}
+.fmt small{display:block;margin-top:9px}
+.code{background:#0e120c;border:1px solid var(--line);border-radius:10px;padding:13px;margin:11px 0 0;
+  font-family:ui-monospace,"Courier New",monospace;font-size:11.5px;line-height:1.55;color:#c9d6bd;
+  overflow-x:auto;white-space:pre;-webkit-overflow-scrolling:touch}
+/* Галочки на задачах */
+.tick{display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:4px}
+.tick input{width:21px;height:21px;flex:none;margin:1px 0 0;accent-color:var(--green);cursor:pointer}
+.tick.auto{cursor:default}
+.tick.auto input{cursor:default}
+.tick b{margin:0}
+.task.done .tick b{text-decoration:line-through;color:var(--mute)}
+.task.done small{opacity:.7}
+small.kit{margin-top:6px;color:var(--mint)}
+/* Что изменилось */
+.diff{display:grid;gap:7px;margin-top:10px}
+.diff div{display:flex;align-items:center;gap:10px;font-size:14px;background:var(--card2);
+  border-radius:10px;padding:11px 13px}
+.diff i{width:8px;height:8px;border-radius:50%;flex:none}
+.diff .good i{background:var(--mint)} .diff .bad i{background:var(--danger)}
+.diff .flat i{background:#4a5a3c}
+.diff .bad{color:#f0a98a}
+/* Режим в поле */
+.modeSwitch{width:100%;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;
+  font-size:14px;color:var(--mute);background:var(--card2)}
+.modeSwitch.on{background:var(--green);color:#111508;border-color:var(--green);font-weight:700}
+.modeSwitch span{font-size:17px}
+/* Главный ответ режима: работаете вы сейчас или едете впустую */
+.status{width:100%;display:block;text-align:center;border-radius:18px;padding:22px 18px;margin-bottom:12px}
+.status b{display:block;font-size:46px;line-height:1;letter-spacing:1px;font-weight:800}
+.status small{font-size:15px;margin-top:8px}
+.status.go{background:#173a24;border:2px solid var(--mint)}
+.status.go b{color:var(--mint)}
+.status.stop{background:#3a1f16;border:2px solid var(--danger)}
+.status.stop b{color:#ff9d72}
+.status.stop small{color:#f0b89e}
+.doing{text-align:center;color:var(--mute);font-size:14px;margin-bottom:16px}
+.levels{display:grid;gap:12px;margin-bottom:16px}
+.levels > div{display:grid;grid-template-columns:78px 1fr auto;gap:10px;align-items:center;
+  background:var(--card2);border-radius:12px;padding:12px 14px}
+.levels span{font-size:13px;color:var(--mute)}
+.levels b{font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.levels small{grid-column:2 / -1;font-size:12px;margin-top:-2px}
+.lvl{height:9px;border-radius:6px;background:#0f1410;overflow:hidden}
+.lvl i{display:block;height:100%;background:var(--green);border-radius:6px}
+.lvl.speed i{background:var(--gold)}
+.bigGrid .act{min-height:110px;font-size:17px}
+.nextLine{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:14px;
+  border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
+.nextLine .eyebrow{margin:0}
+/* Удержание отличается от импульса и на вид */
+.act{position:relative}
+.act.holdBtn{border-style:dashed;border-color:#6f7f57}
+.act.holdBtn:active,.act.holdBtn.down{background:#3d5230;border-style:solid}
+.gest{position:absolute;top:7px;right:9px;font-size:9px;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--mute);opacity:.85}
+/* Поля */
+svg.map{display:block;width:100%;height:auto;background:#141810;border-radius:16px}
+svg.map polygon{cursor:pointer;stroke:#0d100a;stroke-width:1.5;transition:filter .12s}
+svg.map polygon:hover{filter:brightness(1.25)}
+svg.map polygon.mine{stroke:var(--gold);stroke-width:3}
+svg.map polygon.sel{stroke:#fff;stroke-width:3.5}
+svg.map text{font-size:9px;fill:#0d100a;font-weight:700;pointer-events:none}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.legend span{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute)}
+.legend i{width:12px;height:12px;border-radius:3px;display:block}
+/* Показатели поля: доля, слово и стрелка изменения с прошлого сохранения */
+.gauge4{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}
+.stat{background:var(--card2);border-radius:12px;padding:12px}
+.statTop{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.statTop span{font-size:12px;color:var(--mute)}
+.stat strong{display:block;font-size:22px;font-variant-numeric:tabular-nums;margin:4px 0 7px}
+.stat .lvl{height:6px}
+.stat .lvl i.good{background:var(--mint)} .stat .lvl i.warnc{background:var(--warn)}
+.stat .lvl i.bad{background:var(--danger)}
+.stat small{font-size:12px;margin-top:6px}
+.delta{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.delta.bad{color:var(--danger)} .delta.good{color:var(--mint)}
+/* Урожай: ожидание, разбор потерь, факт */
+.yield{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:15px;margin-top:8px}
+.yTop{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;
+  padding-bottom:12px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+.yTop b{display:block;font-size:24px;font-variant-numeric:tabular-nums;margin-top:3px}
+.yAct{text-align:right;position:relative}
+.yPct{display:inline-block;font-size:12px;font-weight:700;margin-top:3px}
+.yBase{font-size:12px;color:var(--mute);margin-bottom:9px}
+.yRow{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:6px 0}
+.yRow b{font-variant-numeric:tabular-nums}
+.yRow.total{border-top:1px solid var(--line);margin-top:4px;padding-top:9px;font-weight:600}
+.yield > small{display:block;margin-top:10px;font-size:12px}
+.yActions{margin-top:12px}
+/* Коэффициент семян по месяцам */
+.factorRow{margin-top:16px}
+/* Двенадцать колонок влезают только на широком экране: на 375 px ячейка
+   выходит 24 px, и «0,81» обрезается. На телефоне — две строки по шесть. */
+.factors{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin:8px 0}
+.factors div{text-align:center;background:var(--card2);border-radius:7px;padding:8px 2px}
+.factors b{display:block;font-size:13px;font-variant-numeric:tabular-nums}
+.factors small{font-size:10px}
+@media(min-width:620px){
+  .factors{grid-template-columns:repeat(12,minmax(0,1fr));gap:3px}
+  .factors b{font-size:11px} .factors small{font-size:9px}
+}
+.factors .cheap{background:#2a3a24} .factors .cheap b{color:var(--mint)}
+.factors .now{outline:2px solid var(--gold);outline-offset:-2px}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.metric{background:var(--card2);border-radius:10px;padding:10px}
+.metric strong{display:block;font-size:17px;margin-top:3px}
+.bad{color:var(--danger)} .warnc{color:var(--warn)} .good{color:var(--mint)}
+/* Сеять */
+.crop{background:var(--card2);border-radius:14px;padding:14px;margin:10px 0;border-left:5px solid var(--line)}
+.crop.best{border-left-color:var(--gold)}
+.crop.open{border-left-color:var(--green)}
+.crop.shut{opacity:.5}
+.crop h4{margin:0 0 6px;font-size:17px;display:flex;align-items:center;gap:8px}
+.crop h4 i{width:14px;height:14px;border-radius:4px;display:block}
+.pros{font-size:13px;line-height:1.6;margin:6px 0 0;padding-left:18px}
+/* Магазин */
+.kit{display:grid;gap:8px}
+.kit div{display:grid;grid-template-columns:1fr auto;gap:10px;background:var(--card2);padding:12px;border-radius:11px;font-size:14px}
+.kit b{font-weight:600}
+.tag{font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;align-self:center}
+.tag.have{background:#2a3a24;color:var(--mint)} .tag.need{background:#3d2a1c;color:var(--warn)}
+.tag.sell{background:#3a2420;color:var(--danger)}
+/* Вложенные вкладки разделов. Выделение намеренно зелёное, как у страниц пульта:
+   золотой оставлен верхней навигации, чтобы уровни не путались. */
+.subTabs{margin:14px 0 6px}
+.subTabs button{font-size:13px;padding:9px 14px;min-height:auto;color:var(--mute);
+  background:var(--card2);border:1px solid var(--line);border-radius:11px}
+/* Каталог: выбор и итог */
+.pick{cursor:pointer;border:1px solid transparent;transition:border-color .12s,background .12s}
+.pick:active{background:#222a1c}
+.pick.picked{border-color:var(--mint);background:#1d2a1c}
+.pick .why{color:var(--mute);margin-top:4px}
+.badge{font-style:normal;font-size:10px;letter-spacing:.6px;text-transform:uppercase;
+  background:#3a3016;color:var(--gold);padding:2px 7px;border-radius:20px;margin-left:6px;white-space:nowrap}
+.totalBar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:16px;
+  padding:16px;border-radius:14px;background:var(--card2);border:1px solid var(--line);opacity:.5}
+.totalBar.on{opacity:1;border-color:var(--gold)}
+.totalBar b{display:block;font-size:22px;font-variant-numeric:tabular-nums;margin-top:3px}
+.totalBar .after{text-align:right}
+/* Таблица цен на культуры */
+.priceHead{display:grid;grid-template-columns:1.5fr 1fr 1.2fr;gap:10px;padding:0 4px 8px;
+  font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mute)}
+.priceRow{display:grid;grid-template-columns:1.5fr 1fr 1.2fr;gap:10px;align-items:center;
+  background:var(--card2);border-radius:12px;padding:12px;margin-bottom:8px}
+.pName{display:flex;align-items:center;gap:9px;min-width:0}
+.pName i{width:13px;height:13px;border-radius:4px;flex:none}
+.pName b{font-size:15px} .pName small{font-size:11px}
+.pNow b,.pBest b{font-size:17px;font-variant-numeric:tabular-nums}
+.pNow small,.pBest small{font-size:11px}
+.pFoot{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px 18px;padding-top:9px;margin-top:2px;
+  border-top:1px solid var(--line);font-size:12px;color:var(--mute)}
+.pFoot b{color:var(--ink)}
+@media(max-width:520px){
+  .priceHead{display:none}
+  .priceRow{grid-template-columns:1fr 1fr}
+  .pName{grid-column:1 / -1}
+}
+/* Письма */
+.letter{background:var(--paper);color:var(--paperInk);border-radius:6px;padding:26px 24px;margin:14px 0;
+  font-family:"Courier New",ui-monospace,monospace;line-height:1.7;box-shadow:0 10px 30px #0006;
+  background-image:repeating-linear-gradient(#0000 0 26px,#3a322611 26px 27px)}
+.letter .lh{display:flex;justify-content:space-between;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+  border-bottom:1px solid #3a322633;padding-bottom:10px;margin-bottom:14px;opacity:.7}
+.letter h4{margin:0 0 12px;font-size:17px;letter-spacing:.5px}
+.letter p{margin:10px 0;font-size:14px}
+.letter .sig{margin-top:18px;font-style:italic;opacity:.75;font-size:13px}
+/* Календарь */
+.cal{overflow-x:auto}
+.calGrid{display:grid;grid-template-columns:104px repeat(12,minmax(30px,1fr));gap:3px;min-width:560px;align-items:center}
+.calGrid .mh{font-size:10px;color:var(--mute);text-align:center;padding-bottom:4px}
+.calGrid .mh.now{color:var(--gold);font-weight:700}
+.calGrid .rn{font-size:13px;display:flex;align-items:center;gap:7px}
+.calGrid .rn i{width:11px;height:11px;border-radius:3px;display:block;flex:none}
+.cell{height:26px;border-radius:5px;background:#1b2016}
+.cell.sow{background:var(--gold)} .cell.grow{background:#3c5a2e} .cell.harv{background:var(--danger)}
+.cell.now{outline:2px solid #fff6;outline-offset:-2px}
+.calKey{display:flex;gap:14px;margin-top:12px;font-size:12px;color:var(--mute);flex-wrap:wrap}
+.calKey span{display:flex;align-items:center;gap:6px}
+.calKey i{width:12px;height:12px;border-radius:3px;display:block}
+/* Пульт */
+.tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;margin-bottom:10px}
+.tabs button{font-size:13px;padding:9px 13px;min-height:auto}
+.tabs button.on{background:var(--green);color:#111508;border-color:var(--green);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.act{min-height:92px;font-weight:600;font-size:15px;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;text-align:center;gap:6px;line-height:1.25}
+.act small{font-size:11px;color:var(--mute)}
+.act .k{font-size:10px;color:var(--gold);letter-spacing:1px}
+.act.on{background:#1d3a24;border:2px solid var(--mint)}
+.gauges{display:flex;justify-content:space-around;text-align:center;margin:4px 0 10px}
+.gauges strong{display:block;font-size:46px;font-variant-numeric:tabular-nums;line-height:1.05}
+.gauges small{font-size:10px;letter-spacing:1px}
+.rpm{font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums;margin:6px 0}
+progress{width:100%;height:9px;accent-color:var(--green)}
+.note{font-size:12px;color:var(--mute);line-height:1.6;border-left:3px solid var(--line);padding-left:12px;margin:14px 0}
+[hidden]{display:none!important}
+@media(min-width:760px){
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .money{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .split{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;align-items:start}
+  .split .card{margin-bottom:0}
+}
+@media(max-width:520px){main{padding:12px}.card{padding:15px}.hero .day{font-size:34px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div><small>SimDeck 0.8.3 · макет</small><strong>Farming Simulator 25</strong></div>
+  <div id="conn">Макет интерфейса<br>данные не поступают из игры</div>
+</header>
+
+<nav id="nav"></nav>
+<main id="main"></main>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Данные ниже взяты из настоящих файлов: savegame1 (environment/fields/farms/
+// economy/vehicles) и data/ игры (foliage — цвета карты, окна посева, нормы).
+// Ничего не выдумано; проверяемо построчно.
+// ─────────────────────────────────────────────────────────────────────────────
+const PERIODS = ["EARLY_SPRING","MID_SPRING","LATE_SPRING","EARLY_SUMMER","MID_SUMMER","LATE_SUMMER",
+                 "EARLY_AUTUMN","MID_AUTUMN","LATE_AUTUMN","EARLY_WINTER","MID_WINTER","LATE_WINTER"];
+const PERIODS_RU = ["ранняя весна","середина весны","поздняя весна","начало лета","середина лета","конец лета",
+                    "начало осени","середина осени","поздняя осень","начало зимы","середина зимы","конец зимы"];
+const MONTHS  = ["март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь","январь","февраль"];
+const MSHORT  = ["мар","апр","май","июн","июл","авг","сен","окт","ноя","дек","янв","фев"];
+// environment.xml: currentDay 6, daysPerPeriod 1 → период 6 = LATE_SUMMER = август.
+// Массивы выше нумеруются с нуля, поэтому индекс на единицу меньше номера периода.
+// Именно ради этой ловушки в SimDeck.Core заведён отдельный тип Period.
+const DAY = 6, PERIOD_NO = 6, NOW = PERIOD_NO - 1;
+const SEASON = "лето";
+
+// data/foliage/*/*.xml — mapColors default, переведённые из линейного в sRGB
+const CROPS = {
+  WHEAT    :{ru:"Пшеница",       c:"#CEAB4F", seed:0.0308, yield:0.89, roll:1, lime:1, sow:[6,7]},
+  BARLEY   :{ru:"Ячмень",        c:"#897246", seed:0.0265, yield:0.96, roll:1, lime:1, sow:[6,7]},
+  CANOLA   :{ru:"Канола",        c:"#9CC251", seed:0.0049, yield:0.58, roll:1, lime:1, sow:[5,6]},
+  OAT      :{ru:"Овёс",          c:"#B36A2F", seed:0.034,  yield:0.57, roll:1, lime:1, sow:[0,1]},
+  MAIZE    :{ru:"Кукуруза",      c:"#E89A2D", seed:0.0053, yield:0.92, roll:0, lime:1, sow:[1,2]},
+  SUNFLOWER:{ru:"Подсолнечник",  c:"#EACB22", seed:0.0143, yield:0.52, roll:0, lime:1, sow:[0,1]},
+  SOYBEAN  :{ru:"Соя",           c:"#81852E", seed:0.0214, yield:0.45, roll:1, lime:1, sow:[1,2]},
+  POTATO   :{ru:"Картофель",     c:"#8C634F", seed:0.3733, yield:4.13, roll:0, lime:1, sow:[0,1]},
+  SUGARBEET:{ru:"Сах. свёкла",   c:"#D9A38F", seed:0.0034, yield:5.78, roll:1, lime:1, sow:[0,1]},
+  COTTON   :{ru:"Хлопок",        c:"#F2E8E6", seed:0.005,  yield:0.497,roll:0, lime:1, sow:[0,11]},
+  SORGHUM  :{ru:"Сорго",         c:"#705042", seed:0.0035, yield:0.82, roll:0, lime:1, sow:[1,2]},
+  GRASS    :{ru:"Трава",         c:"#3A622C", seed:0.012,  yield:4.37, roll:0, lime:0, sow:[0,1,2,3,4,5,6,7,8]},
+  BEETROOT :{ru:"Стол. свёкла",  c:"#B6145B", seed:0.004,  yield:5.78, roll:0, lime:1, sow:[1,2,3]},
+  CARROT   :{ru:"Морковь",       c:"#E06635", seed:0.001,  yield:7.7,  roll:0, lime:1, sow:[1,2,3,4]},
+  PARSNIP  :{ru:"Пастернак",     c:"#D7BE9B", seed:0.001,  yield:6.95, roll:0, lime:1, sow:[1,2,3]},
+  GREENBEAN:{ru:"Зел. фасоль",   c:"#1BD9AF", seed:0.028,  yield:0.6975,roll:0,lime:1, sow:[1,2,3]},
+  PEA      :{ru:"Горох",         c:"#2C8D62", seed:0.025,  yield:0.96, roll:0, lime:1, sow:[0,1]},
+  SPINACH  :{ru:"Шпинат",        c:"#9ED02E", seed:0.001,  yield:2.31, roll:0, lime:1, sow:[0,1,2]},
+  ONION    :{ru:"Лук",           c:"#E5D0B6", seed:0.0009, yield:3.5,  roll:1, lime:1, sow:[0,1]},
+  UNKNOWN  :{ru:"Пусто",         c:"#4a5340", seed:0, yield:0, roll:0, lime:0, sow:[]},
+};
+// economy.xml — цена за 1000 л по 12 периодам
+const PRICE = {
+  WHEAT:[337,361,334,317,286,273,290,334,364,381,408,364],
+  BARLEY:[313,335,310,294,266,254,269,310,338,354,379,338],
+  CANOLA:[645,597,567,513,488,519,597,651,681,730,651,603],
+  OAT:[532,569,527,500,452,431,458,527,575,601,644,575],
+  POTATO:[222,211,200,211,222,222,222,233,244,255,244,233],
+  SUGARBEET:[172,163,155,163,172,172,172,181,189,198,189,181],
+  MAIZE:[426,410,395,433,498,372,334,270,232,350,505,372],
+  SUNFLOWER:[808,787,707,586,633,666,740,747,713,437,498,754],
+};
+const SEED_PRICE = 0.9, LIME_PRICE = 0.225, FERT_PRICE = 1.60;
+const SEASON_FACTOR = [1.00,1.07,0.99,0.94,0.85,0.81,0.86,0.99,1.08,1.13,1.21,1.08];
+
+// fields.xml — реальное состояние. mine: farmland.xml → участки 45 и 46 наши.
+const FIELDS = [
+  {id:1,crop:"MAIZE",gs:4,ground:"SOWN",weed:1,lime:3,spray:2,plow:1},
+  {id:2,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:3,lime:1,spray:1,plow:1},
+  {id:5,crop:"OAT",gs:5,ground:"HARVEST_READY",weed:5,lime:0,spray:1,plow:1},
+  {id:10,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:7,lime:2,spray:0,plow:1},
+  {id:12,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:7,lime:1,spray:2,plow:1},
+  {id:15,crop:"CANOLA",gs:9,ground:"HARVEST_READY_OTHER",weed:6,lime:0,spray:1,plow:1},
+  {id:17,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:5,lime:3,spray:2,plow:1},
+  {id:24,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:5,lime:3,spray:2,plow:1},
+  {id:25,crop:"CANOLA",gs:9,ground:"HARVEST_READY_OTHER",weed:3,lime:3,spray:2,plow:1},
+  {id:28,crop:"OAT",gs:5,ground:"HARVEST_READY",weed:4,lime:1,spray:2,plow:1},
+  {id:29,crop:"GRASS",gs:3,ground:"GRASS",weed:0,lime:2,spray:2,plow:1},
+  {id:31,crop:"UNKNOWN",gs:0,ground:"CULTIVATED",weed:0,lime:2,spray:0,plow:1},
+  {id:35,crop:"UNKNOWN",gs:0,ground:"PLOWED",weed:0,lime:1,spray:2,plow:1},
+  {id:39,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:9,lime:0,spray:2,plow:1},
+  {id:40,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:8,lime:2,spray:0,plow:1},
+  {id:42,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:9,lime:1,spray:2,plow:1},
+  // Площадь в гектарах даёт мод: в файлах сейва она лежит в закрытом формате.
+  {id:45,crop:"UNKNOWN",gs:0,ground:"PLOWED",weed:0,lime:0,spray:0,plow:1,mine:1,ha:1.7},
+  {id:46,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:0,lime:0,spray:0,plow:0,mine:1,ha:2.1},
+  {id:47,crop:"COTTON",gs:8,ground:"SOWN",weed:7,lime:0,spray:0,plow:1},
+  {id:50,crop:"SORGHUM",gs:4,ground:"SOWN",weed:4,lime:1,spray:0,plow:1},
+  {id:61,crop:"CANOLA",gs:9,ground:"HARVEST_READY_OTHER",weed:4,lime:2,spray:2,plow:1},
+];
+// vehicles.xml + storeData из data/vehicles
+const FLEET = [
+  {n:"Challenger MT600",    t:"Трактор 160 л.с.",         have:1},
+  {n:"John Deere 3650",     t:"Трактор 116 л.с.",         have:1},
+  {n:"MF 8570",             t:"Комбайн 250 л.с.",         have:1},
+  {n:"MF 8570 жатка 6 м",   t:"Зерновая жатка",           have:1},
+  {n:"Great Plains 1500",   t:"Сеялка 4,6 м · 110 л.с.",  have:1},
+  {n:"John Deere 980",      t:"Культиватор 4 м",          have:1},
+  {n:"Farmtech EDK 650",    t:"Прицеп-самосвал",          have:1},
+];
+// Цены и характеристики — из файлов установленной игры, не на глаз.
+// Известь в базовой игре умеют сыпать всего две машины: дешёвые разбрасыватели
+// берут только удобрение, и это важно, потому что подводит под лишнюю покупку.
+const CATALOG = [
+  {id:"k105", n:"Bredal K105", cat:"Известь", price:45000, w:"24 м", cap:"9 000 л",
+   note:"Берёт и известь, и удобрение — закрывает сразу две дыры", best:true},
+  {id:"fw212", n:"Streumaster FW 212 TD PROFI", cat:"Известь", price:92000, w:"—", cap:"—",
+   note:"Тоже с известью, но вдвое дороже без выигрыша для двух полей"},
+
+  {id:"rzk", n:"Salek RZK 300H", cat:"Удобрение", price:2000, w:"14 м", cap:"300 л",
+   note:"Известь не берёт. Зато почти даром и хватит на два поля", best:true},
+  {id:"zats", n:"Amazone ZA-TS 3200", cat:"Удобрение", price:25000, w:"42 м", cap:"3 200 л",
+   note:"Известь не берёт. Ширина 42 м избыточна для ваших площадей"},
+
+  {id:"rexius", n:"Väderstad Rexius 1230", cat:"Каток", price:46500, w:"12,3 м", cap:"120 л.с.",
+   note:"Прикатывание после посева пшеницы и канолы", best:true},
+  {id:"landroller", n:"Brandt LandRoller 591A", cat:"Каток", price:115000, w:"27,7 м", cap:"275 л.с.",
+   note:"Требует 275 л.с. — ваш самый сильный трактор даёт 160"},
+
+  {id:"puler", n:"Gorenc Puler 600", cat:"Сорняки", price:6500, w:"6 м", cap:"60 л.с.",
+   note:"Пропольщик: убирает сорняки железом, без химии и без бака", best:true},
+  {id:"rotocare", n:"Pöttinger ROTOCARE V 12400", cat:"Сорняки", price:36000, w:"12,4 м", cap:"160 л.с.",
+   note:"Тот же принцип, шире и ровно под ваш Challenger"},
+  {id:"mega", n:"Hardi MEGA 1200L", cat:"Сорняки", price:30500, w:"24 м", cap:"1 200 л",
+   note:"Опрыскиватель. Дороже пропольщика и требует покупки гербицида"},
+
+  {id:"scorpio", n:"Elho Scorpio 550", cat:"Камни", price:56000, w:"5,5 м", cap:"120 л.с.",
+   note:"Камни в игре включены, но на ваших полях их пока нет"},
+];
+const CAT_ORDER = ["Известь","Удобрение","Сорняки","Каток","Камни"];
+const NEEDED = [
+  {n:"Разбрасыватель извести", t:"Без него не подготовить поле 45, а посевное окно закрывается", price:"от 45 000 €"},
+  {n:"Пропольщик или опрыскиватель", t:"Сорняки включены, на соседних полях уже под завязку", price:"от 6 500 €"},
+  {n:"Каток", t:"Пшенице и каноле нужно прикатывание после посева", price:"от 46 500 €"},
+  {n:"Разбрасыватель удобрений", t:"Без подкормки урожай заметно ниже", price:"от 2 000 €"},
+];
+
+// Приоритет: 1 — горит сейчас, 2 — важно, но не сегодня, 3 — на потом.
+// Порядок внутри группы — как написано.
+const SEASON_PLAN = [
+  {id:"t1", pri:1, title:"Убрать пшеницу с поля 46", field:46, page:"Посев", src:"plan",
+   why:"Пшеница поспела, и август — последний месяц. Дотянете до сентября — она высохнет на корню, и весь труд пропадёт.",
+   kit:"Комбайн и жатка у вас есть, делать можно прямо сегодня."},
+  {id:"t2", pri:1, title:"Купить разбрасыватель извести", src:"fix",
+   why:"Без него не выйдет подготовить поле 45, а посевное окно закрывается через месяц. Это первое, за чем стоит съездить.",
+   kit:"В магазине от 45 000 € — известь возят только две машины в базовой игре."},
+  {id:"t3", pri:2, title:"Внести известь на поле 45", field:45, src:"fix",
+   why:"Земля на этом поле сильно закислена. Почти всё, что здесь растят, на кислой земле просто не поднимется — семена уйдут впустую.",
+   kit:"Нужен разбрасыватель извести, которого пока нет."},
+  {id:"t4", pri:2, title:"Посеять канолу на поле 45", field:45, page:"Посев", src:"plan",
+   why:"В августе сеять можно только канолу и траву. В сентябре окно закроется, и до марта поле будет стоять пустым.",
+   kit:"Сеялка подходит. Сначала известь, потом посев."},
+  {id:"t5", pri:3, title:"Присмотреть каток", src:"fix",
+   why:"После посева каноле нужно прикатывание, иначе часть семян не взойдёт. Успеете купить, пока идёт известкование.",
+   kit:"В магазине от 46 500 €."},
+  {id:"t6", pri:0, title:"Вспахать поле 45", field:45, src:"plan",
+   why:"Поле уже вспахано — вычеркнуто само, делать ничего не нужно.", kit:""},
+];
+
+// То, чего делать НЕ стоит. Отдельным блоком: новичку это важнее половины задач.
+const DONT = [
+  {title:"Не продавайте пшеницу сразу после уборки",
+   why:"Сейчас за неё дают меньше всего за весь год — 273 за тысячу литров. К январю поднимется до 408. Полтора месяца в амбаре добавляют почти половину выручки."},
+  {title:"Не сейте пшеницу в августе",
+   why:"Её время — сентябрь и октябрь. Посеете сейчас — просто потеряете семена."},
+  {title:"Не беритесь за картофель, свёклу и кукурузу",
+   why:"Под них нужны отдельная сажалка и отдельный уборщик, а у вас нет ни того, ни другого. Посадить получится, убрать — нет."},
+  {title:"Не тратьте кредит на технику впрок",
+   why:"Проценты идут каждый день. Берите то, что нужно на ближайший месяц: известь сейчас, каток к посеву, опрыскиватель к весне."},
+];
+
+// Что поменялось с прошлого сохранения — приложение сравнивает два снимка фермы.
+const SINCE_SAVE = [
+  {t:"good", s:"Поле 45 вспахано"},
+  {t:"good", s:"Пшеница на поле 46 дозрела до уборки"},
+  {t:"bad",  s:"Сорняки на поле 39 выросли с 7 до 9"},
+  {t:"flat", s:"Денег столько же — 1 000 000 €"},
+];
+// Итог сезона показывается, когда сезон закрывается.
+const SEASON_SUMMARY = {
+  season:"Лето", done:3, of:6,
+  lines:[
+    {t:"good", s:"Вспахано полей: 1"},
+    {t:"bad",  s:"Посеяно за лето: ничего"},
+    {t:"bad",  s:"Продано урожая: ничего"},
+    {t:"flat", s:"Проценты по кредиту съели часть счёта"},
+  ],
+  verdict:"Лето прошло вхолостую. Осенью так нельзя: пшеница на поле 46 не переживёт сентябрь.",
+};
+
+// План пишется заранее и кладётся файлом. Приложение показывает, что загружено,
+// насколько это свежо и чего не хватает.
+const PLAN = {
+  loaded:true, name:"Осень первого года", author:"Весельчак",
+  forSeason:"лето — осень", covers:[5,6,7,8], written:"перед 6-м днём",
+  version:1, tasks:6, letters:2,
+  nextGap:"зиму", // винительный падеж: «на зиму плана ещё нет»
+};
+
+// Пример файла — он же образец, который уезжает в задание для ИИ.
+const PLAN_SAMPLE = `{
+  "planVersion": 1,
+  "name": "Осень первого года",
+  "forPeriods": [7, 8, 9],
+  "tasks": [
+    {
+      "id": "harvest-46",
+      "title": "Убрать пшеницу с поля 46",
+      "why": "Поспела, и август — последний месяц.",
+      "kit": "Комбайн и жатка у вас есть.",
+      "priority": 1,
+      "field": 46,
+      "deckPage": "Посев"
+    }
+  ],
+  "dont": [
+    {
+      "title": "Не продавайте пшеницу сразу",
+      "why": "Сейчас минимум года, к январю дадут на 49 % больше."
+    }
+  ],
+  "letters": [
+    {
+      "id": "autumn-1",
+      "date": "6-й день · август",
+      "subject": "О вашей пшенице",
+      "body": ["Уважаемый клиент,", "Второй абзац."],
+      "sign": "Ваш Весельчак, финансовый агент"
+    }
+  ]
+}`;
+
+// Задание для ИИ. Состояние фермы подставляется из текущего снимка,
+// чтобы не пришлось ничего дописывать руками.
+function promptText(){
+  const mine = FIELDS.filter(f=>f.mine).map(f=>{
+    const c = CROPS[f.crop], stage = stageOf(f);
+    // На пустом поле состояние уже и есть «вспахано» — второй раз не повторяем.
+    const plow = stage.includes("вспахано") ? "" : `, ${f.plow ? "вспахано" : "не вспахано"}`;
+    return `  - Поле ${f.id}, ${String(f.ha).replace(".",",")} га: ${c.ru.toLowerCase()}, ${stage}; `
+      + `сорняки ${f.weed} из 9, известь ${f.lime} из 3, удобрение ${f.spray} из 3${plow}`;
+  }).join("\n");
+  const sowable = Object.entries(CROPS)
+    .filter(([k,v])=>k!=="UNKNOWN" && v.sow.includes(NOW)).map(([,v])=>v.ru.toLowerCase()).join(", ");
+  return `Ты — Весельчак, финансовый агент моей фермы. Не сосед и не приятель: тебе платят за то,
+чтобы ферма не разорилась, поэтому каждый совет ты в конце сводишь к деньгам — во что это встанет,
+что принесёт, что будет стоить бездействие. Говоришь коротко, по делу, с сухим британским юмором,
+но первая строка каждого совета всегда отвечает на вопрос «что сделать».
+Обращаешься на «вы». Никаких технических терминов и названий файлов.
+
+Составь план на сезон для моей фермы в Farming Simulator 25 и верни его ОДНИМ файлом JSON,
+без пояснений до и после.
+
+Положение дел на сегодня:
+- Карта Zielonka, ${PERIODS_RU[NOW]} (${MONTHS[NOW]}), день ${DAY}. Сложная экономика.
+- Денег ${eur(MONEY)}, кредит ${eur(LOAN)}.
+- Мои поля:
+${mine}
+- Техника: трактор 160 л.с., трактор 116 л.с., комбайн с зерновой жаткой 6 м,
+  сеялка 4,6 м, культиватор 4 м, прицеп-самосвал.
+- Чего нет: разбрасывателя извести, катка, опрыскивателя, разбрасывателя удобрений,
+  сажалки и уборщика корнеплодов.
+- Сеять в этом месяце можно: ${sowable}.
+- Пшеница сейчас ${PRICE.WHEAT[NOW]} € за 1000 л, это минимум года; в январе ${Math.max(...PRICE.WHEAT)} €.
+
+Требования к плану:
+- От 4 до 8 задач. priority: 1 — горит сейчас, 2 — важно, 3 — можно позже.
+- В каждой задаче поле why объясняет причину простыми словами, поле kit — чем это делать
+  и есть ли оно у меня.
+- Отдельно 3-4 пункта в dont: чего делать НЕ стоит и почему. Для новичка это важнее половины задач.
+- Два письма в letters, каждое на 3-4 абзаца, в твоём голосе.
+- deckPage указывай только если задача делается кнопками в тракторе: "Орудие", "Посев",
+  "Трактор", "Погрузчик", "Помощник" или "Хозяйство".
+
+Формат — строго такой:
+${PLAN_SAMPLE}`;
+}
+
+const LETTERS = [
+  {id:"l1", date:"6-й день · август", subj:"О вашей пшенице, которая вот-вот станет сеном",
+   body:[`Уважаемый клиент,`,
+     `Заезжал к вам с ведомостью, по дороге посмотрел поле 46 и был вынужден остановиться. Пшеница ваша спелая — и, что важнее, спелая последний месяц. В августе она либо в бункере, либо в истории. Комбайн у вас, к счастью, уже есть, хотя судя по виду он помнит ещё прошлый век.`,
+     `Продавать сейчас не советую категорически. Двести семьдесят три евро за тысячу литров — это не цена, это оскорбление. К январю дадут четыреста восемь. Полтора месяца терпения стоят половины выручки.`,
+     `Поле 45 лежит вспаханное и совершенно праздное. В августе туда просится канола: семян нужно вчетверо меньше, чем на пшеницу, а платят за неё вдвое лучше. Но сначала известь. Уровень нуль — земля у вас кислая, как отзывы критиков.`],
+   sig:"Ваш Весельчак, финансовый агент"},
+  {id:"l2", date:"7-й день · сентябрь", subj:"Осень и последнее окно",
+   body:[`Уважаемый клиент,`,
+     `Осень. Для вас это значит ровно одно: сентябрь — последний месяц, когда канолу ещё можно сеять. С октября — только озимые пшеница и ячмень, а дальше земля отдыхает, чего не могу сказать о вашем кредите.`,
+     `Кстати о кредите. Двести пятьдесят тысяч под сложные проценты — это не «стартовый капитал», это счётчик. Каждый месяц простоя поля обходится дороже, чем вам кажется.`],
+   sig:"Ваш Весельчак, финансовый агент"},
+];
+
+const DECK = {
+  "Орудие":[
+    ["ОПУСТИТЬ / ПОДНЯТЬ","Опускает и поднимает орудие","V"],
+    ["ОПУСТИТЬ ВСЁ","Все орудия сразу","Ctrl+V"],
+    ["ВКЛЮЧИТЬ АГРЕГАТ","Запускает сеялку, культиватор","B",1],
+    ["ВКЛЮЧИТЬ ВСЁ","Все орудия сразу","Ctrl+B"],
+    ["СЛОЖИТЬ / РАЗЛОЖИТЬ","Транспорт и работа","Ctrl+X"],
+    ["ШИРИНА ЗАХВАТА","Где ширина меняется","Ctrl+Z"],
+    ["РЕЖИМ РАБОТЫ","Где режим есть","Ctrl+Y"],
+    ["ПРИЦЕПИТЬ","Ближайшее орудие","Q"],
+    ["ОТЦЕПИТЬ","Текущее орудие","Ctrl+Q"],
+    ["СЛЕДУЮЩЕЕ ОРУДИЕ","Другое в сцепке","G"],
+    ["ПРЕДЫДУЩЕЕ ОРУДИЕ","Обратный порядок","Shift+G"],
+    ["ДОП. ФУНКЦИЯ 2","Зависит от орудия","X"],
+  ],
+  "Посев":[
+    ["ВЫБРАТЬ КУЛЬТУРУ","Культуры сеялки","Y"],
+    ["КУЛЬТУРА НАЗАД","Обратный порядок","Shift+Y"],
+    ["ДВОЙНАЯ НОРМА","Удвоенный расход","OemComma"],
+    ["ТРУБА ВЫГРУЗКИ","Труба комбайна","O"],
+    ["РАЗГРУЗИТЬ","Комбайн или прицеп","I"],
+    ["СТОРОНА СВАЛКИ","Куда сыпать","U"],
+    ["ТЕНТ / КРЫШКА","Открыть кузов","N"],
+    ["ИЗМЕЛЬЧИТЕЛЬ","Солома в валок","OemComma"],
+  ],
+  "Трактор":[
+    ["ДВИГАТЕЛЬ","Пуск и остановка","Return",1],
+    ["СМЕНА НАПРАВЛЕНИЯ","Вперёд или назад","Space"],
+    ["КРУИЗ-КОНТРОЛЬ","Держит скорость","D3",1],
+    ["ПЕРЕДАЧА +","Ручная коробка","Add"],
+    ["ПЕРЕДАЧА −","Ручная коробка","Subtract"],
+    ["ДИАПАЗОН +","Повышающий ряд","NumPad9"],
+    ["ДИАПАЗОН −","Понижающий ряд","NumPad7"],
+    ["СВЕТ","Ближний","F"],
+    ["ДАЛЬНИЙ","Дальний","Ctrl+F"],
+    ["РАБОЧИЙ ПЕРЕД","Передние фары","NumPad5",1],
+    ["РАБОЧИЙ ЗАД","Задние фары","NumPad6"],
+    ["МАЯЧОК","Проблесковый","Home",1],
+    ["ПОВОРОТ ВЛЕВО","Левый указатель","NumPad1"],
+    ["ПОВОРОТ ВПРАВО","Правый указатель","NumPad3"],
+    ["АВАРИЙКА","Обе стороны","NumPad2"],
+    ["СИГНАЛ","Гудит, пока держите","D0",0,"hold"],
+    ["КАМЕРА","Следующая","C"],
+    ["ПОДЪЁМНАЯ ОСЬ","Где ось есть","Z"],
+  ],
+  // Погрузчик и труба — единственное, что в этой игре вправду тянется,
+  // пока держишь клавишу. Здесь удержание не украшение, а то, как оно работает.
+  "Погрузчик":[
+    ["СТРЕЛА ВВЕРХ","Пока держите","J",0,"hold"],
+    ["СТРЕЛА ВНИЗ","Пока держите","Shift+J",0,"hold"],
+    ["КОВШ НА СЕБЯ","Пока держите","K",0,"hold"],
+    ["КОВШ ОТ СЕБЯ","Пока держите","Shift+K",0,"hold"],
+    ["ЗАХВАТ ОТКРЫТЬ","Пока держите","Ctrl+K",0,"hold"],
+    ["ТРУБА ВЫДВИНУТЬ","Пока держите","Shift+K",0,"hold"],
+  ],
+  "Помощник":[
+    ["НАНЯТЬ / УВОЛИТЬ","Помощник за рулём","H"],
+    ["СЛЕДУЮЩАЯ МАШИНА","Переключить","Tab"],
+    ["ПРЕДЫДУЩАЯ МАШИНА","Обратный порядок","Shift+Tab"],
+    ["ВОЙТИ / ВЫЙТИ","Сесть и выйти","E"],
+    ["СМЕНИТЬ МЕСТО","Где есть места","Ctrl+G"],
+  ],
+  "Хозяйство":[
+    ["МЕНЮ","Главное меню","Escape"],
+    ["МАГАЗИН","Магазин техники","P"],
+    ["КАРТА","Размер карты","D9"],
+    ["СТРОИТЕЛЬСТВО","Режим постройки","Shift+P"],
+    ["ПОДСКАЗКИ","Игровые подсказки","F1"],
+    ["ПАУЗА","Остановить время","Pause"],
+    ["ВРЕМЯ +","Ускорить","D8"],
+    ["ВРЕМЯ −","Замедлить","D7"],
+    ["РАДИО","Вкл. и выкл.","D5"],
+  ],
+};
+
+// ─── правила: что делать с полем ────────────────────────────────────────────
+const STATES = { // порядок foliageState, 1-based, из foliage/*.xml
+  WHEAT:9, CANOLA:11, OAT:7, MAIZE:10, COTTON:12, SORGHUM:7, GRASS:6, UNKNOWN:0,
+};
+// Голое «6 / 9» новичку ничего не говорит: непонятно, много это или мало
+// и в какую сторону хорошо. Поэтому доля, слово и стрелка изменения.
+const CHANGE = { 46:{}, 45:{lime:0}, 39:{weed:+2}, 40:{weed:+1}, 10:{weed:+1}, 15:{weed:+2} };
+
+function weedWord(v){ return v===0?"чисто" : v<=2?"единичные" : v<=5?"заметно" : "много"; }
+function limeWord(v){ return v===0?"кислая земля" : v===1?"мало" : v===2?"нормально" : "хорошо"; }
+
+function stat(name, value, max, word, cls, delta){
+  const pct = Math.round(value/max*100);
+  // Стрелку тоже в процентах: рядом с «100 %» голое «2» читается как другая единица.
+  // У сорняков рост — это плохо, у остальных наоборот, поэтому цвет считается
+  // с учётом направления, а не просто «вверх красный».
+  const worseUp = name === "Сорняки";
+  const deltaPct = delta ? Math.round(delta/max*100) : 0;
+  const arrow = deltaPct ? `<span class="delta ${(delta>0)===worseUp?"bad":"good"}">
+      ${delta>0?"↑":"↓"}${Math.abs(deltaPct)} %</span>` : "";
+  return `<div class="stat">
+    <div class="statTop"><span>${name}</span>${arrow}</div>
+    <strong class="${cls}">${pct} %</strong>
+    <div class="lvl"><i class="${cls}" style="width:${pct}%"></i></div>
+    <small>${word}</small>
+  </div>`;
+}
+
+// ───── Урожай: ожидание до уборки, факт после ─────
+//
+// Точно известны только две вещи: урожайность культуры из файлов игры
+// (пшеница — 0,89 л/м²) и площадь поля, которую отдаёт мод. Множители за
+// удобрение, известь и сорняки игра считает внутри себя, в закрытом архиве,
+// поэтому здесь они названы прикидкой и показаны отдельными строками —
+// чтобы видно было, откуда взялось число, и чтобы никто не принял его
+// за обещание.
+const PENALTY = [
+  {id:"fert", name:"Не удобряли",      test:f=>f.spray===0, cut:0.25},
+  {id:"half", name:"Удобрили частично",test:f=>f.spray===1, cut:0.12},
+  {id:"lime", name:"Известь на нуле",  test:f=>f.lime===0,  cut:0.15},
+  {id:"weed", name:"Сорняки",          test:f=>f.weed>=6,   cut:0.20},
+  {id:"weed2",name:"Немного сорняков", test:f=>f.weed>=3&&f.weed<6, cut:0.08},
+];
+
+// Фактический сбор: мод пишет его сам, без мода вводится руками и здесь же хранится.
+const actuals = JSON.parse(localStorage.getItem("fs25yield") || "{}");
+const saveActuals = () => localStorage.setItem("fs25yield", JSON.stringify(actuals));
+
+function yieldOf(f){
+  const c = CROPS[f.crop];
+  if(!c || !f.ha || !c.yield) return null;
+  const base = Math.round(c.yield * f.ha * 10000);
+  const hits = PENALTY.filter(p => p.test(f));
+  const keep = hits.reduce((k,p) => k * (1 - p.cut), 1);
+  const expect = Math.round(base * keep);
+  const price = PRICE[f.crop] ? PRICE[f.crop][NOW] : 0;
+  return {base, hits, expect, lost: base - expect,
+          money: Math.round(expect * price / 1000),
+          actual: actuals[f.id] ?? null};
+}
+
+function yieldBlock(f){
+  const y = yieldOf(f); if(!y) return "";
+  const ready = f.ground.startsWith("HARVEST_READY");
+  const pct = y.actual ? Math.round(y.actual / y.expect * 100) : 0;
+  return `
+  <h3>${y.actual ? "Итог по урожаю" : ready ? "Ожидаемый урожай" : "Сколько ждать"}</h3>
+  <div class="yield">
+    <div class="yTop">
+      <div><small>${y.actual?"Ожидали":"Выйдет примерно"}</small><b>${fmt(y.expect)} л</b></div>
+      ${y.actual
+        ? `<div class="yAct"><small>Вышло</small>
+             <b class="${pct>=95?"good":pct>=80?"warnc":"bad"}">${fmt(y.actual)} л</b>
+             <span class="yPct ${pct>=95?"good":pct>=80?"warnc":"bad"}">${pct} %</span></div>`
+        : `<div class="yAct"><small>Это примерно</small><b class="good">${eur(y.money)}</b></div>`}
+    </div>
+    <div class="yBase">С ${String(f.ha).replace(".", ",")} га по-хорошему вышло бы ${fmt(y.base)} л</div>
+    ${y.hits.length ? y.hits.map(p=>`
+      <div class="yRow"><span>${p.name}</span><b class="bad">−${Math.round(p.cut*100)} %</b></div>`).join("")
+      : `<div class="yRow"><span>Поле в порядке, терять нечего</span><b class="good">—</b></div>`}
+    ${y.hits.length?`<div class="yRow total"><span>Недобор</span><b class="bad">${fmt(y.lost)} л</b></div>`:""}
+    ${y.actual
+      ? `<small>${pct>=95?"Сошлось с ожиданием.":pct>=80?"Чуть хуже ожидания — обычное дело."
+          :"Заметно хуже ожидания. Стоит проверить, не потерялась ли часть при выгрузке."}</small>`
+      : `<small>Это прикидка: точные множители игра держит в себе. Число показывает,
+         на что рассчитывать, и что именно съедает разницу.</small>`}
+    <div class="yActions">
+      ${y.actual
+        ? `<button class="jump" data-clear="${f.id}">Убрать введённое</button>`
+        : ready ? `<button class="jump" data-enter="${f.id}">Записать, сколько вышло</button>` : ""}
+    </div>
+  </div>`;
+}
+
+const fmt = n => n.toLocaleString("ru-RU").replace(/,/g," ");
+// Десятичная запятая: «0,81», а не «0.81».
+const dec = (n, d = 2) => n.toFixed(d).replace(".", ",");
+
+function stageOf(f){
+  if(f.crop==="UNKNOWN") return f.ground==="PLOWED"?"вспахано":f.ground==="CULTIVATED"?"культивировано":"пусто";
+  if(f.ground.startsWith("HARVEST_READY")) return "готово к уборке";
+  if(f.ground==="GRASS") return "растёт";
+  return "растёт";
+}
+function nextOp(f){
+  const c = CROPS[f.crop]||CROPS.UNKNOWN;
+  if(f.ground.startsWith("HARVEST_READY")){
+    const wither = f.crop==="WHEAT"||f.crop==="OAT"||f.crop==="CANOLA";
+    return {op:"Убирать, и поскорее", urg:wither?"urgent":"soon",
+      why: wither ? `Поспело, и ${MONTHS[NOW]} — последний месяц. Промедлите — высохнет на корню и пропадёт.`
+                  : "Поспело, можно убирать.",
+      kit:"Комбайн и жатка у вас есть"};
+  }
+  if(f.crop==="UNKNOWN"){
+    if(f.lime===0) return {op:"Сначала известь, только потом сеять", urg:"soon",
+      why:"Земля здесь кислая. Посеете как есть — половина семян не взойдёт, и деньги уйдут впустую.",
+      kit:"Нужен разбрасыватель извести, у вас его пока нет"};
+    const open = Object.entries(CROPS).filter(([k,v])=>v.sow.includes(NOW)&&k!=="UNKNOWN").map(([k])=>CROPS[k].ru);
+    return {op:"Можно сеять", urg:"soon", why:`Поле готово. В ${MONTHS[NOW]}е сюда пойдёт: ${open.join(", ")}.`,
+      kit:"Ваша сеялка подходит"};
+  }
+  if(f.weed>=6) return {op:"Опрыскать от сорняков", urg:"soon",
+    why:`Сорняков много — ${f.weed} из 9. Оставите так, соберёте заметно меньше.`,
+    kit:"Нужен опрыскиватель, у вас его пока нет"};
+  if(f.spray===0) return {op:"Подкормить удобрением", urg:"ok",
+    why:"Поле не удобрено. Подкормите — соберёте ощутимо больше с той же площади.",
+    kit:"Нужен разбрасыватель удобрений, у вас его пока нет"};
+  return {op:"Ничего не делать", urg:"ok",
+    why:`${CROPS[f.crop].ru} растёт как надо. Лезть сюда сейчас незачем.`, kit:""};
+}
+
+// ─── вывод ─────────────────────────────────────────────────────────────────
+// Пульт первым: кто пришёл из BeamNG или F1, сразу видит привычные приборы
+// и кнопки, а не незнакомый фермерский советник.
+const TABS = [
+  ["deck","Пульт"],["brief","Брифинг"],["tasks","Задачи"],["fields","Поля"],["crops","Культуры"],
+  ["shop","Техника"],["letters","Письма"],["cal","Календарь"],["plan","План сезона"],
+];
+let tab = "deck", selField = 46, deckPage = "Орудие", fieldMode = false, workState = 0;
+let cropTab = "now", machTab = "need", showFmt = false;
+const cart = new Set();   // прикидка покупки, живёт до перезагрузки
+
+// Три состояния, на которых новичок теряет проход. В макете переключаются
+// нажатием, в приложении придут из игры.
+const WORK = [
+  {ok:false, head:"НЕ СЕЕТ", why:"Орудие поднято — вы едете вхолостую",
+   doing:"Канола · сеялка 4,6 м", lowered:false, running:false},
+  {ok:false, head:"НЕ СЕЕТ", why:"Орудие опущено, но агрегат не включён",
+   doing:"Канола · сеялка 4,6 м", lowered:true, running:false},
+  {ok:true,  head:"СЕЕТ",    why:"Всё как надо, можно ехать дальше",
+   doing:"Канола · сеялка 4,6 м · засеяно 40 %", lowered:true, running:true},
+];
+const nav = document.getElementById("nav"), main = document.getElementById("main");
+nav.innerHTML = TABS.map(([k,t])=>`<button data-t="${k}">${t}</button>`).join("");
+nav.onclick = e => { const b=e.target.closest("button"); if(b){ tab=b.dataset.t; render(); window.scrollTo(0,0);} };
+// Колесо мыши крутит страницу вниз, а не ленту вбок — переназначаем над самой лентой.
+nav.addEventListener("wheel", e => {
+  if(nav.scrollWidth <= nav.clientWidth) return;   // вкладки уместились, вмешиваться не нужно
+  if(Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+  e.preventDefault();
+  nav.scrollLeft += e.deltaY;
+}, {passive:false});
+
+const eur = n => n.toLocaleString("ru-RU").replace(/,/g," ")+" €";
+const seedCost = c => Math.round(CROPS[c].seed*10000*SEED_PRICE*SEASON_FACTOR[NOW]);
+const revenue  = (c,p) => Math.round(CROPS[c].yield*10000*(PRICE[c]?PRICE[c][p]:0)/1000);
+
+function render(){
+  nav.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.t===tab));
+  main.innerHTML = ({brief,tasks,fields,crops,shop,letters,cal,deck,plan})[tab]();
+  // Вложенные вкладки внутри «Культур» и «Техники»
+  main.querySelectorAll(".subTabs button").forEach(b => b.onclick = () => {
+    if(tab==="crops") cropTab = b.dataset.s; else machTab = b.dataset.s; render(); });
+  main.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => {
+    const id = el.dataset.pick;
+    cart.has(id) ? cart.delete(id) : cart.add(id);
+    render(); });
+  // Пока мода нет, фактический сбор вводится руками — цифру видно в силосе.
+  main.querySelectorAll("[data-enter]").forEach(b => b.onclick = () => {
+    const id = b.dataset.enter;
+    const raw = prompt("Сколько литров вышло с поля " + id + "?\nЧисло видно в силосе или в прицепе.");
+    if(raw === null) return;
+    const n = parseInt(String(raw).replace(/[^\d]/g, ""), 10);
+    if(!Number.isFinite(n) || n <= 0) return;
+    actuals[id] = n; saveActuals(); render(); });
+  main.querySelectorAll("[data-clear]").forEach(b => b.onclick = () => {
+    delete actuals[b.dataset.clear]; saveActuals(); render(); });
+  const fmtBtn = main.querySelector("#showFmt");
+  if(fmtBtn) fmtBtn.onclick = () => { showFmt = !showFmt; render(); };
+  const copyBtn = main.querySelector("#copyPrompt");
+  if(copyBtn) copyBtn.onclick = async () => {
+    const hint = main.querySelector("#copyHint");
+    const text = promptText();
+    try {
+      // clipboard API требует защищённого контекста; по локальной сети его может не быть
+      if(navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text);
+      else {
+        const ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        const ok = document.execCommand("copy");
+        ta.remove();
+        if(!ok) throw new Error("copy refused");
+      }
+      copyBtn.textContent = "Скопировано — вставляйте в чат";
+      copyBtn.classList.add("done");
+      if(hint) hint.textContent = "Задание в буфере обмена. Ответ ИИ сохраните как plan-осень.json";
+    } catch {
+      // Ничего не теряем: показываем текст, его можно выделить и скопировать руками.
+      if(hint) hint.innerHTML = `<b>Скопировать автоматически не вышло.</b>
+        Выделите текст ниже и скопируйте вручную:
+        <pre class="code" style="margin-top:8px">${text.replace(/[<>&]/g, ch =>
+          ({"<":"&lt;", ">":"&gt;", "&":"&amp;"}[ch]))}</pre>`;
+    }
+  };
+  if(tab==="fields") main.querySelector("svg").onclick = e => {
+    const p=e.target.closest("polygon"); if(p){ selField=+p.dataset.id; render(); } };
+  // Только на пульте: подвкладки «Культур» и «Техники» тоже носят класс .tabs,
+  // и без проверки этот обработчик цеплялся к ним. Клик по подвкладке писал
+  // в deckPage значение undefined, после чего пульт переставал открываться.
+  // В режиме «в поле» страниц кнопок нет, поэтому узла может не быть вовсе.
+  const pageTabs = tab === "deck" ? main.querySelector(".tabs") : null;
+  if(pageTabs) pageTabs.onclick = e => {
+    const b = e.target.closest("button");
+    if(b?.dataset.p) { deckPage = b.dataset.p; render(); } };
+  // «Кнопки на пульте →» уводит из задачи прямо на нужную страницу пульта.
+  // Класс .jump носят и другие мелкие кнопки — показать пример, записать урожай.
+  // Поэтому отбор только по наличию страницы, иначе этот обработчик затирал бы их:
+  // он идёт последним, а onclick присваивается, а не добавляется.
+  main.querySelectorAll(".jump[data-p]").forEach(b => b.onclick = () => {
+    deckPage = b.dataset.p; tab = "deck"; render(); window.scrollTo(0,0); });
+  main.querySelectorAll(".tick input").forEach(c => c.onchange = () => {
+    c.checked ? ticked.add(c.dataset.id) : ticked.delete(c.dataset.id);
+    saveTicks(); render(); });
+  const fm = main.querySelector("#fieldMode");
+  if(fm) fm.onclick = () => { fieldMode = !fieldMode; render(); };
+  const wd = main.querySelector("#workDemo");
+  if(wd) wd.onclick = () => { workState = (workState + 1) % WORK.length; render(); };
+  main.querySelectorAll(".act").forEach(b=>{
+    b.onpointerdown=()=>b.classList.add("down"); b.onpointerup=()=>b.classList.remove("down");
+    b.onpointerleave=()=>b.classList.remove("down");
+  });
+}
+
+function brief(){
+  const mine = FIELDS.filter(f=>f.mine);
+  const top = SEASON_PLAN.filter(t=>t.pri>0).sort((a,b)=>a.pri-b.pri).slice(0,3);
+  // Сколько периодов осталось до закрытия окна посева канолы
+  const left = CROPS.CANOLA.sow.filter(m=>m>=NOW).length;
+  return `
+  <div class="card">
+    <div class="hero">
+      <div>
+        <span class="eyebrow">День ${DAY} · ${PERIODS_RU[NOW]}</span>
+        <div class="day">${MONTHS[NOW]} <span>· ${SEASON}</span></div>
+      </div>
+      <div class="wx">
+        <div>Сейчас <b>ясно</b><br>Завтра <b>дождь</b>, начинается осень</div>
+      </div>
+    </div>
+    <div class="money">
+      <div><small>Счёт</small><strong>${eur(1000000)}</strong></div>
+      <div class="loan"><small>Кредит</small><strong>${eur(250000)}</strong></div>
+      <div><small>Ваших участков</small><strong>2</strong></div>
+      <div><small>Экономика</small><strong>Сложная</strong></div>
+    </div>
+    <div class="countdown">
+      <b>Осталось ${left} месяца, чтобы посеять канолу</b>
+      <small>Август и сентябрь. С октября сеять будет нечего — до марта земля стоит пустой.</small>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Три главных дела</h2>
+    <small>Самое важное из плана на сезон</small>
+    ${top.map(t=>taskHtml(t)).join("")}
+  </div>
+
+  <div class="card">
+    <h2>С прошлого сохранения</h2>
+    <small>Приложение сравнило два снимка фермы</small>
+    <div class="diff">${SINCE_SAVE.map(d=>`<div class="${d.t}"><i></i>${d.s}</div>`).join("")}</div>
+  </div>
+
+  <div class="card">
+    <h2>И одно, чего делать не надо</h2>
+    <div class="dont"><b>${DONT[0].title}</b><small>${DONT[0].why}</small></div>
+  </div>
+
+  <div class="card">
+    <h2>Ваши поля</h2>
+    ${mine.map(f=>{const o=nextOp(f);const c=CROPS[f.crop];return `
+      <div class="task ${o.urg}">
+        <div class="bar"></div>
+        <div>
+          <b>Поле ${f.id} · ${c.ru}</b>
+          <small>${o.op} — ${o.why}</small>
+          <span class="chip">${o.kit}</span>
+        </div>
+      </div>`}).join("")}
+  </div>`;
+}
+
+const PRI_CLASS = {1:"urgent", 2:"soon", 3:"ok", 0:"done"};
+
+// Часть задач приложение вычёркивает само — поле вспахано, засеяно, убрано.
+// Но поездку в магазин оно не увидит, поэтому галочка ставится руками
+// и переживает перезапуск.
+const ticked = new Set(JSON.parse(localStorage.getItem("fs25done") || "[]"));
+const saveTicks = () => localStorage.setItem("fs25done", JSON.stringify([...ticked]));
+const isDone = t => t.pri === 0 || ticked.has(t.id);
+
+function taskHtml(t){
+  // Заголовок часто уже называет поле — не повторяем номер дважды.
+  const f = t.field && !t.title.includes(String(t.field)) ? ` · поле ${t.field}` : "";
+  const jump = t.page ? `<button class="jump" data-p="${t.page}">Кнопки на пульте →</button>` : "";
+  const done = isDone(t), auto = t.pri === 0;
+  return `<div class="task ${done?"done":PRI_CLASS[t.pri]}">
+    <div class="bar"></div>
+    <div>
+      <label class="tick ${auto?"auto":""}">
+        <input type="checkbox" data-id="${t.id}" ${done?"checked":""} ${auto?"disabled":""}>
+        <b>${t.title}${f}</b>
+      </label>
+      <small>${t.why}</small>
+      ${t.kit?`<small class="kit">${t.kit}</small>`:""}
+      <div class="taskFoot">
+        <span class="chip ${t.src}">${t.src==="plan"?"из плана Весельчака":"заметил сам"}</span>
+        ${auto?'<span class="chip">вычеркнулось само</span>':""}${jump}
+      </div>
+    </div>
+  </div>`;
+}
+
+const GROUPS = [
+  [1, "Сделать сейчас",      "Горит: пропустите — потеряете урожай или окно"],
+  [2, "Важно, но не сегодня","Успеть до конца месяца"],
+  [3, "Можно позже",         "Держите в голове, время есть"],
+  [0, "Уже сделано",         "Вычеркнуто автоматически по состоянию фермы"],
+];
+
+function tasks(){
+  // Отмеченное руками уезжает в «Уже сделано», как бы оно ни было важно.
+  const group = (pri) => pri === 0
+    ? SEASON_PLAN.filter(isDone)
+    : SEASON_PLAN.filter(t => t.pri === pri && !isDone(t));
+  const left = SEASON_PLAN.filter(t=>!isDone(t)).length;
+  return `<div class="card">
+    <h2>Задачи</h2>
+    <small>План на сезон от Весельчака плюс то, что приложение увидело на ваших полях само.
+    Осталось ${left} из ${SEASON_PLAN.length}.</small>
+    ${GROUPS.map(([pri,name,hint])=>{
+      const list = group(pri); if(!list.length) return "";
+      return `<div class="grp ${PRI_CLASS[pri]}"><h3>${name}</h3><small>${hint}</small></div>
+              ${list.map(taskHtml).join("")}`;
+    }).join("")}
+  </div>
+
+  <div class="card">
+    <h2>Чего делать не стоит</h2>
+    <small>Самые дорогие ошибки первого года</small>
+    ${DONT.map(d=>`<div class="dont"><b>${d.title}</b><small>${d.why}</small></div>`).join("")}
+  </div>`;
+}
+
+function plan(){
+  const p = PLAN;
+  return `<div class="card">
+    <h2>План сезона</h2>
+    <small>Большой план пишется заранее, целиком на сезон, и загружается одним файлом.
+    Дальше приложение работает само и ничего никуда не отправляет.</small>
+
+    <div class="planCard">
+      <div class="planTop">
+        <div><span class="eyebrow">Загружен план</span><b>${p.name}</b></div>
+        <span class="tag have">действует</span>
+      </div>
+      <div class="metrics">
+        <div class="metric"><small>Автор</small><strong>${p.author}</strong></div>
+        <div class="metric"><small>Охватывает</small><strong>${p.forSeason}</strong></div>
+        <div class="metric"><small>Задач</small><strong>${p.tasks}</strong></div>
+        <div class="metric"><small>Писем</small><strong>${p.letters}</strong></div>
+      </div>
+      <small>Написан ${p.written}. Действует до конца ноября.</small>
+    </div>
+
+    <div class="planCard warnCard">
+      <div class="planTop">
+        <div><span class="eyebrow">Дальше</span><b>На ${p.nextGap} плана ещё нет</b></div>
+        <span class="tag need">напомним</span>
+      </div>
+      <small>Когда начнётся декабрь, приложение подскажет, что пора сесть и написать следующий.
+      Без плана оно продолжит работать — просто останутся подсказки по полям, без общей линии.</small>
+    </div>
+
+    <div class="planCard">
+      <div class="planTop">
+        <div><span class="eyebrow">Итог сезона</span><b>${SEASON_SUMMARY.season} закончилось</b></div>
+        <span class="tag ${SEASON_SUMMARY.done*2>=SEASON_SUMMARY.of?"have":"need"}">
+          ${SEASON_SUMMARY.done} из ${SEASON_SUMMARY.of}</span>
+      </div>
+      <div class="diff">${SEASON_SUMMARY.lines.map(d=>`<div class="${d.t}"><i></i>${d.s}</div>`).join("")}</div>
+      <small style="margin-top:12px">${SEASON_SUMMARY.verdict}</small>
+    </div>
+
+    <h3>Как сделать новый</h3>
+    <div class="steps">
+      <div><b>1</b><span>Копируете задание кнопкой ниже</span></div>
+      <div><b>2</b><span>Вставляете в любой ИИ-чат — он вернёт готовый файл</span></div>
+      <div><b>3</b><span>Сохраняете как <code>plan-осень.json</code></span></div>
+      <div><b>4</b><span>В окне SimDeck — «План сезона» → «Открыть файл»</span></div>
+    </div>
+    <button class="wideBtn" id="copyPrompt">Скопировать задание для ИИ</button>
+    <small id="copyHint" class="copyHint">Задание уже содержит состояние вашей фермы: месяц, поля,
+    технику, деньги. Менять в нём ничего не нужно.</small>
+
+    <h3>Какой нужен файл</h3>
+    <div class="fmt">
+      <div class="fmtHead"><span>Обычный текстовый файл <b>.json</b></span>
+        <button class="jump" id="showFmt">${showFmt?"Свернуть":"Показать пример"}</button></div>
+      ${showFmt?`<pre class="code">${PLAN_SAMPLE}</pre>`:`<small>Четыре поля: как называется план,
+      на какой сезон, список задач и письма. Всё остальное приложение достроит само.</small>`}
+    </div>
+    <p class="note">Раз в сезон — четыре раза за игровой год. Между загрузками ничего делать не нужно:
+    задачи вычёркиваются сами, когда поле вспахано, засеяно или убрано. Если файл окажется
+    кривым, приложение скажет об этом и оставит работать прежний план.</p>
+  </div>`;
+}
+
+function fields(){
+  // Схематичная раскладка. Настоящие контуры полей выгрузит Lua-мод —
+  // в файлах сейва они лежат в закрытом формате .grle.
+  const cols=6, w=100, h=68, gap=8;
+  let poly="", i=0;
+  for(const f of FIELDS){
+    const cx=(i%cols)*(w+gap)+10, cy=Math.floor(i/cols)*(h+gap)+10, s=(n)=>((f.id*7+n*13)%9)-4;
+    const pts=[[cx+s(1),cy+s(2)],[cx+w+s(3),cy+s(4)],[cx+w+s(5),cy+h+s(6)],[cx+s(7),cy+h+s(8)]]
+      .map(p=>p.join(",")).join(" ");
+    const cls=[f.mine?"mine":"", f.id===selField?"sel":""].filter(Boolean).join(" ");
+    poly+=`<polygon points="${pts}" fill="${CROPS[f.crop].c}" class="${cls}" data-id="${f.id}"/>
+      <text x="${cx+6}" y="${cy+16}">${f.id}${f.mine?" ★":""}</text>`;
+    i++;
+  }
+  const rows=Math.ceil(FIELDS.length/cols);
+  const f=FIELDS.find(x=>x.id===selField), c=CROPS[f.crop], o=nextOp(f);
+  const seen=[...new Set(FIELDS.map(x=>x.crop))];
+  return `<div class="split">
+    <div class="card">
+      <h2>Поля</h2>
+      <small>Цвета те же, что на карте в самой игре. ★ — ваши участки. Нажмите поле.</small>
+      <svg class="map" viewBox="0 0 ${cols*(w+gap)+12} ${rows*(h+gap)+12}">${poly}</svg>
+      <div class="legend">${seen.map(k=>`<span><i style="background:${CROPS[k].c}"></i>${CROPS[k].ru}</span>`).join("")}</div>
+      <p class="note">Формы пока условные — настоящие очертания полей и их размер в гектарах
+      появятся позже.</p>
+    </div>
+    <div class="card">
+      <span class="eyebrow">Поле ${f.id}${f.mine?" · ваше":" · чужое"}</span>
+      <h2 style="display:flex;align-items:center;gap:9px">
+        <i style="width:16px;height:16px;border-radius:4px;background:${c.c};display:block"></i>${c.ru}</h2>
+      <small>${stageOf(f)}</small>
+      <div class="gauge4">
+        ${stat("Сорняки", f.weed, 9, weedWord(f.weed), f.weed>=6?"bad":f.weed>=3?"warnc":"good", CHANGE[f.id]?.weed)}
+        ${stat("Известь", f.lime, 3, limeWord(f.lime), f.lime===0?"bad":f.lime>=2?"good":"warnc", CHANGE[f.id]?.lime)}
+        ${stat("Удобрение", f.spray, 3, f.spray===0?"не вносили":f.spray>=2?"хватает":"мало",
+               f.spray===0?"warnc":"good", CHANGE[f.id]?.spray)}
+        ${stat("Вспашка", f.plow?1:0, 1, f.plow?"вспахано":"не вспахано", f.plow?"good":"warnc")}
+      </div>
+      <div class="task ${o.urg}"><div class="bar"></div><div>
+        <b>${o.op}</b><small>${o.why}</small><span class="chip">${o.kit}</span></div></div>
+      ${yieldBlock(f)}
+      ${PRICE[f.crop]?`<h3>Цена за 1000 литров</h3>
+        <div class="metrics"><div class="metric"><small>Сейчас (${MSHORT[NOW]})</small>
+        <strong class="${PRICE[f.crop][NOW]<=Math.min(...PRICE[f.crop])?"bad":""}">${PRICE[f.crop][NOW]} €</strong></div>
+        <div class="metric"><small>Пик (${MSHORT[PRICE[f.crop].indexOf(Math.max(...PRICE[f.crop]))]})</small>
+        <strong class="good">${Math.max(...PRICE[f.crop])} €</strong></div></div>
+        <small>Разница +${Math.round((Math.max(...PRICE[f.crop])/PRICE[f.crop][NOW]-1)*100)} % — стоит подержать в амбаре до пика.</small>`:""}
+    </div>
+  </div>`;
+}
+
+function sowNow(){
+  const open = Object.entries(CROPS).filter(([k,v])=>k!=="UNKNOWN"&&v.sow.includes(NOW));
+  const next = Object.entries(CROPS).filter(([k,v])=>k!=="UNKNOWN"&&v.sow.includes((NOW+1)%12));
+  const shut = Object.entries(CROPS).filter(([k,v])=>k!=="UNKNOWN"&&!v.sow.includes(NOW)&&!v.sow.includes((NOW+1)%12));
+  const seederOk = ["WHEAT","BARLEY","OAT","CANOLA","GRASS","PEA","SPINACH"]; // категория SOWINGMACHINE
+  const card=([k,v],cls)=>{
+    const fits=seederOk.includes(k), pk=PRICE[k]?Math.max(...PRICE[k]):0;
+    return `<div class="crop ${cls}">
+      <h4><i style="background:${v.c}"></i>${v.ru}</h4>
+      <ul class="pros">
+        <li>Семена: <b>${seedCost(k)} €/га</b> (${Math.round(v.seed*10000)} л/га)</li>
+        ${pk?`<li>Выручка на пике: <b>${eur(revenue(k,PRICE[k].indexOf(pk)))}/га</b></li>`:""}
+        <li>${fits?"Сеялка Great Plains 1500 подходит":"<b>Сеялка не подходит</b> — нужна другая"}</li>
+        ${v.roll?"<li>После посева нужно прикатывание — <b>катка нет</b></li>":""}
+        ${v.lime?"<li>Требует извести для роста</li>":""}
+      </ul></div>`;
+  };
+  return `
+    <h3>Можно сейчас</h3>
+    ${open.map((e,i)=>card(e,i===0?"best":"open")).join("")}
+    <h3>Откроется в ${MONTHS[(NOW+1)%12]}е</h3>
+    ${next.filter(([k])=>!CROPS[k].sow.includes(NOW)).map(e=>card(e,"open")).join("")}
+    <h3>Закрыто до весны</h3>
+    <p><small>${shut.map(([k,v])=>v.ru).join(" · ")}</small></p>
+    <p class="note">Рекомендация: <b>канола на поле 45</b>. Семян всего ${seedCost("CANOLA")} €/га против
+    ${seedCost("WHEAT")} €/га у пшеницы, а платят за неё вдвое больше. Убирать в июне-июле —
+    зерновая жатка справится. Но сначала известь: уровень на поле 45 нулевой.</p>`;
+}
+
+// ───── Техника: парк, что нужно, каталог с прикидкой ─────
+const MONEY = 1000000, LOAN = 250000;
+
+function shop(){
+  const sub = [["mine","Мой парк"],["need","Что нужно"],["cat","Прицениться"]];
+  const total = [...cart].reduce((s,id)=>s+CATALOG.find(c=>c.id===id).price, 0);
+  return `<div class="card">
+    <h2>Техника</h2>
+    <small>Ваш парк, характеристики и цены прочитаны из игры</small>
+    <div class="tabs subTabs">${sub.map(([k,t])=>
+      `<button data-s="${k}" class="${machTab===k?"on":""}">${t}</button>`).join("")}</div>
+
+    ${machTab==="mine"?`
+      <div class="kit">${FLEET.map(v=>`<div><span><b>${v.n}</b><small>${v.t}</small></span>
+        <span class="tag have">есть</span></div>`).join("")}</div>
+      <h3>Под вопросом</h3>
+      <div class="kit"><div><span><b>MF 8570 — комбайн</b>
+        <small>Стоит 104 500 €. Если по правилам первый год без комбайна — это живые деньги
+        на известь, каток и пропольщик сразу. Но тогда пшеницу с поля 46 убрать будет нечем.</small></span>
+        <span class="tag sell">решить</span></div></div>
+      <p class="note">Ваша техника закрывает одно направление — зерновые и канолу. Картофель,
+      свёклу, морковь и кукурузу не выйдет ни посадить, ни убрать: нужны отдельная сажалка
+      и отдельный уборочный комбайн.</p>`:""}
+
+    ${machTab==="need"?`
+      <div class="kit">${NEEDED.map(v=>`<div><span><b>${v.n}</b><small>${v.t}</small></span>
+        <span class="tag need">${v.price}</span></div>`).join("")}</div>
+      <p class="note">Известь в этой игре умеют сыпать только две машины, и обе недешёвы.
+      Дешёвые разбрасыватели берут исключительно удобрение — на это легко попасться.</p>`:""}
+
+    ${machTab==="cat"?`
+      <small>Нажмите, чтобы прикинуть покупку. Считает на ходу.</small>
+      ${CAT_ORDER.map(cat=>{
+        const list = CATALOG.filter(c=>c.cat===cat); if(!list.length) return "";
+        return `<h3>${cat}</h3><div class="kit">${list.map(c=>`
+          <div class="pick ${cart.has(c.id)?"picked":""}" data-pick="${c.id}">
+            <span><b>${c.n}${c.best?' <i class="badge">дешевле всего</i>':''}</b>
+              <small>${c.w} · ${c.cap}</small>
+              <small class="why">${c.note}</small></span>
+            <span class="tag ${cart.has(c.id)?"have":"need"}">${eur(c.price)}</span>
+          </div>`).join("")}</div>`;
+      }).join("")}
+      <div class="totalBar ${total>0?"on":""}">
+        <div><small>Выбрано ${cart.size}</small><b>${eur(total)}</b></div>
+        <div class="after"><small>Останется</small><b class="${MONEY-total<LOAN?"bad":"good"}">${eur(MONEY-total)}</b></div>
+      </div>
+      ${total>0?`<p class="note">Кредит ${eur(LOAN)} никуда не делся и капает каждый день.
+      Берите то, что нужно в ближайший месяц, а не весь список сразу.</p>`:""}`:""}
+  </div>`;
+}
+
+// ───── Культуры: что сеять сейчас и цены на всё ─────
+function crops(){
+  const sub = [["now","Сеять сейчас"],["all","Цены на всё"]];
+  return `<div class="card">
+    <h2>Культуры</h2>
+    <small>Сроки и цены взяты из самой игры, а не из гайдов</small>
+    <div class="tabs subTabs">${sub.map(([k,t])=>
+      `<button data-s="${k}" class="${cropTab===k?"on":""}">${t}</button>`).join("")}</div>
+    ${cropTab==="now"?sowNow():priceTable()}
+  </div>`;
+}
+
+function priceTable(){
+  const seederOk = ["WHEAT","BARLEY","OAT","CANOLA","GRASS","PEA","SPINACH"];
+  const rows = Object.keys(PRICE).map(k=>{
+    const p = PRICE[k], now = p[NOW], max = Math.max(...p), bestM = MONTHS[p.indexOf(max)];
+    return {k, now, max, bestM, up:Math.round((max/now-1)*100),
+            rev:revenue(k, p.indexOf(max)), seed:seedCost(k), fits:seederOk.includes(k)};
+  // Сначала то, что вы реально можете посеять своей сеялкой, и внутри — по выручке.
+  // Иначе список возглавляет свёкла, которую этим парком не вырастить.
+  }).sort((a,b) => (a.fits?0:1)-(b.fits?0:1) || b.rev-a.rev);
+  return `
+  <div class="priceHead"><span>Культура</span><span>Сейчас</span><span>Лучше всего</span></div>
+  ${rows.map(r=>`
+    <div class="priceRow">
+      <div class="pName"><i style="background:${CROPS[r.k].c}"></i>
+        <div><b>${CROPS[r.k].ru}</b><small>${r.fits?"сеялка подходит":"нужна другая сеялка"}</small></div></div>
+      <div class="pNow"><b>${r.now} €</b><small>за 1000 л</small></div>
+      <div class="pBest"><b class="good">${r.max} €</b><small>${r.bestM} · +${r.up} %</small></div>
+      <div class="pFoot">
+        <span>Семена <b>${r.seed} €/га</b></span>
+        <span>Выручка на пике <b class="good">${eur(r.rev)}/га</b></span>
+      </div>
+    </div>`).join("")}
+  <h3>Расходники · за 1000 литров</h3>
+  <small>Тысяча литров — это один биг-бэг, которым их и покупают</small>
+  <div class="kit">
+    <div><span><b>Семена</b><small>${MONTHS[NOW]}: коэффициент ${dec(SEASON_FACTOR[NOW])}${
+      SEASON_FACTOR[NOW]===Math.min(...SEASON_FACTOR)?" — минимум года":""}</small></span>
+      <span class="tag need">${Math.round(SEED_PRICE*SEASON_FACTOR[NOW]*1000)} €</span></div>
+    <div><span><b>Удобрение</b><small>цена не зависит от месяца</small></span>
+      <span class="tag need">${Math.round(FERT_PRICE*1000)} €</span></div>
+    <div><span><b>Известь</b><small>цена не зависит от месяца · самое дешёвое здесь</small></span>
+      <span class="tag need">${Math.round(LIME_PRICE*1000)} €</span></div>
+  </div>
+  <div class="factorRow">
+    <span class="eyebrow">Коэффициент семян по месяцам</span>
+    <div class="factors">${SEASON_FACTOR.map((v,i)=>`
+      <div class="${i===NOW?"now":""} ${v===Math.min(...SEASON_FACTOR)?"cheap":""}">
+        <b>${dec(v)}</b><small>${MSHORT[i]}</small></div>`).join("")}</div>
+    <small>Семена дорожают и дешевеют вместе с зерном. Сейчас ${MONTHS[NOW]} — минимум года,
+    покупать выгоднее всего именно теперь.</small>
+  </div>
+  <p class="note">Выручка посчитана по урожайности культуры и цене в лучший месяц.
+  Реальный сбор ниже, если поле не удобрено или заросло сорняками.</p>`;
+}
+
+function letters(){
+  return `<div class="card tight">
+    <h2 style="padding:6px 6px 0">Письма Весельчака</h2>
+    <small style="padding:0 6px 6px">Пишутся заранее и грузятся вместе с планом сезона</small>
+    ${LETTERS.map(l=>`<div class="letter">
+      <div class="lh"><span>${l.date}</span><span>Diddly Squat</span></div>
+      <h4>${l.subj}</h4>
+      ${l.body.map(p=>`<p>${p}</p>`).join("")}
+      <div class="sig">${l.sig}</div>
+    </div>`).join("")}
+  </div>`;
+}
+
+function cal(){
+  const rows=["WHEAT","BARLEY","CANOLA","OAT","POTATO","SUGARBEET"];
+  // рост от посева до готовности — упрощённо, по числу состояний культуры
+  const grow={WHEAT:[8,9,10,11,0,1,2,3],BARLEY:[8,9,10,11,0,1,2,3],CANOLA:[7,8,9,10,11,0,1,2],
+              OAT:[2,3,4],POTATO:[2,3,4,5],SUGARBEET:[2,3,4,5,6,7]};
+  const harv={WHEAT:[4,5],BARLEY:[4,5],CANOLA:[3,4],OAT:[4,5],POTATO:[6,7],SUGARBEET:[8,9]};
+  return `<div class="card">
+    <h2>Календарь года</h2>
+    <small>Сроки посева точные, взяты из игры. Рост и уборка показаны примерно.</small>
+    <div class="cal"><div class="calGrid">
+      <div></div>${MSHORT.map((m,i)=>`<div class="mh ${i===NOW?"now":""}">${m}</div>`).join("")}
+      ${rows.map(k=>`<div class="rn"><i style="background:${CROPS[k].c}"></i>${CROPS[k].ru}</div>
+        ${MSHORT.map((_,i)=>{
+          const cls=CROPS[k].sow.includes(i)?"sow":(harv[k]||[]).includes(i)?"harv":(grow[k]||[]).includes(i)?"grow":"";
+          return `<div class="cell ${cls} ${i===NOW?"now":""}"></div>`;}).join("")}`).join("")}
+    </div></div>
+    <div class="calKey">
+      <span><i style="background:var(--gold)"></i>сеять</span>
+      <span><i style="background:#3c5a2e"></i>растёт</span>
+      <span><i style="background:var(--danger)"></i>убирать</span>
+      <span><i style="outline:2px solid #fff6;background:#1b2016"></i>сейчас</span>
+    </div>
+    <p class="note">Видно главное: пшеница и ячмень — озимые, их сеют осенью. Канола ловится
+    в августе-сентябре. Всё весеннее закрыто до марта.</p>
+  </div>`;
+}
+
+function deck(){
+  const pages=Object.keys(DECK);
+  // За рулём полезна задача, которую делают отсюда же. Поездка в магазин
+  // подождёт, поэтому дела с кнопками на пульте идут первыми.
+  const now = SEASON_PLAN.filter(t=>!isDone(t))
+    .sort((a,b) => (a.page?0:1)-(b.page?0:1) || a.pri-b.pri)[0];
+  const toggle = `<button id="fieldMode" class="modeSwitch ${fieldMode?"on":""}">
+    <span>${fieldMode?"◧":"▣"}</span>${fieldMode?"Обычный вид":"Режим в поле"}</button>`;
+
+  // Смысл этого режима — не крупная скорость, а честный ответ на вопрос
+  // «я сейчас вообще работаю или еду впустую». Поднятое орудие и выключенный
+  // агрегат — то, на чём новичок теряет целые проходы.
+  if(fieldMode){
+    const w = WORK[workState];
+    const bar = (v,cls="") => `<div class="lvl ${cls}"><i style="width:${v}%"></i></div>`;
+    return `<div class="card">
+      ${toggle}
+      <button id="workDemo" class="status ${w.ok?"go":"stop"}">
+        <b>${w.head}</b><small>${w.why}</small>
+      </button>
+      <div class="doing">${w.doing}</div>
+      <div class="levels">
+        <div><span>Семена</span>${bar(78)}<b>78 %</b><small>ещё около полутора проходов</small></div>
+        <div><span>Топливо</span>${bar(62)}<b>62 %</b><small>до конца поля хватит</small></div>
+        <div><span>Скорость</span>${bar(60,"speed")}<b>12 км/ч</b><small>для сеялки в самый раз</small></div>
+      </div>
+      <div class="grid bigGrid">
+        <button class="act ${w.lowered?"on":""}">ОПУСТИТЬ /<br>ПОДНЯТЬ<span class="k">V</span></button>
+        <button class="act ${w.running?"on":""}">ВКЛЮЧИТЬ<br>АГРЕГАТ<span class="k">B</span></button>
+        <button class="act">ПОМОЩНИК<span class="k">H</span></button>
+        <button class="act">РАЗГРУЗИТЬ<span class="k">I</span></button>
+      </div>
+      ${now?`<div class="nextLine"><span class="eyebrow">Потом</span>${now.title}</div>`:""}
+    </div>`;
+  }
+
+  return `<div class="card">
+    ${toggle}
+    <div class="gauges">
+      <div><strong>12</strong><small>КМ/Ч</small></div>
+      <div><strong>4</strong><small>ПЕРЕДАЧА</small></div>
+      <div><strong>78</strong><small>% ТОПЛИВА</small></div>
+    </div>
+    <div class="rpm">1 450 / 2 200 об/мин</div>
+    <progress value="0.66"></progress>
+    <small style="margin-top:10px">Challenger MT600 · сеялка Great Plains 1500 опущена, агрегат включён</small>
+  </div>
+  <div class="card">
+    <h2>Пульт</h2>
+    <small>Клавиши берутся из ваших настроек управления в игре. Подсвечено то, что сейчас включено.</small>
+    <div class="tabs" style="margin-top:14px">
+      ${pages.map(p=>`<button data-p="${p}" class="${p===deckPage?"on":""}">${p}</button>`).join("")}
+    </div>
+    <div class="grid">
+      ${DECK[deckPage].map(([l,d,k,on,g])=>`<button class="act ${on?"on":""} ${g==="hold"?"holdBtn":""}">
+        ${g==="hold"?'<span class="gest">удерживать</span>':""}
+        <span>${l}</span><small>${d}</small><span class="k">${k}</span></button>`).join("")}
+    </div>
+    <p class="note">В этой игре одна клавиша делает разное в зависимости от того, чем вы управляете:
+    та же кнопка опускает сеялку у трактора и отцепляет трос у лебёдки. Подписи названы по работе
+    в поле — это то, чем вы будете заниматься почти всегда.</p>
+  </div>`;
+}
+
+render();
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@ public static class GameProfiles
     public const int MaxActions = 96;
     public const int F1PresetVersion = 2;
     public static readonly HashSet<string> KnownIds =
-    ["beamng-default", "f1-24", "f1-25", "acc", "ams2", "ets2", "snowrunner"];
+    ["beamng-default", "f1-24", "f1-25", "acc", "ams2", "ets2", "snowrunner", "fs25"];
     public static GameProfile F1()
     {
         using var stream = typeof(GameProfiles).Assembly.GetManifestResourceStream("SimDeck.F1Preset.json")!;
@@ -53,6 +53,7 @@ public static class GameProfiles
         "ams2" => "Automobilista 2: назначьте клавиши SimDeck в Controls. Для будущей телеметрии включите Shared Memory → Project CARS 2.",
         "ets2" => "ETS2: назначьте те же клавиши в Keys & Buttons. Этот профиль пока работает как button box без телеметрии.",
         "snowrunner" => "SnowRunner: сверьте назначения в Settings → Controls. Этот профиль пока работает как button box без телеметрии.",
+        "fs25" => "Farming Simulator 25: нажмите «Прочитать клавиши FS25», чтобы применить вашу раскладку из inputBinding.xml. Пресет в игре не нужен. Одна клавиша может делать разное в зависимости от машины и орудия.",
         _ => profile.Name
     };
 }

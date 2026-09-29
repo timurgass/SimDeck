@@ -2,11 +2,11 @@ namespace SimDeck.App;
 
 public static class AdditionalProfiles
 {
-    public const int CatalogVersion = 3;
+    public const int CatalogVersion = 4;
 
     public static IReadOnlyList<GameProfile> All() =>
     [
-        Acc(), Automobilista2(), Ets2(), SnowRunner()
+        Acc(), Automobilista2(), Ets2(), SnowRunner(), Fs25Profile.Default()
     ];
 
     public static GameProfile Acc() => new("acc", "Assetto Corsa Competizione", "AC2-Win64-Shipping",
