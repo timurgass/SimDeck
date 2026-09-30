@@ -22,19 +22,20 @@ SimDeck превращает Android-планшет, телефон или Safar
 
 ## Скачать
 
-| Файл | Для чего нужен |
-|---|---|
-| [SimDeck-0.8.9-Windows.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/SimDeck-0.8.9-Windows.zip) | Автономный Windows Companion x64 |
-| [SimDeck-0.8.9-debug.apk](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/SimDeck-0.8.9-debug.apk) | Клиент для Android 10 и новее |
-| [FS25_SimDeckStatus.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/FS25_SimDeckStatus.zip) | Дополнительный мод живого состояния орудий FS25 |
-| [SimDeck-ETS2-Telemetry-0.8.5.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Telemetry-0.8.5.zip) | Плагин телеметрии ETS2 с установщиком и лицензией |
-| [SimDeck-ETS2-Preset-0.8.7.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Preset-0.8.7.zip) | Полный установщик 29 кнопок ETS2 для выбранного игрового профиля |
-| [SimDeck-ACC-Preset-0.8.3.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-ACC-Preset-0.8.3.zip) | 33 команды ACC, ручное зажигание и резервные копии настроек |
-| [SimDeck-F1-Preset-0.7.1.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-F1-Preset-0.7.1.zip) | Установщик Keyboard Preset 2 для F1 24 и F1 25 |
-| [SimDeck-0.2.1-BeamNG.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-0.2.1-BeamNG.zip) | Мод расширенной телеметрии BeamNG.drive |
-| [SimDeck-0.8.9-SHA256SUMS.txt](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/SimDeck-0.8.9-SHA256SUMS.txt) | Контрольные суммы файлов релиза |
+Для любой игры сначала скачайте [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/SimDeck-0.8.9-Windows.zip) и полностью распакуйте архив. Для Android дополнительно установите [APK](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/SimDeck-0.8.9-debug.apk). На iPhone отдельный файл не нужен: откройте локальный Safari-пульт из Companion. [Контрольные суммы файлов версии 0.8.9](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/SimDeck-0.8.9-SHA256SUMS.txt).
 
-Для iPhone отдельное приложение не требуется: локальный Safari-пульт запускается из Companion.
+### Дополнительные файлы по играм
+
+Скачивайте только строку для своей игры. **Мод/плагин** передаёт данные из игры; **пресет** назначает игровые клавиши для кнопок SimDeck. Пресеты не нужны, если вы вручную назначили те же клавиши в игре и Companion.
+
+- **F1 24 / F1 25 — [скачать пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-F1-Preset-0.7.1.zip).** Он настраивает 69 действий: распакуйте архив, закройте игру, запустите `Install-F1-24.cmd` или `Install-F1-25.cmd` и выберите Keyboard Preset 2. Телеметрия работает через UDP игры, отдельный мод не нужен. [Настройка F1](#3-настройте-игру).
+- **BeamNG.drive — [скачать мод телеметрии](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-0.2.1-BeamNG.zip).** Он передаёт передачу, режим коробки и состояния переключателей. Положите ZIP **без распаковки** в пользовательскую папку `mods`, включите мод и перезагрузите машину. Без него остаётся ограниченный резервный OutGauge. [Подробности](beamng/README.md).
+- **Assetto Corsa Competizione — [скачать пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-ACC-Preset-0.8.3.zip).** Он настраивает 33 команды: закройте игру, распакуйте архив и запустите `Install-ACC.cmd`. Телеметрия читается из Shared Memory игры, отдельный мод не нужен. [Подробности](ACC-PROFILE.md).
+- **Euro Truck Simulator 2 — [скачать плагин телеметрии](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Telemetry-0.8.5.zip) и [пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Preset-0.8.7.zip).** Плагин нужен для приборов и маршрута: распакуйте его и запустите `Install-ETS2.cmd` при закрытой игре. Для готовых 29 кнопок отдельно распакуйте пресет и запустите `Install-ETS2-Preset.cmd`. [Подробности](ETS2-PROFILE.md).
+- **Farming Simulator 25 — [скачать мод состояния техники](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/FS25_SimDeckStatus.zip).** Он **необязателен для кнопок и данных сохранения**, но нужен для живого статуса орудия, агрегата и двигателя. Положите ZIP **без распаковки** в `Documents/My Games/FarmingSimulator2025/mods` и включите мод для сохранения. [Подробности](mods/FS25_SimDeckStatus/README.md).
+- **Automobilista 2 / SnowRunner — дополнительные файлы не нужны.** Кнопки настраиваются вручную в игре и Companion; адаптеры живой телеметрии пока не готовы.
+
+Исходники наших модов есть в репозитории: [BeamNG.drive](beamng/mod/lua/vehicle/protocols/simdeckTelemetry.lua) и [FS25](mods/FS25_SimDeckStatus/SimDeckStatus.lua). Установщики пресетов лежат в `tools/`. DLL телеметрии ETS2 — сторонний компонент с лицензией и исходным проектом, указанными в [описании плагина](tools/ets2-telemetry/README.md); готовая DLL включена в архив для скачивания.
 
 ## Возможности
 
