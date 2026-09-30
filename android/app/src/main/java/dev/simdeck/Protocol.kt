@@ -57,6 +57,9 @@ object Protocol {
             "etsHighBeam" -> if (active) "Дальний свет" else "Дальний выключен"
             "etsHazards" -> if (active) "Аварийка включена" else "Аварийка выключена"
             "etsCruise" -> if (active) "Круиз активен" else "Круиз выключен"
+            "fs25Lower" -> if (active) "Орудие опущено" else "Орудие поднято"
+            "fs25TurnOn" -> if (active) "Агрегат работает" else "Агрегат выключен"
+            "fs25Motor" -> if (active) "Двигатель работает" else "Двигатель выключен"
             else -> if (active) "Включено" else "Выключено"
         }
         return ControlFeedback(active = active, description = description)

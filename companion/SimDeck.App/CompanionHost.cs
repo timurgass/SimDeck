@@ -239,6 +239,8 @@ public sealed class CompanionHost : IAsyncDisposable
     {
         try
         {
+            var nextSavePoll = 0L;
+            string? userDataDir = null;
             while (!stop.IsCancellationRequested)
             {
                 lock (profileGate)
@@ -247,28 +249,35 @@ public sealed class CompanionHost : IAsyncDisposable
                     {
                         try
                         {
-                            var save = Fs25GamePaths.FindSavegames().FirstOrDefault();
-                            if (save is null) fs25Diagnostic = "Сохранение FS25 не найдено. Сохраните игру и проверьте папку My Games/FarmingSimulator2025.";
-                            else
+                            userDataDir ??= Fs25GamePaths.FindUserDataDir();
+                            var states = userDataDir is null ? null : Fs25LiveReader.Read(userDataDir, DateTime.UtcNow);
+                            if (states is not null) Telemetry.PublishFs25Live(states);
+                            if (Environment.TickCount64 >= nextSavePoll)
                             {
-                                if (fs25SavePath != save.Path)
+                                nextSavePoll = Environment.TickCount64 + 5000;
+                                var save = Fs25GamePaths.FindSavegames().FirstOrDefault();
+                                if (save is null) fs25Diagnostic = "Сохранение FS25 не найдено. Сохраните игру и проверьте папку My Games/FarmingSimulator2025.";
+                                else
                                 {
-                                    fs25SavePath = save.Path;
-                                    fs25Crops = LoadFs25Crops();
-                                    fs25Watcher = new Fs25SaveWatcher(Telemetry, save,
-                                        plan: () => fs25Plan, catalog: () => fs25Crops);
+                                    if (fs25SavePath != save.Path)
+                                    {
+                                        fs25SavePath = save.Path;
+                                        fs25Crops = LoadFs25Crops();
+                                        fs25Watcher = new Fs25SaveWatcher(Telemetry, save,
+                                            plan: () => fs25Plan, catalog: () => fs25Crops);
+                                    }
+                                    var poll = fs25Watcher!.PollOnce();
+                                    fs25Diagnostic = poll.Error is not null
+                                        ? "FS25: сохранение пока не читается (" + poll.Error.GetType().Name + "). Повторим через 5 с."
+                                        : $"FS25: {save.Name} · {poll.Details?.Period.RussianMonth ?? "ожидание"} · "
+                                            + (poll.IsStale ? "данные устарели" : "сохранение прочитано") + ".";
                                 }
-                                var poll = fs25Watcher!.PollOnce();
-                                fs25Diagnostic = poll.Error is not null
-                                    ? "FS25: сохранение пока не читается (" + poll.Error.GetType().Name + "). Повторим через 5 с."
-                                    : $"FS25: {save.Name} · {poll.Details?.Period.RussianMonth ?? "ожидание"} · "
-                                        + (poll.IsStale ? "данные устарели" : "сохранение прочитано") + ".";
                             }
                         }
                         catch (Exception ex) { fs25Diagnostic = "FS25: ошибка чтения сохранения (" + ex.GetType().Name + ")."; }
                     }
                 }
-                await Task.Delay(TimeSpan.FromSeconds(5), stop.Token);
+                await Task.Delay(TimeSpan.FromMilliseconds(250), stop.Token);
             }
         }
         catch (OperationCanceledException) { }
@@ -477,7 +486,7 @@ public sealed class CompanionHost : IAsyncDisposable
                 lastAvailability = availability;
             }
             var now = Environment.TickCount64;
-            if (!IsFs25 || now - lastFs25Snapshot >= 1000)
+            if (!IsFs25 || now - lastFs25Snapshot >= (Telemetry.HasFs25Live ? 250 : 1000))
             {
                 await Send(socket, Telemetry.Snapshot(session), ct);
                 lastFs25Snapshot = now;

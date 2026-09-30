@@ -87,22 +87,49 @@ public sealed class TelemetryHub
     long sequence;
     string source = "beamng";
     string streamId = Guid.NewGuid().ToString("N");
+    IReadOnlyDictionary<string, bool>? fs25LiveStates;
+    long fs25LiveAt;
     public void Reset(string newSource)
     {
-        lock (gate) { source = newSource; latest = null; receivedAt = 0; sequence = 0; streamId = Guid.NewGuid().ToString("N"); }
+        lock (gate) { source = newSource; latest = null; receivedAt = 0; fs25LiveStates = null; fs25LiveAt = 0; sequence = 0; streamId = Guid.NewGuid().ToString("N"); }
     }
     public void Publish(Telemetry data)
     {
         lock (gate) { latest = data; receivedAt = Environment.TickCount64; sequence++; }
     }
+    public void PublishFs25Live(IReadOnlyDictionary<string, bool> states)
+    {
+        lock (gate)
+        {
+            if (source != "fs25") return;
+            fs25LiveStates = new Dictionary<string, bool>(states);
+            fs25LiveAt = Environment.TickCount64;
+            sequence++;
+        }
+    }
+    public void ClearFs25Live()
+    {
+        lock (gate) { if (fs25LiveStates is not null) { fs25LiveStates = null; fs25LiveAt = 0; sequence++; } }
+    }
+    public bool HasFs25Live
+    {
+        get { lock (gate) return source == "fs25" && fs25LiveStates is not null && Environment.TickCount64 - fs25LiveAt < 1500; }
+    }
+    (Telemetry? Data, long Age) Current()
+    {
+        var now = Environment.TickCount64;
+        if (source == "fs25" && fs25LiveStates is not null && now - fs25LiveAt < 1500)
+            return ((latest ?? new Telemetry(0, 0, 0, null, 0, 0, 0)) with { ActionStates = fs25LiveStates }, now - fs25LiveAt);
+        return (latest, latest is null ? long.MaxValue : Math.Max(0, now - receivedAt));
+    }
     public object Snapshot(string sessionId)
     {
-        lock (gate) return new { protocolMajor = 1, type = "telemetry.snapshot", sessionId, streamId, sequence,
+        lock (gate) { var current = Current(); return new { protocolMajor = 1, type = "telemetry.snapshot", sessionId, streamId, sequence,
             serverMonotonicMs = Environment.TickCount64, source, gameId = source,
-            ageMs = latest is null ? (long?)null : Math.Max(0, Environment.TickCount64 - receivedAt), data = latest };
+            ageMs = current.Data is null ? (long?)null : current.Age, data = current.Data }; }
     }
     public (Telemetry? Data, long Age, string Source) Read()
     {
-        lock (gate) return (latest, latest is null ? long.MaxValue : Math.Max(0, Environment.TickCount64 - receivedAt), source);
+        lock (gate) { var current = Current(); return (current.Data, current.Age, source); }
     }
 }

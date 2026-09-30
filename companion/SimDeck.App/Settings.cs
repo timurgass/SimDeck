@@ -2,6 +2,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using SimDeck.Core;
 
 namespace SimDeck.App;
 
@@ -76,6 +77,11 @@ public sealed class SettingsStore
                 {
                     Backup("before-ets2-bindings");
                     Value.Profiles[index] = AdditionalProfiles.UpgradeEts2(Value.Profiles[index]);
+                }
+                else if (profile.Id == "fs25" && Value.ProfileCatalogVersion < 7)
+                {
+                    Backup("before-fs25-actions");
+                    Value.Profiles[index] = Fs25Profile.Upgrade(Value.Profiles[index], Fs25Bindings.Empty);
                 }
             }
             Value.ProfileCatalogVersion = AdditionalProfiles.CatalogVersion;

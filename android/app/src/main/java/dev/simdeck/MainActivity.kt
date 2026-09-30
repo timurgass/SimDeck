@@ -108,7 +108,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.8.8 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.8.9 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
     }
 }
 
@@ -316,6 +316,8 @@ private fun Fs25Overview(data: Fs25Data?) {
         else Text(controlsHint(state.profileId, page), color = Muted, fontSize = 11.sp)
         if (state.profileId == "beamng-default" && !state.stale && !state.demo && state.telemetry?.headlights == null)
             Text("Игра присылает старый поток без состояния кнопок. Перезапустите BeamNG после обновления мода.", color = Amber, fontSize = 11.sp)
+        if (state.profileId == "fs25" && (state.stale || state.telemetry?.actionStates?.keys?.none { it.startsWith("fs25") } != false))
+            Text("Текущее положение орудия появится после включения мода FS25_SimDeckStatus в сохранении.", color = Muted, fontSize = 11.sp)
         if (state.command.isNotBlank()) Text(state.command, color = Amber, fontSize = 12.sp)
     }
 }
@@ -327,6 +329,7 @@ private fun Fs25Overview(data: Fs25Data?) {
     val feedback = Protocol.feedback(action, state.telemetry, state.stale || state.demo || !state.connected)
     val active = feedback.active == true
     val ets2 = state.profileId == "ets2"
+    val fs25 = state.profileId == "fs25"
     val accent = when {
         ets2 && active && action == "etsHighBeam" || feedback.headlights == 2 -> Color(0xFF62A6FF)
         ets2 && active && action == "etsParkingBrake" -> Color(0xFFFF7770)
@@ -373,7 +376,8 @@ private fun Fs25Overview(data: Fs25Data?) {
         }, contentAlignment = Alignment.Center) {
         Column(Modifier.padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (ets2) Ets2Icon(action, if (enabled) accent else Muted)
-            if (active) Text("● ВКЛ", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = accent)
+            if (fs25) Fs25Icon(action, if (enabled) accent else Muted)
+            if (active) Text(when(action) { "fs25Lower" -> "● ОПУЩЕНО"; "fs25TurnOn" -> "● РАБОТАЕТ"; "fs25Motor" -> "● ЗАПУЩЕН"; else -> "● ВКЛ" }, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = accent)
             Text(label, fontSize = if (state.profileId in setOf("f1-24","f1-25")) { if (label in listOf("↑", "←", "↓", "→")) 30.sp else 16.sp } else 14.sp, maxLines = 2, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, color = if (enabled) accent else Muted)
             Text(if (startingIgnition && down) "Запуск · держите кнопку" else displaySubtitle, fontSize = if (state.profileId in setOf("f1-24","f1-25")) 13.sp else 11.sp, textAlign = TextAlign.Center, color = if (active) Color(0xFFBDD0D8) else Muted, modifier = Modifier.padding(top = 6.dp))
         }

@@ -3,14 +3,14 @@
 <p align="center"><strong>Your rig. One touch.</strong></p>
 
 <p align="center">
-  <img alt="Release 0.8.8" src="https://img.shields.io/badge/release-0.8.8-7dd3c0?style=flat-square">
+  <img alt="Release 0.8.9" src="https://img.shields.io/badge/release-0.8.9-7dd3c0?style=flat-square">
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-4f8cc9?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Android" src="https://img.shields.io/badge/Android-10%2B-3ddc84?style=flat-square&logo=android&logoColor=white">
   <img alt="Safari" src="https://img.shields.io/badge/iPhone-Safari-4f8cc9?style=flat-square&logo=safari&logoColor=white">
 </p>
 
 <p align="center">
-  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.8.8"><strong>Скачать SimDeck 0.8.8</strong></a>
+  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.8.9"><strong>Скачать SimDeck 0.8.9</strong></a>
   · <a href="#быстрый-запуск">Быстрый запуск</a>
   · <a href="TROUBLESHOOTING.md">Решение проблем</a>
 </p>
@@ -24,14 +24,15 @@ SimDeck превращает Android-планшет, телефон или Safar
 
 | Файл | Для чего нужен |
 |---|---|
-| [SimDeck-0.8.8-Windows.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.8/SimDeck-0.8.8-Windows.zip) | Автономный Windows Companion x64 |
-| [SimDeck-0.8.8-debug.apk](https://github.com/timurgass/SimDeck/releases/download/v0.8.8/SimDeck-0.8.8-debug.apk) | Клиент для Android 10 и новее |
+| [SimDeck-0.8.9-Windows.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/SimDeck-0.8.9-Windows.zip) | Автономный Windows Companion x64 |
+| [SimDeck-0.8.9-debug.apk](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/SimDeck-0.8.9-debug.apk) | Клиент для Android 10 и новее |
+| [FS25_SimDeckStatus.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/FS25_SimDeckStatus.zip) | Дополнительный мод живого состояния орудий FS25 |
 | [SimDeck-ETS2-Telemetry-0.8.5.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Telemetry-0.8.5.zip) | Плагин телеметрии ETS2 с установщиком и лицензией |
 | [SimDeck-ETS2-Preset-0.8.7.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Preset-0.8.7.zip) | Полный установщик 29 кнопок ETS2 для выбранного игрового профиля |
 | [SimDeck-ACC-Preset-0.8.3.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-ACC-Preset-0.8.3.zip) | 33 команды ACC, ручное зажигание и резервные копии настроек |
 | [SimDeck-F1-Preset-0.7.1.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-F1-Preset-0.7.1.zip) | Установщик Keyboard Preset 2 для F1 24 и F1 25 |
 | [SimDeck-0.2.1-BeamNG.zip](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-0.2.1-BeamNG.zip) | Мод расширенной телеметрии BeamNG.drive |
-| [SimDeck-0.8.8-SHA256SUMS.txt](https://github.com/timurgass/SimDeck/releases/download/v0.8.8/SimDeck-0.8.8-SHA256SUMS.txt) | Контрольные суммы файлов релиза |
+| [SimDeck-0.8.9-SHA256SUMS.txt](https://github.com/timurgass/SimDeck/releases/download/v0.8.9/SimDeck-0.8.9-SHA256SUMS.txt) | Контрольные суммы файлов релиза |
 
 Для iPhone отдельное приложение не требуется: локальный Safari-пульт запускается из Companion.
 
@@ -59,11 +60,11 @@ SimDeck превращает Android-планшет, телефон или Safar
 | **Automobilista 2** | Запланирована Shared Memory | 31 действие | Гонка, электроника, ICM и HUD |
 | **Euro Truck Simulator 2** | SCS Telemetry SDK через плагин | 29 действий | Приборы, маршрутные метрики, векторные значки и состояния переключателей |
 | **SnowRunner** | Нет подтверждённого штатного потока | 26 действий | Трансмиссия, лебёдка, оборудование и навигация |
-| **Farming Simulator 25** | Последнее сохранение XML | 54 действия | Поля, период, финансы, предупреждения и JSON-план сезона; данные обновляются после сохранения |
+| **Farming Simulator 25** | Последнее сохранение XML; живое состояние через дополнительный мод | 53 действия | Значки действий, одна кнопка сцепки, состояние выбранного орудия/молотилки/двигателя при включённом моде |
 
 Подробные назначения: [F1 24](F1-24-PROFILE.md) · [F1 25](F1-25-PROFILE.md) · [BeamNG.drive](BEAMNG-PROFILE.md) · [ACC](ACC-PROFILE.md) · [Automobilista 2](AUTOMOBILISTA-2-PROFILE.md) · [ETS2](ETS2-PROFILE.md) · [SnowRunner](SNOWRUNNER-PROFILE.md) · [Farming Simulator 25](docs/FS25-STATUS.md)
 
-Для FS25 выберите профиль в Companion, нажмите **«Прочитать клавиши FS25»** и укажите игровой `inputBinding.xml`, если меняли назначения. Сохраните ферму: экран Android/Safari покажет состояние последнего сохранения, время записи, предупреждения и загруженный план. [Проверка модуля](docs/FS25-TESTING.md) · [Макет будущих экранов](docs/fs25-mockup.html).
+Для FS25 выберите профиль в Companion, нажмите **«Прочитать клавиши FS25»** и укажите игровой `inputBinding.xml`, если меняли назначения. Сохраните ферму: экран Android/Safari покажет состояние последнего сохранения, время записи, предупреждения и загруженный план. Для актуального положения орудия и состояния агрегата установите [дополнительный мод](mods/FS25_SimDeckStatus/README.md) и включите его в сохранении. [Проверка модуля](docs/FS25-TESTING.md) · [Макет будущих экранов](docs/fs25-mockup.html).
 
 Для разработчиков новых игр: [точки интеграции и требования к передаче работы](docs/DEVELOPING-GAMES.md).
 
@@ -91,7 +92,7 @@ Companion показывает состояние подключения, вхо
 
 ### 1. Запустите Companion
 
-1. Скачайте и полностью распакуйте `SimDeck-0.8.8-Windows.zip`.
+1. Скачайте и полностью распакуйте `SimDeck-0.8.9-Windows.zip`.
 2. Запустите `SimDeck.exe`. Переносить один EXE из папки нельзя.
 3. Выберите профиль игры и оставьте Companion запущенным.
 
@@ -270,6 +271,6 @@ Android SDK задаётся через `ANDROID_HOME` или локальный
 
 ## Текущий статус
 
-Версия 0.8.8 добавляет чтение последнего сохранения FS25, советник, загрузку плана и экран фермы для Android/Safari. Она также улучшает восстановление подключения Android после краткого перехода окна в фон и смены адреса ПК. [Установщик всех 29 клавиш ETS2](tools/ets2-preset/README.md) появился в 0.8.7. Настоящая карта дорог ETS2 на планшете требует отдельного источника картографических данных; текущая телеметрия содержит только маршрутные числа. Для AMS2 и SnowRunner пока требуются ручная сверка назначений и адаптеры телеметрии; для F1 25 остаётся полный ручной прогон всех 69 действий.
+Версия 0.8.9 добавляет векторные значки FS25 на Android/Safari, объединяет сцепку в одну кнопку и поддерживает дополнительный мод живого состояния выбранного орудия, агрегата и двигателя. Для проверки мода на конкретной технике следуйте [инструкции](docs/FS25-TESTING.md). Версия 0.8.8 добавила чтение последнего сохранения FS25, советник, загрузку плана и экран фермы для Android/Safari. [Установщик всех 29 клавиш ETS2](tools/ets2-preset/README.md) появился в 0.8.7. Настоящая карта дорог ETS2 на планшете требует отдельного источника картографических данных; текущая телеметрия содержит только маршрутные числа. Для AMS2 и SnowRunner пока требуются ручная сверка назначений и адаптеры телеметрии; для F1 25 остаётся полный ручной прогон всех 69 действий.
 
 Настройки Companion находятся в `%LOCALAPPDATA%/SimDeck/settings.json`. Доверенные устройства можно отключить кнопкой **«Отозвать доступ»**.

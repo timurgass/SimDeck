@@ -19,7 +19,7 @@ namespace SimDeck.App;
 /// </remarks>
 public static class Fs25Profile
 {
-    public const int Revision = 1;
+    public const int Revision = 2;
 
     /// <summary>Process name without ".exe", from the game's own FarmingSimulator2025.xml cmdline.</summary>
     public const string TargetProcess = "FarmingSimulator2025Game";
@@ -67,11 +67,11 @@ public static class Fs25Profile
         // ---- Орудие: основной рабочий цикл в поле ----
         new("fs25Lower", "LOWER_IMPLEMENT", "Орудие", "ОПУСТИТЬ / ПОДНЯТЬ",
             "Опускает и поднимает текущее орудие", "V", Group: "Работа"),
-        new("fs25LowerAll", "LOWER_ALL_IMPLEMENTS", "Орудие", "ОПУСТИТЬ ВСЁ",
+        new("fs25LowerAll", "LOWER_ALL_IMPLEMENTS", "Орудие", "ОПУСТИТЬ / ПОДНЯТЬ ВСЁ",
             "Все прицепленные орудия сразу", "Ctrl+V", Group: "Работа"),
-        new("fs25TurnOn", "IMPLEMENT_EXTRA", "Орудие", "ВКЛЮЧИТЬ АГРЕГАТ",
-            "Запускает работу сеялки, культиватора, опрыскивателя", "B", Group: "Работа"),
-        new("fs25TurnOnAll", "TURN_ON_ALL_IMPLEMENTS", "Орудие", "ВКЛЮЧИТЬ ВСЁ",
+        new("fs25TurnOn", "IMPLEMENT_EXTRA", "Орудие", "ВКЛ / ВЫКЛ АГРЕГАТ",
+            "Включает или выключает работу выбранного агрегата; на комбайне — молотилку", "B", Group: "Работа"),
+        new("fs25TurnOnAll", "TURN_ON_ALL_IMPLEMENTS", "Орудие", "ВКЛ / ВЫКЛ ВСЁ",
             "Все орудия сразу", "Ctrl+B", Group: "Работа"),
         new("fs25Fold", "FOLD_ALL_IMPLEMENTS", "Орудие", "СЛОЖИТЬ / РАЗЛОЖИТЬ",
             "Транспортное и рабочее положение", "Ctrl+X", Group: "Работа"),
@@ -79,10 +79,8 @@ public static class Fs25Profile
             "Только на орудиях с изменяемой шириной", "Ctrl+Z", Group: "Работа"),
         new("fs25WorkMode", "TOGGLE_WORKMODE", "Орудие", "РЕЖИМ РАБОТЫ",
             "Переключает режим у орудий, где он есть", "Ctrl+Y", Group: "Работа"),
-        new("fs25Attach", "ATTACH", "Орудие", "ПРИЦЕПИТЬ",
-            "Прицепляет ближайшее орудие", "Q", Group: "Сцепка"),
-        new("fs25Detach", "DETACH", "Орудие", "ОТЦЕПИТЬ",
-            "Отцепляет текущее орудие", "Ctrl+Q", Group: "Сцепка"),
+        new("fs25Attach", "ATTACH", "Орудие", "ПРИЦЕПИТЬ / ОТЦЕПИТЬ",
+            "Q выполняет доступное действие сцепки; отдельная Ctrl+Q нужна лишь в особых случаях", "Q", Group: "Сцепка"),
         new("fs25NextImplement", "SWITCH_IMPLEMENT", "Орудие", "СЛЕДУЮЩЕЕ ОРУДИЕ",
             "Передаёт управление другому орудию в сцепке", "G", Group: "Сцепка"),
         new("fs25PrevImplement", "SWITCH_IMPLEMENT_BACK", "Орудие", "ПРЕДЫДУЩЕЕ ОРУДИЕ",
@@ -191,10 +189,13 @@ public static class Fs25Profile
     {
         var current = Build(bindings);
         var factoryIds = current.Actions.Select(a => a.Id).ToHashSet(StringComparer.Ordinal);
-        var custom = existing.Actions.Where(a => !factoryIds.Contains(a.Id)).ToList();
+        var custom = existing.Actions.Where(a => !factoryIds.Contains(a.Id) && a.Id != "fs25Detach").ToList();
+        var oldById = existing.Actions.ToDictionary(a => a.Id, StringComparer.Ordinal);
         return current with
         {
-            Actions = [.. current.Actions, .. custom],
+            Actions = [.. current.Actions.Select(a => oldById.TryGetValue(a.Id, out var old)
+                ? a with { Key = bindings.Key(Specs.Single(s => s.Id == a.Id).GameAction) ?? old.Key }
+                : a), .. custom],
             Revision = Math.Max(current.Revision, existing.Revision + 1),
         };
     }

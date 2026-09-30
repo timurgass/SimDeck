@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modDesc descVersion="96">
+    <author>SimDeck</author>
+    <version>1.0.5.0</version>
+    <title><en>SimDeck equipment status</en><ru>SimDeck: состояние орудий</ru></title>
+    <description><en>Read-only status for the local SimDeck dashboard.</en><ru>Передаёт состояние выбранного орудия локальному пульту SimDeck.</ru></description>
+    <iconFilename>icon.dds</iconFilename>
+    <multiplayer supported="true"/>
+    <extraSourceFiles><sourceFile filename="SimDeckStatus.lua"/></extraSourceFiles>
+</modDesc>

@@ -7,7 +7,8 @@ function renderFs25(profileId, frame) {
   card.hidden = !active;
   if (!active) { fs25RenderKey = ''; return; }
   const details = frame?.data?.fs25, report = frame?.data?.fs25Advisor;
-  const key = String(frame?.sequence) + '|' + fs25Expanded + '|' + Boolean(details);
+  const liveFresh = Number.isFinite(frame?.ageMs) && frame.ageMs + performance.now() - frameAt < 500;
+  const key = String(frame?.sequence) + '|' + fs25Expanded + '|' + Boolean(details) + '|' + liveFresh;
   if (fs25RenderKey === key) return;
   fs25RenderKey = key;
   card.replaceChildren();
@@ -19,6 +20,10 @@ function renderFs25(profileId, frame) {
     return element;
   };
   add('small', 'eyebrow', 'ХОЗЯЙСТВО · ДАННЫЕ СОХРАНЕНИЯ');
+  const live = liveFresh ? frame.data?.actionStates : null;
+  const status = [['fs25Lower','Орудие', 'поднято', 'опущено'],['fs25TurnOn','Агрегат','выключен','работает'],['fs25Motor','Двигатель','остановлен','запущен']]
+    .filter(([id]) => typeof live?.[id] === 'boolean').map(([id,name,off,on]) => name + ': ' + (live[id] ? on : off));
+  add('p', status.length ? 'fs25Row' : 'hint', status.length ? 'Сейчас · ' + status.join(' · ') : 'Текущее состояние орудия: нет данных от мода FS25_SimDeckStatus');
   if (!details) {
     add('p', 'hint', 'Сохранение FS25 пока не найдено. Сохраните игру и проверьте путь в Companion.');
     return;
