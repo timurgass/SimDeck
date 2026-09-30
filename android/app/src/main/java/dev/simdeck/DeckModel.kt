@@ -54,6 +54,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
     @Volatile private var sourceAge = Long.MAX_VALUE
     @Volatile private var lastMessage = 0L
     private var retry: Job? = null
+    private var backgroundClose: Job? = null
     private val presses = ConcurrentHashMap<String, String>()
     private val acknowledgements = ConcurrentHashMap<String, CompletableDeferred<Boolean>>()
     private var menuSequence: Job? = null
@@ -70,22 +71,35 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                 }
                 if (session != null) {
                     if (presses.isNotEmpty()) send("input.renew") { put("pressIds", JSONArray(presses.keys.toList())) }
-                    if (now - lastMessage > 10000) {
-                        failed(generation,"Companion не ответил за 10 с",true)
+                    if (now - lastMessage > 20000) {
+                        failed(generation,"Companion не ответил за 20 с",true)
                     }
                 }
             }
         }
     }
     fun start() {
+        backgroundClose?.cancel()
+        backgroundClose = null
         active = true
         discover()
         if (state.value.selected != null && vault.read() != null && session == null && socket == null) connect()
     }
-    fun pause() { active = false; retry?.cancel(); disconnect(); stopDiscovery() }
+    fun pause() {
+        // Android briefly stops the Activity for system overlays and task switching. Give it
+        // time to resume without tearing down TLS, losing the controller slot and flashing
+        // the disconnected state on the dashboard.
+        backgroundClose?.cancel()
+        backgroundClose = viewModelScope.launch {
+            delay(30_000)
+            active = false
+            retry?.cancel()
+            disconnect()
+            stopDiscovery()
+        }
+    }
     fun select(computer: Computer) {
         disconnect()
-        if (state.value.selected?.fingerprint != computer.fingerprint) vault.clear()
         mutable.update { it.copy(selected = computer, status = "Сравните отпечаток с Companion", command = "") }
     }
     fun pair(code: String) {
@@ -113,6 +127,10 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
     }
     fun connect() {
         val computer = state.value.selected ?: return
+        if (prefs.getString("fingerprint", null) != computer.fingerprint) {
+            mutable.update { it.copy(status = "Для этого ПК нужен код из Companion") }
+            return
+        }
         val token = vault.read() ?: return
         disconnect()
         val current = generation
@@ -124,7 +142,8 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                 override fun onMessage(webSocket: WebSocket, text: String) {
                     if (current != generation) return
                     try {
-                        if (text.length > 65536) error("Слишком большое сообщение")
+                        // Large FS25 farms can exceed the old 64 KiB telemetry limit.
+                        if (text.length > 1_048_576) error("Слишком большое сообщение")
                         val root = JSONObject(text)
                         require(root.getInt("protocolMajor") == 1) { "Несовместимая версия Companion" }
                         lastMessage = SystemClock.elapsedRealtime()
@@ -133,6 +152,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                                 session = root.getString("sessionId")
                                 profileRevision = root.getInt("profileRevision")
                                 profileId = root.getString("profileId")
+                                lastMessage = SystemClock.elapsedRealtime()
                                 val controls = Protocol.controls(root)
                                 mutable.update { it.copy(connected = true, status = "${computer.name} · подключено", controls = controls, profileId = profileId, profileName = root.getString("profileName"), telemetry = null, stale = true, ignitionReady = false, command = "") }
                             }
@@ -167,8 +187,13 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                 override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                     if (current == generation) android.util.Log.w("SimDeckConnection", "${t.javaClass.simpleName}: ${t.message}; incomingAgeMs=${SystemClock.elapsedRealtime()-lastMessage}; pendingBytes=${webSocket.queueSize()}")
                     val revoked = response?.code == 401
+                    val occupied = response?.code == 409
                     if (current == generation && revoked) vault.clear()
-                    failed(current, if (revoked) "Доступ отозван. Свяжите устройства снова." else t.message ?: "Соединение потеряно", !revoked)
+                    failed(current, when {
+                        revoked -> "Доступ отозван. Свяжите устройства снова."
+                        occupied -> "Другой телефон или Safari уже управляет SimDeck. Закройте его и нажмите «Подключиться»."
+                        else -> t.message ?: "Соединение потеряно"
+                    }, !revoked && !occupied)
                 }
                 override fun onClosing(webSocket: WebSocket, code: Int, reason: String) { webSocket.close(code, null); failed(current, "Соединение закрыто", true) }
             })
@@ -303,7 +328,19 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                         val host = service.host?.hostAddress ?: return
                         val fingerprint = service.attributes["fingerprint"]?.toString(Charsets.UTF_8) ?: return
                         val computer = Computer(service.serviceName, host, service.port, fingerprint)
-                        mutable.update { it.copy(computers = (it.computers.filter { pc -> pc.name != computer.name } + computer).sortedBy { pc -> pc.name }) }
+                        mutable.update { state ->
+                            val previous = state.computers.firstOrNull { it.name == computer.name }
+                            val preferred = DiscoveryAddress.prefer(previous, computer)
+                            val selected = state.selected
+                            val samePc = selected?.fingerprint == computer.fingerprint && selected.host != "127.0.0.1"
+                            if (samePc && selected.host != preferred.host) {
+                                prefs.edit().putString("host", preferred.host).putInt("port", preferred.port).apply()
+                            }
+                            state.copy(
+                                computers = (state.computers.filter { it.name != computer.name } + preferred).sortedBy { it.name },
+                                selected = if (samePc) preferred else selected
+                            )
+                        }
                     }
                 })
             }
@@ -312,6 +349,6 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
         runCatching { nsd.discoverServices("_simdeck._tcp.", NsdManager.PROTOCOL_DNS_SD, listener) }.onFailure { discovery = null }
     }
     private fun stopDiscovery() { discovery?.let { runCatching { nsd.stopServiceDiscovery(it) } }; discovery = null }
-    override fun onCleared() { pause(); super.onCleared() }
+    override fun onCleared() { backgroundClose?.cancel(); active = false; retry?.cancel(); disconnect(); stopDiscovery(); super.onCleared() }
 }
 

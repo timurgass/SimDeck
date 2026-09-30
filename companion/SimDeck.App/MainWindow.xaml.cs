@@ -59,10 +59,12 @@ public partial class MainWindow : Window
         if (host.Browser?.Pairing.IsOpen != true) BrowserCode.Text = "";
         var t = host.Telemetry.Read();
         var fresh = t.Data is not null && t.Age < 500;
-        SourceLabel.Text = t.Source == "demo" ? "ДЕМОНСТРАЦИЯ · не данные игры" : host.Profile.Name + (fresh ? " · данные поступают" : " · нет свежих данных");
-        SpeedLabel.Text = fresh ? (t.Data!.SpeedMps * 3.6).ToString("0") : "—";
-        RpmLabel.Text = fresh ? $"{t.Data!.Rpm:0} RPM   /   {t.Data.GearDisplay}" : "— RPM   /   —";
-        TelemetryHelp.Text = fresh ? host.Profile.Id is "f1-24" or "f1-25" ? $"UDP F1 · принято {host.ReceivedPackets}, отклонено {host.InvalidPackets}" : host.Profile.Id == "beamng-default" && t.Data!.Headlights is null
+        var fs25 = host.Profile.Id == "fs25" ? t.Data?.Fs25 : null;
+        SourceLabel.Text = t.Source == "demo" ? "ДЕМОНСТРАЦИЯ · не данные игры" : fs25 is not null
+            ? "FS25 · данные последнего сохранения" : host.Profile.Name + (fresh ? " · данные поступают" : " · нет свежих данных");
+        SpeedLabel.Text = host.Profile.Id == "fs25" ? "—" : fresh ? (t.Data!.SpeedMps * 3.6).ToString("0") : "—";
+        RpmLabel.Text = host.Profile.Id == "fs25" ? "СЕЙВ FS25" : fresh ? $"{t.Data!.Rpm:0} RPM   /   {t.Data.GearDisplay}" : "— RPM   /   —";
+        TelemetryHelp.Text = host.Profile.Id == "fs25" ? host.TelemetryDiagnostic : fresh ? host.Profile.Id is "f1-24" or "f1-25" ? $"UDP F1 · принято {host.ReceivedPackets}, отклонено {host.InvalidPackets}" : host.Profile.Id == "beamng-default" && t.Data!.Headlights is null
             ? "Старый поток без состояния кнопок. Перезапустите BeamNG после обновления мода."
             : host.Profile.Id == "beamng-default" ? "Состояния кнопок поступают · " + (t.Data!.Headlights == 2 ? "дальний свет" : t.Data.Headlights == 1 ? "ближний свет" : "фары выключены")
             : host.Profile.Id == "acc" ? $"ACC Shared Memory · принято {host.ReceivedPackets} кадров · шины и тормоза доступны на пульте"
@@ -118,6 +120,20 @@ public partial class MainWindow : Window
         ProcessName.Text = host.Profile.TargetProcess;
         ProfileHelp.Text = GameProfiles.Help(host.Profile);
         ImportFs25Button.Visibility = host.Profile.Id == "fs25" ? Visibility.Visible : Visibility.Collapsed;
+        LoadFs25PlanButton.Visibility = host.Profile.Id == "fs25" ? Visibility.Visible : Visibility.Collapsed;
+    }
+    void LoadFs25Plan(object sender, RoutedEventArgs e)
+    {
+        if (host?.Profile.Id != "fs25") return;
+        var picker = new OpenFileDialog
+        {
+            Title = "Выберите план сезона FS25",
+            Filter = "План сезона (*.json)|*.json",
+        };
+        if (picker.ShowDialog(this) != true) return;
+        try { ErrorLabel.Text = "План FS25 загружен: " + host.LoadFs25Plan(picker.FileName) + ". План появится на пульте после чтения сохранения."; }
+        catch (Exception ex) when (ex is Fs25PlanException or UnauthorizedAccessException)
+        { ErrorLabel.Text = "План FS25: " + ex.Message; }
     }
     void ImportFs25Bindings(object sender, RoutedEventArgs e)
     {

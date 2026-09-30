@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<farms>
+    <farm farmId="1" name="TestFarm" color="1" loan="250000.000000" money="1000000.000000">
+        <statistics>
+            <playTime>0.000000</playTime>
+        </statistics>
+    </farm>
+</farms>

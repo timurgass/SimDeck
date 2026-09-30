@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Synthetic FS25 save fixture. Day 1, HARD difficulty, 1M€ start, lime required. -->
+<careerSavegame revision="2" valid="true">
+    <settings>
+        <savegameName>test-clean</savegameName>
+        <mapId>MapEU</mapId>
+        <mapTitle>Zielonka</mapTitle>
+        <saveDate>2026-01-01</saveDate>
+        <initialMoney>1000000</initialMoney>
+        <initialLoan>250000</initialLoan>
+        <economicDifficulty>HARD</economicDifficulty>
+        <plannedDaysPerPeriod>2</plannedDaysPerPeriod>
+        <limeRequired>true</limeRequired>
+        <weedsEnabled>true</weedsEnabled>
+        <plowingRequiredEnabled>false</plowingRequiredEnabled>
+    </settings>
+    <statistics>
+        <money>1000000</money>
+        <playTime>0.0</playTime>
+    </statistics>
+</careerSavegame>

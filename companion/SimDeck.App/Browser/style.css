@@ -2,3 +2,5 @@
 /* ETS2 state and route indicators */
 .route{border-top:1px solid #304049;margin-top:14px;padding-top:14px}.route>strong{font-size:13px;letter-spacing:1px}.routeValues{display:flex;justify-content:space-between;gap:8px;margin:12px 0;font-size:18px;color:#f2b84b;font-weight:700}.routeValues span{white-space:nowrap}.actionIcon{display:block;width:34px;height:34px;margin:0 auto 5px;color:#c9d6db}.action.on{background:#203c37;border-color:#79d4ab}.action.low{background:#164932;color:#83efad;border-color:#5cdd8e}.action.high{background:#143a70;color:#9ac5ff;border-color:#62a6ff}.action.brakeOn{background:#4b2528;color:#ffc0bd;border-color:#ff7770}
 .action.on .actionIcon{color:#79d4ab}.action.low .actionIcon{color:#83efad}.action.high .actionIcon{color:#9ac5ff}.action.brakeOn .actionIcon{color:#ffc0bd}
+#fs25Overview .fs25Row{padding:8px 10px;margin:5px 0;background:#101a20;border-radius:8px;font-size:14px}
+@media(min-width:760px){.fs25Deck #fs25Overview{grid-column:1;grid-row:1;align-self:start}}

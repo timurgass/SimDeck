@@ -390,9 +390,11 @@ const FIELDS = [
   {id:39,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:9,lime:0,spray:2,plow:1},
   {id:40,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:8,lime:2,spray:0,plow:1},
   {id:42,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:9,lime:1,spray:2,plow:1},
-  // Площадь в гектарах даёт мод: в файлах сейва она лежит в закрытом формате.
-  {id:45,crop:"UNKNOWN",gs:0,ground:"PLOWED",weed:0,lime:0,spray:0,plow:1,mine:1,ha:1.7},
-  {id:46,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:0,lime:0,spray:0,plow:0,mine:1,ha:2.1},
+  // Площадь в гектарах игра держит в закрытом .grle. На ваниле её нет — поле `ha` не
+  // задаём, оценка урожая при этом не рисуется. Как включить обратно если появится
+  // свой мод — см. docs/FS25-MOD-HOOKS.md.
+  {id:45,crop:"UNKNOWN",gs:0,ground:"PLOWED",weed:0,lime:0,spray:0,plow:1,mine:1},
+  {id:46,crop:"WHEAT",gs:8,ground:"HARVEST_READY",weed:0,lime:0,spray:0,plow:0,mine:1},
   {id:47,crop:"COTTON",gs:8,ground:"SOWN",weed:7,lime:0,spray:0,plow:1},
   {id:50,crop:"SORGHUM",gs:4,ground:"SOWN",weed:4,lime:1,spray:0,plow:1},
   {id:61,crop:"CANOLA",gs:9,ground:"HARVEST_READY_OTHER",weed:4,lime:2,spray:2,plow:1},
@@ -546,7 +548,9 @@ function promptText(){
     const c = CROPS[f.crop], stage = stageOf(f);
     // На пустом поле состояние уже и есть «вспахано» — второй раз не повторяем.
     const plow = stage.includes("вспахано") ? "" : `, ${f.plow ? "вспахано" : "не вспахано"}`;
-    return `  - Поле ${f.id}, ${String(f.ha).replace(".",",")} га: ${c.ru.toLowerCase()}, ${stage}; `
+    // Ваниль: площадь поля игра не отдаёт (GRLE закрыт). Даём её только если появится мод.
+    const area = f.ha ? `${String(f.ha).replace(".",",")} га` : "площадь недоступна на ваниле";
+    return `  - Поле ${f.id}, ${area}: ${c.ru.toLowerCase()}, ${stage}; `
       + `сорняки ${f.weed} из 9, известь ${f.lime} из 3, удобрение ${f.spray} из 3${plow}`;
   }).join("\n");
   const sowable = Object.entries(CROPS)
@@ -931,7 +935,7 @@ function brief(){
         <div class="day">${MONTHS[NOW]} <span>· ${SEASON}</span></div>
       </div>
       <div class="wx">
-        <div>Сейчас <b>ясно</b><br>Завтра <b>дождь</b>, начинается осень</div>
+        <div>Сейчас <b>ясно</b><br>Прогноз на завтра — по игре</div>
       </div>
     </div>
     <div class="money">
@@ -1352,6 +1356,10 @@ function deck(){
         <b>${w.head}</b><small>${w.why}</small>
       </button>
       <div class="doing">${w.doing}</div>
+      <div style="font-size:11px;color:var(--mute);margin:6px 0 0;padding:8px 10px;background:var(--card2);border-radius:10px">
+        Пример: FS25 на ваниле не отдаёт «поднято ли орудие» в реальном времени.
+        Кнопки ниже — рабочие, состояние — макет.
+      </div>
       <div class="levels">
         <div><span>Семена</span>${bar(78)}<b>78 %</b><small>ещё около полутора проходов</small></div>
         <div><span>Топливо</span>${bar(62)}<b>62 %</b><small>до конца поля хватит</small></div>

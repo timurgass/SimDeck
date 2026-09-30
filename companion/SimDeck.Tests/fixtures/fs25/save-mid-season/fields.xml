@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Synthetic mid-season fixture with contrasting field states:
+      - Field 1: wheat, HARVEST_READY (growthState 8), weeds 6, lime OK — cash cow needing action.
+      - Field 2: potato growing, weeds terrible (9), lime empty — the advisor SHOULD scream.
+      - Field 3: sugar beet, seeded, no issues.
+      - Field 4: fallow, plowed.
+-->
+<fields>
+    <field id="1" plannedFruit="FALLOW" fruitType="WHEAT" growthState="8" lastGrowthState="0" weedState="6" stoneLevel="0" groundType="HARVEST_READY" sprayType="NONE" sprayLevel="2" limeLevel="3" rollerLevel="1" plowLevel="1" stubbleShredLevel="0" waterLevel="0"/>
+    <field id="2" plannedFruit="FALLOW" fruitType="POTATO" growthState="5" lastGrowthState="0" weedState="9" stoneLevel="0" groundType="SOWN" sprayType="NONE" sprayLevel="1" limeLevel="0" rollerLevel="0" plowLevel="1" stubbleShredLevel="0" waterLevel="0"/>
+    <field id="3" plannedFruit="FALLOW" fruitType="SUGARBEET" growthState="3" lastGrowthState="0" weedState="1" stoneLevel="0" groundType="SOWN" sprayType="NONE" sprayLevel="1" limeLevel="2" rollerLevel="1" plowLevel="1" stubbleShredLevel="0" waterLevel="0"/>
+    <field id="4" plannedFruit="FALLOW" fruitType="" growthState="0" lastGrowthState="0" weedState="0" stoneLevel="0" groundType="" sprayType="NONE" sprayLevel="0" limeLevel="0" rollerLevel="0" plowLevel="1" stubbleShredLevel="0" waterLevel="0"/>
+</fields>

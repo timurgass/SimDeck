@@ -18,6 +18,7 @@ static class BrowserTests
         using var http = new HttpClient(new HttpClientHandler { UseProxy=false, CookieContainer=cookies });
         check((await http.GetStringAsync(origin)).Contains("IPHONE / SAFARI"), "Browser serves bundled UI without internet dependencies");
         check((await http.GetStringAsync(origin + "/ets2-icons.js")).Contains("etsHighBeam"), "Browser serves ETS2 dashboard icons to Safari");
+        check((await http.GetStringAsync(origin + "/fs25.js")).Contains("ДАННЫЕ СОХРАНЕНИЯ"), "Browser serves the FS25 save dashboard to Safari");
         check((await http.GetAsync(origin+"/status")).StatusCode==HttpStatusCode.Unauthorized, "Browser starts without authorisation");
         async Task<HttpResponseMessage> Pair(string code, string? from) {
             using var request=new HttpRequestMessage(HttpMethod.Post,origin+"/pair") { Content=JsonContent.Create(new {code}) };

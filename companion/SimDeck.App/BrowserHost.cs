@@ -48,6 +48,7 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
         app.UseWebSockets();
         app.MapGet("/", () => Asset("index.html", "text/html; charset=utf-8"));
         app.MapGet("/app.js", () => Asset("app.js", "text/javascript; charset=utf-8"));
+        app.MapGet("/fs25.js", () => Asset("fs25.js", "text/javascript; charset=utf-8"));
         app.MapGet("/ets2-icons.js", () => Asset("ets2-icons.js", "text/javascript; charset=utf-8"));
         app.MapGet("/style.css", () => Asset("style.css", "text/css; charset=utf-8"));
         app.MapGet("/f1-circuits.json", () => Asset("f1-circuits.json", "application/json; charset=utf-8"));

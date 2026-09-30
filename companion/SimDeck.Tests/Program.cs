@@ -100,6 +100,18 @@ F1DetailTests.Run(Check);
 F1RaceTests.Run(Check);
 AccTelemetryTests.Run(Check);
 ScsTelemetryTests.Run(Check);
+Fs25CatalogTests.Run(Check);
+Fs25SaveTests.Run(Check);
+Fs25PlanTests.Run(Check);
+Fs25RulesTests.Run(Check);
+Fs25SaveWatcherTests.Run(Check);
+var fs25Hub = new TelemetryHub();
+var fs25Save = Fs25SaveReader.Read(new Fs25SavegameDir(Path.Combine(AppContext.BaseDirectory, "fixtures", "fs25", "save-mid-season")));
+fs25Hub.Publish(new Telemetry(0, 0, 0, null, 0, 0, 0, Fs25: fs25Save, Fs25Advisor: Fs25Rules.Evaluate(fs25Save, null)));
+var fs25Wire = JsonSerializer.SerializeToUtf8Bytes(fs25Hub.Snapshot("fs25-test"), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+using (var fs25Json = JsonDocument.Parse(fs25Wire))
+    Check(fs25Wire.Length < 65536 && fs25Json.RootElement.GetProperty("data").GetProperty("fs25").GetProperty("period").GetProperty("number").GetInt32() == 8,
+        "FS25 snapshot serializes without recursive Period.Next and fits the Android message limit");
 var oldEts2 = AdditionalProfiles.Ets2() with { Revision = 1, Actions = AdditionalProfiles.Ets2().Actions
     .Select(a => a.Id switch
     {

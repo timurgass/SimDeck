@@ -19,6 +19,7 @@ public sealed class Settings
     public List<GameProfile> Profiles { get; set; } = [];
     public int F1PresetVersion { get; set; }
     public int ProfileCatalogVersion { get; set; }
+    public string? Fs25PlanPath { get; set; }
     [System.Text.Json.Serialization.JsonIgnore]
     public GameProfile ActiveProfile => Profiles.Single(p => p.Id == ActiveProfileId);
 }

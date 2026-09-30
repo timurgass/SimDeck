@@ -70,11 +70,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit) {
-    var code by remember { mutableStateOf("") }
-    var verified by remember(state.selected?.fingerprint) { mutableStateOf(false) }
-    var advanced by remember { mutableStateOf(false) }
-    var address by remember { mutableStateOf("") }
-    var fingerprint by remember { mutableStateOf("") }
+    var code by rememberSaveable { mutableStateOf("") }
+    var verified by rememberSaveable(state.selected?.fingerprint) { mutableStateOf(false) }
+    var advanced by rememberSaveable { mutableStateOf(false) }
+    var address by rememberSaveable { mutableStateOf("") }
+    var fingerprint by rememberSaveable { mutableStateOf("") }
     Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Ваш кокпит\nначинается здесь.", fontSize = 32.sp, fontWeight = FontWeight.Bold, lineHeight = 37.sp)
         Text("Запустите SimDeck Companion на ПК. Подключите оба устройства к одной сети Wi-Fi.", color = Muted)
@@ -108,12 +108,20 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.8.7 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.8.8 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
     }
 }
 
 @Composable
 private fun Dashboard(state: DeckState, model: DeckModel) {
+    if (state.profileId == "fs25") {
+        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Fs25Overview(state.telemetry?.fs25)
+            Controls(state, model)
+            StatusFootnote(state)
+        }
+        return
+    }
     val data = state.telemetry.takeUnless { state.stale }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth > 700.dp
@@ -160,6 +168,49 @@ private fun Instruments(state: DeckState, data: Telemetry?) {
             if (state.profileId == "ets2") Ets2Route(data?.ets2Navigation)
             if (data?.maxRpm == null) Text("Шкала RPM: 8000 · настроечный предел", fontSize = 10.sp, color = Muted, modifier = Modifier.padding(top = 16.dp))
             if (state.stale && !state.demo) Text(telemetryHint(state.profileId), fontSize = 11.sp, color = Amber, modifier = Modifier.padding(top = 10.dp))
+        }
+    }
+}
+
+@Composable
+private fun Fs25Overview(data: Fs25Data?) {
+    var allFields by rememberSaveable { mutableStateOf(false) }
+    Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
+        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+            Text("ХОЗЯЙСТВО · ДАННЫЕ СОХРАНЕНИЯ", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Amber)
+            if (data == null) {
+                Text("Сохранение FS25 пока не найдено. Сохраните игру и проверьте путь в Companion.", color = Muted)
+                return@Column
+            }
+            Text(data.saveName.ifBlank { "Без названия" }, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(listOf(data.mapName, data.period).filter(String::isNotBlank).joinToString(" · "), color = Muted)
+            Text("Сохранено: ${data.savedAt}" + if (data.stale) " · ДАННЫЕ УСТАРЕЛИ" else "", color = if (data.stale) Amber else Color(0xFF9ED8B0), fontSize = 12.sp)
+            data.money?.let { money ->
+                Text("Деньги: ${"%,.0f".format(money)} €" + (data.loan?.let { " · кредит ${"%,.0f".format(it)} €" } ?: ""), fontSize = 15.sp)
+            }
+            HorizontalDivider(color = Color(0xFF304049))
+            Text("ПОЛЯ · ${data.fields.size}", fontWeight = FontWeight.Bold)
+            (if (allFields) data.fields else data.fields.take(6)).forEach { field ->
+                Text("№${field.id} · ${field.crop.ifBlank { "пусто" }} · ${field.ground.ifBlank { "состояние неизвестно" }} · сорняки ${field.weeds}/9 · известь ${field.lime}/3", fontSize = 12.sp)
+            }
+            if (data.fields.size > 6) TextButton(onClick = { allFields = !allFields }) {
+                Text(if (allFields) "Свернуть поля" else "Показать все поля")
+            }
+            if (data.alerts.isNotEmpty()) {
+                HorizontalDivider(color = Color(0xFF304049))
+                Text("СОВЕТНИК · ${data.alerts.size} уведомлений", fontWeight = FontWeight.Bold)
+                data.alerts.take(6).forEach { alert ->
+                    Text(alert.message, color = if (alert.severity >= 2) Color(0xFFFF7770) else Amber, fontSize = 12.sp)
+                }
+            }
+            data.planName?.let { name ->
+                HorizontalDivider(color = Color(0xFF304049))
+                Text("ПЛАН: $name", fontWeight = FontWeight.Bold)
+                data.tasks.take(6).forEach { task ->
+                    val status = when (task.status) { 1 -> "✓"; 2 -> "Вне сезона"; 3 -> "Нет поля"; else -> "К исполнению" }
+                    Text("$status · ${task.title}", fontSize = 12.sp)
+                }
+            }
         }
     }
 }

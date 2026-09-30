@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Synthetic FS25 save fixture. Day 15 = period 8 (MID_AUTUMN, октябрь) with plannedDaysPerPeriod=2. -->
+<careerSavegame revision="2" valid="true">
+    <settings>
+        <savegameName>test-mid-season</savegameName>
+        <mapId>MapEU</mapId>
+        <mapTitle>Zielonka</mapTitle>
+        <saveDate>2026-04-15</saveDate>
+        <initialMoney>1000000</initialMoney>
+        <initialLoan>250000</initialLoan>
+        <economicDifficulty>HARD</economicDifficulty>
+        <plannedDaysPerPeriod>2</plannedDaysPerPeriod>
+        <limeRequired>true</limeRequired>
+        <weedsEnabled>true</weedsEnabled>
+        <plowingRequiredEnabled>false</plowingRequiredEnabled>
+    </settings>
+    <statistics>
+        <money>856000</money>
+        <playTime>32.5</playTime>
+    </statistics>
+    <mod modName="pdlc_strawHarvestPack" title="Straw Harvest Pack" version="1.1.0.0"/>
+    <mod modName="pdlc_vredoPack" title="Vredo Pack" version="1.2.0.0"/>
+</careerSavegame>

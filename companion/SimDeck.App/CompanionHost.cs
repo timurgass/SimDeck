@@ -43,6 +43,7 @@ public sealed class CompanionHost : IAsyncDisposable
     bool IsBeamNg => Profile.Id == "beamng-default";
     bool IsAcc => Profile.Id == "acc";
     bool IsEts2 => Profile.Id == "ets2";
+    bool IsFs25 => Profile.Id == "fs25";
     string GameId => IsBeamNg ? "beamng" : Profile.Id;
     public string TelemetryDiagnostic => IsF1
         ? f1Udp is null ? "UDP 20777 занят. Закройте другую программу телеметрии на этом порту."
@@ -51,6 +52,7 @@ public sealed class CompanionHost : IAsyncDisposable
         : $"Нет свежих данных. Получено: {ReceivedPackets}, отклонено: {InvalidPackets}. Вернитесь на трассу."
         : IsAcc ? accDiagnostic
         : IsEts2 ? scsDiagnostic
+        : IsFs25 ? fs25Diagnostic
         : !IsBeamNg ? "Профиль управления готов. Телеметрия для этой игры пока не подключена."
         : udp is null ? "UDP-порт занят: закройте другой экземпляр Companion."
         : ReceivedPackets == 0 ? "Нет пакетов от игры. Установите мод SimDeck и перезагрузите машину (Ctrl+R)."
@@ -72,6 +74,11 @@ public sealed class CompanionHost : IAsyncDisposable
     ulong lastScsTimestamp;
     long lastScsPacketAt;
     string scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите ETS2.";
+    string fs25Diagnostic = "Ожидание сохранения Farming Simulator 25.";
+    Fs25SaveWatcher? fs25Watcher;
+    string? fs25SavePath;
+    Fs25CropCatalogView? fs25Crops;
+    Fs25Plan? fs25Plan;
     int lastAccPacket = int.MinValue;
     long lastAccPacketAt;
     long lastAccReconnect;
@@ -87,7 +94,22 @@ public sealed class CompanionHost : IAsyncDisposable
         this.inputBackend = inputBackend ?? Backend;
         Input = new(this.inputBackend);
         Backend.UseVirtualKey = Store.Value.UseVirtualKeyInput;
+        if (!string.IsNullOrWhiteSpace(Store.Value.Fs25PlanPath))
+            try { fs25Plan = Fs25PlanLoader.LoadFile(Store.Value.Fs25PlanPath); }
+            catch (Exception ex) when (ex is Fs25PlanException or UnauthorizedAccessException)
+            { fs25Diagnostic = "План FS25 не прочитан: " + ex.Message; }
         ApplyBindings();
+    }
+    public string LoadFs25Plan(string path)
+    {
+        var loaded = Fs25PlanLoader.LoadFile(path);
+        lock (profileGate)
+        {
+            fs25Plan = loaded;
+            Store.Value.Fs25PlanPath = path;
+            Store.Save();
+        }
+        return loaded.Name;
     }
     public void ApplyBindings()
     {
@@ -130,6 +152,8 @@ public sealed class CompanionHost : IAsyncDisposable
             accDiagnostic = "Ожидание ACC Shared Memory. Запустите заезд и выйдите на трассу.";
             scsReader.Reset(); lastScsTimestamp = 0; lastScsPacketAt = 0;
             scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите ETS2.";
+            fs25Watcher = null; fs25SavePath = null; fs25Crops = null;
+            fs25Diagnostic = "Ожидание сохранения Farming Simulator 25.";
             Telemetry.Reset(Demo ? "demo" : GameId);
         }
     }
@@ -201,7 +225,7 @@ public sealed class CompanionHost : IAsyncDisposable
         Telemetry.Reset(GameId);
         try
         {
-            if (localOnly) { loops = [ReceiveTelemetry(), ReceiveF1(), RunTick()]; return; }
+            if (localOnly) { loops = [ReceiveTelemetry(), ReceiveF1(), RunTick(), MonitorFs25()]; return; }
             discovery = new ServiceDiscovery();
             var service = new ServiceProfile("SimDeck-" + Environment.MachineName, "_simdeck._tcp", (ushort)Store.Value.Port);
             service.AddProperty("fingerprint", Fingerprint);
@@ -209,7 +233,66 @@ public sealed class CompanionHost : IAsyncDisposable
             discovery.Advertise(service);
         }
         catch (Exception ex) { Status += " · автопоиск: " + ex.GetType().Name; }
-        loops = [ReceiveTelemetry(), ReceiveF1(), RunTick()];
+        loops = [ReceiveTelemetry(), ReceiveF1(), RunTick(), MonitorFs25()];
+    }
+    async Task MonitorFs25()
+    {
+        try
+        {
+            while (!stop.IsCancellationRequested)
+            {
+                lock (profileGate)
+                {
+                    if (IsFs25 && !Demo)
+                    {
+                        try
+                        {
+                            var save = Fs25GamePaths.FindSavegames().FirstOrDefault();
+                            if (save is null) fs25Diagnostic = "Сохранение FS25 не найдено. Сохраните игру и проверьте папку My Games/FarmingSimulator2025.";
+                            else
+                            {
+                                if (fs25SavePath != save.Path)
+                                {
+                                    fs25SavePath = save.Path;
+                                    fs25Crops = LoadFs25Crops();
+                                    fs25Watcher = new Fs25SaveWatcher(Telemetry, save,
+                                        plan: () => fs25Plan, catalog: () => fs25Crops);
+                                }
+                                var poll = fs25Watcher!.PollOnce();
+                                fs25Diagnostic = poll.Error is not null
+                                    ? "FS25: сохранение пока не читается (" + poll.Error.GetType().Name + "). Повторим через 5 с."
+                                    : $"FS25: {save.Name} · {poll.Details?.Period.RussianMonth ?? "ожидание"} · "
+                                        + (poll.IsStale ? "данные устарели" : "сохранение прочитано") + ".";
+                            }
+                        }
+                        catch (Exception ex) { fs25Diagnostic = "FS25: ошибка чтения сохранения (" + ex.GetType().Name + ")."; }
+                    }
+                }
+                await Task.Delay(TimeSpan.FromSeconds(5), stop.Token);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+    static Fs25CropCatalogView? LoadFs25Crops()
+    {
+        var install = Fs25GamePaths.FindInstall();
+        if (install is null) return null;
+        try
+        {
+            using var index = File.OpenRead(install.FruitTypesXml);
+            var files = Fs25FruitTypesParser.Parse(index).FoliageFiles;
+            var dataRoot = Path.GetFullPath(install.DataDir) + Path.DirectorySeparatorChar;
+            var crops = new List<Fs25Crop>();
+            foreach (var relative in files)
+            {
+                var path = Path.GetFullPath(Path.Combine(install.DataDir, relative.Replace('/', Path.DirectorySeparatorChar)));
+                if (!path.StartsWith(dataRoot, StringComparison.OrdinalIgnoreCase) || !File.Exists(path)) continue;
+                try { using var stream = File.OpenRead(path); crops.Add(Fs25CropParser.Parse(stream)); }
+                catch (Exception ex) when (ex is IOException or System.Xml.XmlException or InvalidDataException) { }
+            }
+            return crops.Count > 0 ? new Fs25CropListCatalogView(crops) : null;
+        }
+        catch (Exception ex) when (ex is IOException or System.Xml.XmlException or UnauthorizedAccessException) { return null; }
     }
     async Task ReceiveTelemetry()
     {
@@ -378,6 +461,7 @@ public sealed class CompanionHost : IAsyncDisposable
     async Task SendLoop(WebSocket socket, ChannelReader<object> responses, string session, CancellationToken ct)
     {
         long lastInputRevision = -1;
+        long lastFs25Snapshot = 0;
         string? lastAvailability = null;
         // Full race snapshots include all cars. Bound traffic to 10 Hz on tablet Wi-Fi.
         using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
@@ -392,7 +476,12 @@ public sealed class CompanionHost : IAsyncDisposable
                 lastInputRevision = inputState.Revision;
                 lastAvailability = availability;
             }
-            await Send(socket, Telemetry.Snapshot(session), ct);
+            var now = Environment.TickCount64;
+            if (!IsFs25 || now - lastFs25Snapshot >= 1000)
+            {
+                await Send(socket, Telemetry.Snapshot(session), ct);
+                lastFs25Snapshot = now;
+            }
         }
     }
     static async Task Send(WebSocket socket, object value, CancellationToken ct)

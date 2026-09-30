@@ -26,7 +26,7 @@ object PinnedTls {
         // after explicit comparison on the PC. Both TLS trust and hostname verification enforce it.
         val verifier = HostnameVerifier { _, tls -> runCatching { fingerprint(tls.peerCertificates[0]) == pin }.getOrDefault(false) }
         return OkHttpClient.Builder().proxy(java.net.Proxy.NO_PROXY).sslSocketFactory(ssl.socketFactory, trust).hostnameVerifier(verifier)
-            // DeckModel watches incoming snapshots (10 s), while input leases expire in
+            // DeckModel watches incoming snapshots (20 s), while input leases expire in
             // 500 ms. A second 2 s ping deadline caused reconnects under tablet/PC load.
             .connectTimeout(5, TimeUnit.SECONDS).readTimeout(0, TimeUnit.SECONDS).pingInterval(0, TimeUnit.SECONDS).build()
     }
