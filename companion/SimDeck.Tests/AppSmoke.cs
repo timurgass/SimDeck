@@ -10,6 +10,8 @@ static class AppSmoke
 {
     public static async Task Run(string executable, string stateDirectory)
     {
+        executable = Path.GetFullPath(executable);
+        stateDirectory = Path.GetFullPath(stateDirectory);
         // Isolate smoke tests from an already running user Companion.
         var reserve = new TcpListener(IPAddress.Loopback,0); reserve.Start();
         var store = new SettingsStore(stateDirectory); store.Value.Port=((IPEndPoint)reserve.LocalEndpoint).Port;
@@ -22,7 +24,21 @@ static class AppSmoke
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25));
             var settingsPath = Path.Combine(stateDirectory, "settings.json");
             while (!File.Exists(settingsPath)) { if (process.HasExited) throw new Exception("Companion exited at startup"); await Task.Delay(100, timeout.Token); }
-            var settings = JsonSerializer.Deserialize<Settings>(await File.ReadAllTextAsync(settingsPath, timeout.Token))!;
+            // The test creates settings before launching WPF. On a clean machine,
+            // certificate generation updates them later; do not pin an empty thumbprint.
+            Settings settings;
+            while (true)
+            {
+                if (process.HasExited) throw new Exception("Companion exited at startup");
+                try
+                {
+                    settings = JsonSerializer.Deserialize<Settings>(await File.ReadAllTextAsync(settingsPath, timeout.Token))!;
+                    if (!string.IsNullOrWhiteSpace(settings.CertificateThumbprint)) break;
+                }
+                catch (IOException) { }
+                catch (JsonException) { }
+                await Task.Delay(100, timeout.Token);
+            }
             using var http = new HttpClient(new HttpClientHandler { UseProxy = false, ServerCertificateCustomValidationCallback = (_, c, _, _) => c?.Thumbprint == settings.CertificateThumbprint });
             while (true)
             {
@@ -53,6 +69,8 @@ static class AppSmoke
 
     public static async Task RunStartupFailure(string executable, string stateDirectory)
     {
+        executable = Path.GetFullPath(executable);
+        stateDirectory = Path.GetFullPath(stateDirectory);
         var listener = new TcpListener(IPAddress.Any,0); listener.Start();
         try {
             var store = new SettingsStore(stateDirectory); store.Value.Port=((IPEndPoint)listener.LocalEndpoint).Port; store.Save();
