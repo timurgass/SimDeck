@@ -31,7 +31,7 @@ private fun teamColor(team: Int): Color = Color(when(team) {
     else -> longArrayOf(0xFF74CCE0,0xFFFFC869,0xFFB7A3ED,0xFFB6D881)[Math.floorMod(team,4)]
 })
 
-@Composable internal fun F1CircuitMap(race: RaceData?, stale: Boolean, compact: Boolean = false) {
+@Composable internal fun F1CircuitMap(race: RaceData?, stale: Boolean, compact: Boolean = false, heightDp: Int? = null) {
     val track=circuit(race?.trackId)
     if (track == null) {
         Text(if(race == null || race.trackId < 0) "Ожидание названия трассы от игры" else "Для этой конфигурации схема пока не добавлена", fontSize = 15.sp)
@@ -40,7 +40,7 @@ private fun teamColor(team: Int): Color = Color(when(team) {
     val live=!stale && race?.fresh == true
     Text(track.name, fontSize = if(compact) 16.sp else 23.sp, fontWeight = FontWeight.Bold)
     val markers=if(live) race!!.drivers.filter { it.onTrack } else emptyList()
-    Canvas(Modifier.fillMaxWidth().height(if(compact) 85.dp else 195.dp)) {
+    Canvas(Modifier.fillMaxWidth().height((heightDp ?: if(compact) 85 else 195).dp)) {
         val points=track.points
         val minX=points.minOf { it.x }; val maxX=points.maxOf { it.x }; val minY=points.minOf { it.y }; val maxY=points.maxOf { it.y }
         val margin=if(compact) 12.dp.toPx() else 28.dp.toPx()

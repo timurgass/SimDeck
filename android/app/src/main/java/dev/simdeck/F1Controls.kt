@@ -10,17 +10,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@Composable internal fun F1Controls(state: DeckState, model: DeckModel) {
+@Composable internal fun F1Controls(state: DeckState, model: DeckModel,
+    initialSection: String = "Control Scheme", initialPanel: String = "mfdSetup",
+    showSections: Boolean = true, showRaceShortcuts: Boolean = true) {
     val gameName = gameDisplayName(state.profileId, state.profileName)
     val actions = state.controls
     val sections = (actions.map { it.page } + "Трасса").distinct()
-    var selectedSection by rememberSaveable { mutableStateOf("Control Scheme") }
+    var selectedSection by rememberSaveable(initialSection) { mutableStateOf(initialSection) }
     val section = selectedSection.takeIf { it in sections } ?: sections.first()
     val groups = (actions.filter { it.page == section }.map { it.group.ifEmpty { "Общие" } } + if(section=="Control Scheme") listOf("Инженер") else emptyList()).distinct().ifEmpty { listOf("Карта и пилоты") }
     var selectedGroup by rememberSaveable(section) { mutableStateOf(groups.first()) }
     val group = selectedGroup.takeIf { it in groups } ?: groups.first()
     val visible = actions.filter { it.page == section && it.group.ifEmpty { "Общие" } == group }
-    var panel by rememberSaveable { mutableStateOf("mfdSetup") }
+    var panel by rememberSaveable(initialPanel) { mutableStateOf(initialPanel) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(if(!state.connected) state.status else when(state.inputAvailability) {
             "ready" -> "Ввод готов · $gameName активно"
@@ -30,7 +32,7 @@ import androidx.compose.ui.unit.sp
             else -> "Проверка готовности ввода…"
         }, fontSize = 15.sp)
         if (state.command.isNotBlank()) Text(state.command, fontSize = 15.sp)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (showSections) Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             sections.forEach { name -> FilterChip(selected = name == section,
                 onClick = { model.releaseAll(); selectedSection = name }, label = { Text(name, fontSize = 15.sp) }) }
         }
@@ -103,8 +105,8 @@ import androidx.compose.ui.unit.sp
                 }
                 else -> {
                     if (section == "Control Scheme" && group == "Гонка") {
-                        Button(onClick = { selectedSection = "MFD"; selectedGroup = "Навигация"; panel = "mfdPit" }, modifier = Modifier.fillMaxWidth()) { Text("Пит-стоп · резина и крыло", fontSize = 18.sp) }
-                        F1Grid(visible.filterNot { it.id == "pitStop" }, state, model)
+                        if (showRaceShortcuts) Button(onClick = { selectedSection = "MFD"; selectedGroup = "Навигация"; panel = "mfdPit" }, modifier = Modifier.fillMaxWidth()) { Text("Пит-стоп · резина и крыло", fontSize = 18.sp) }
+                        F1Grid(visible.filterNot { it.id == "pitStop" || (!showRaceShortcuts && it.id == "radio") }, state, model)
                         Text("Радио инженера — T. Голосовая связь — удержание Y для микрофона ПК; звук с планшета не передаётся.", fontSize = 14.sp)
                     } else F1Grid(visible, state, model)
                 }

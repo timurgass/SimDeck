@@ -31,8 +31,7 @@ internal data class ProfileDesign(
 )
 
 internal fun profileDesign(id: String): ProfileDesign = when (id) {
-    "f1-24" -> ProfileDesign(Color(0xFF17191D), Color(0xFF202226), Color(0xFF2B2526), Color(0xFFE63537), Color(0xFFB7AFB0), Color(0xFF484044), 5, "RACE CONTROL")
-    "f1-25" -> ProfileDesign(Color(0xFF08151B), Color(0xFF0E242D), Color(0xFF17333D), Color(0xFF21C6D7), Color(0xFF8DB0BA), Color(0xFF31515C), 20, "PRECISION DISPLAY")
+    "f1-24", "f1-25" -> ProfileDesign(Color(0xFF17191D), Color(0xFF202226), Color(0xFF2B2526), Color(0xFFE63537), Color(0xFFB7AFB0), Color(0xFF484044), 5, "RACE CONTROL")
     "beamng-default" -> ProfileDesign(Color(0xFF181C1E), Color(0xFF242A2E), Color(0xFF30383C), Color(0xFFF5842D), Color(0xFFAEBBBD), Color(0xFF435054), 8, "VEHICLE CONTROL UNIT")
     "acc" -> ProfileDesign(Color(0xFF111314), Color(0xFF1D2020), Color(0xFF2A3030), Color(0xFFFFAE3B), Color(0xFFA9B9B2), Color(0xFF3A4843), 5, "GT COCKPIT")
     "ams2" -> ProfileDesign(Color(0xFF0C1C24), Color(0xFF132E37), Color(0xFF1C4248), Color(0xFFB8E44B), Color(0xFFA6C4C0), Color(0xFF356061), 18, "COCKPIT CONTROL")
@@ -45,13 +44,13 @@ internal fun profileDesign(id: String): ProfileDesign = when (id) {
 internal val LocalProfileDesign = compositionLocalOf { profileDesign("") }
 
 @Composable
-private fun DesignCard(content: @Composable ColumnScope.() -> Unit) {
+internal fun DesignCard(spacingDp: Int = 12, content: @Composable ColumnScope.() -> Unit) {
     val design = LocalProfileDesign.current
     Card(
         colors = CardDefaults.cardColors(containerColor = design.panel),
         shape = RoundedCornerShape(design.radius.dp),
         modifier = Modifier.fillMaxWidth().border(1.dp, design.line, RoundedCornerShape(design.radius.dp))
-    ) { Column(Modifier.fillMaxWidth().padding(17.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content) }
+    ) { Column(Modifier.fillMaxWidth().padding(17.dp), verticalArrangement = Arrangement.spacedBy(spacingDp.dp), content = content) }
 }
 
 @Composable
@@ -115,22 +114,12 @@ internal fun ProfileInstruments(state: DeckState, data: Telemetry?) {
     val fuel = data?.fuelFraction?.let { "%.0f".format(it * 100) } ?: "—"
     when (state.profileId) {
         "f1-24", "f1-25" -> DesignCard {
-            InstrumentHeading(state, if (state.profileId == "f1-24") "ГОНКА · F1 24" else "LIVE DATA · F1 25")
-            if (state.profileId == "f1-25") {
-                Box(Modifier.fillMaxWidth().background(design.panelAlt, RoundedCornerShape(18.dp)).padding(15.dp), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(gear, fontSize = 88.sp, lineHeight = 92.sp, color = design.accent, fontWeight = FontWeight.Black)
-                        Text("$speed КМ/Ч", fontSize = 27.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-                DesignValue("RPM", rpm)
-            } else {
+            InstrumentHeading(state, "ГОНКА · ${gameDisplayName(state.profileId, state.profileName)}")
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column { Text(gear, fontSize = 85.sp, lineHeight = 88.sp, color = design.accent, fontWeight = FontWeight.Black); DesignLabel("ПЕРЕДАЧА") }
                     Column(horizontalAlignment = Alignment.End) { Text(speed, fontSize = 48.sp, fontWeight = FontWeight.Black); DesignLabel("КМ/Ч") }
                     Column(horizontalAlignment = Alignment.End) { Text(rpm, fontSize = 20.sp, fontWeight = FontWeight.Bold); DesignLabel("RPM") }
                 }
-            }
             RpmStrip(data)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Топливо $fuel%", color = design.muted, fontSize = 12.sp)

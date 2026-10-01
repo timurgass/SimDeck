@@ -1,6 +1,6 @@
 /* Game identity only: controls, pairing and telemetry still use the shared client logic. */
 body[data-profile]{--p-bg:#17191d;--p-panel:#202226;--p-alt:#2b2526;--p-accent:#e63537;--p-muted:#b7afb0;--p-line:#484044;--p-radius:6px;background:var(--p-bg);color:#f5f7f5;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-body[data-profile="f1-25"]{--p-bg:#08151b;--p-panel:#0e242d;--p-alt:#17333d;--p-accent:#21c6d7;--p-muted:#8db0ba;--p-line:#31515c;--p-radius:18px}
+body[data-profile="f1-24"],body[data-profile="f1-25"]{--p-bg:#17191d;--p-panel:#202226;--p-alt:#2b2526;--p-accent:#e63537;--p-muted:#b7afb0;--p-line:#484044;--p-radius:5px}
 body[data-profile="beamng-default"]{--p-bg:#181c1e;--p-panel:#242a2e;--p-alt:#30383c;--p-accent:#f5842d;--p-muted:#aebbbd;--p-line:#435054;--p-radius:8px}
 body[data-profile="acc"]{--p-bg:#111314;--p-panel:#1d2020;--p-alt:#2a3030;--p-accent:#ffae3b;--p-muted:#a9b9b2;--p-line:#3a4843;--p-radius:5px}
 body[data-profile="ams2"]{--p-bg:#0c1c24;--p-panel:#132e37;--p-alt:#1c4248;--p-accent:#b8e44b;--p-muted:#a6c4c0;--p-line:#356061;--p-radius:16px}
@@ -52,23 +52,10 @@ body[data-profile] .routeValues{color:var(--p-accent)}
 body[data-profile] .settingHead{background:var(--p-alt);text-align:left}
 body[data-profile] .tyre.selectedTyre{background:var(--p-alt);border-color:var(--p-accent)}
 
-/* F1 24: angular red race display with a large gear readout. */
-body[data-profile="f1-24"] header{border-top:5px solid var(--p-accent)}
-body[data-profile="f1-24"] .gauges{border-top:0;border-left:5px solid var(--p-accent)}
-body[data-profile="f1-24"] .numbers>div{background:transparent;text-align:left;padding:5px 0}
-body[data-profile="f1-24"] #gear{font-size:76px;font-weight:900}
-body[data-profile="f1-24"] #speed{font-size:52px;color:#f5f7f5}
-body[data-profile="f1-24"] .action{border-radius:3px}
-body[data-profile="f1-24"] .panelTabs button{border-radius:3px}
-
-/* F1 25: cyan instrument pod and compact command strips. */
-body[data-profile="f1-25"] .gauges{border-top:1px solid var(--p-line);border-radius:22px;text-align:center}
-body[data-profile="f1-25"] .gauges>.inline{text-align:left}
-body[data-profile="f1-25"] .numbers{justify-content:center}
-body[data-profile="f1-25"] .numbers>div:first-child{border-radius:100px 100px 15px 15px;border-top:6px solid var(--p-accent);background:var(--p-alt)}
-body[data-profile="f1-25"] #gear{font-size:78px}
-body[data-profile="f1-25"] #speed{font-size:49px;color:#f5f7f5}
-body[data-profile="f1-25"] .action{border-radius:10px}
+/* Both F1 games use the approved angular red race dashboard. */
+body.f1Deck header{border-top:5px solid var(--p-accent)}
+body.f1Deck #brandGame{color:var(--p-accent)}
+body.f1Deck .action,body.f1Deck .panelTabs button{border-radius:3px}
 
 /* BeamNG: workshop panel; vehicle state stays in the button labels. */
 body[data-profile="beamng-default"] header{border-left:7px solid var(--p-accent)}
@@ -124,13 +111,64 @@ body[data-profile="fs25"] .action.on{background:#355b3a}
   body[data-profile="fs25"] #fs25Overview{order:0}
   body[data-profile="fs25"] .controls{order:1}
 }
+
+/* F1 layout: global navigation, instruments and track card, then full controls. */
+body.f1Deck #deck{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px}
+body.f1Deck #f1Nav{grid-column:1 / -1;grid-row:1;background:var(--p-panel);border:1px solid var(--p-line);gap:0;padding:0;margin:0}
+body.f1Deck #f1Nav button{border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:var(--p-muted);font-weight:800;font-size:12px;padding:14px 18px}
+body.f1Deck #f1Nav button.selected{border-bottom-color:var(--p-accent);color:var(--p-accent)}
+body.f1Deck .gauges{grid-column:1;grid-row:2;border:1px solid var(--p-line);display:grid;grid-template-columns:.75fr 1fr .9fr;grid-template-rows:auto 35px 50px 38px auto;gap:8px 16px;align-content:center;min-width:0;margin:0;padding:18px}
+body.f1Deck .gauges>.inline{grid-column:1 / -1;grid-row:1;margin:0 0 10px}
+body.f1Deck .gauges>label{grid-column:3;grid-row:2;align-self:end;font-size:10px;letter-spacing:.05em}
+body.f1Deck #rpm{grid-column:3;grid-row:3;font-size:24px;margin:0;align-self:center;color:#faf8f7;white-space:nowrap}
+body.f1Deck #rpmBar{display:none}
+body.f1Deck #f1Rpm{grid-column:3;grid-row:4;width:100%;height:35px;align-self:start}
+body:not(.f1Deck) #f1Rpm{display:none}
+body.f1Deck .numbers{display:contents}
+body.f1Deck .numbers>div{background:transparent;padding:0;text-align:left;display:flex;flex-direction:column;justify-content:center;min-width:0}
+body.f1Deck .numbers>div:first-child{grid-column:1;grid-row:2 / 5}
+body.f1Deck .numbers>div:last-child{grid-column:2;grid-row:2 / 5}
+body.f1Deck #gear{font-size:100px;font-weight:900;letter-spacing:-.06em}
+body.f1Deck #speed{font-size:62px;font-weight:900;letter-spacing:-.05em;color:#faf8f7}
+body.f1Deck #fuel{display:none}
+body.f1Deck #f1Quick{grid-column:1 / -1;grid-row:5;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:20px}
+body.f1Deck #f1Quick button{display:flex;gap:6px;justify-content:center;align-items:center;border-radius:3px;font-size:12px;font-weight:800;padding:9px 6px;min-height:58px}
+body.f1Deck #f1Quick button.primary{color:white}
+body.f1Deck #f1Quick svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;flex:none}
+body.f1Deck #f1Summary{grid-column:2;grid-row:2;margin:0;padding:16px;min-width:0}
+body.f1Deck .f1SummaryHeading{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.06em}
+body.f1Deck .f1Order{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+body.f1Deck .f1Order>div{display:flex;gap:6px;align-items:center;background:var(--p-bg);padding:10px 7px;font-size:12px}
+body.f1Deck .f1Order .player{background:var(--p-alt);color:var(--p-accent)}
+body.f1Deck .f1SummaryValues{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--p-line);padding-top:14px;margin-top:14px;font-size:13px}
+body.f1Deck .f1SummaryValues small{font-size:10px;margin-bottom:4px}
+body.f1Deck .controls{grid-column:1 / -1;grid-row:3}
+body.f1Deck #pages{display:none}
+body.f1Deck #wheelsPanel{grid-column:1 / -1;grid-row:4}
+body.f1Deck:not([data-f1-page="race"]) .gauges,body.f1Deck:not([data-f1-page="race"]) #f1Summary{display:none}
+@media(max-width:650px){
+ body.f1Deck #deck{display:flex;flex-direction:column}
+ body.f1Deck #f1Nav{order:0}
+ body.f1Deck .gauges{order:1;padding:14px;gap:8px 12px}
+ body.f1Deck #f1Summary{order:2}
+ body.f1Deck .controls{order:3}
+ body.f1Deck #wheelsPanel{order:4}
+ body.f1Deck #gear{font-size:78px}
+ body.f1Deck #speed{font-size:49px}
+ body.f1Deck #rpm{font-size:18px}
+ body.f1Deck .gauges>label{font-size:9px}
+ body.f1Deck #f1Quick button{font-size:11px}
+}
 @media(max-width:520px){
   body[data-profile] main{padding:10px}
   body[data-profile] header{padding:12px}
   body[data-profile] header strong{font-size:19px}
   body[data-profile] .gauges,body[data-profile] .controls{padding:13px}
   body[data-profile] .numbers strong{font-size:43px}
-  body[data-profile="f1-24"] #gear,body[data-profile="f1-25"] #gear{font-size:60px}
+  body[data-profile="f1-24"] #gear,body[data-profile="f1-25"] #gear{font-size:72px}
+  body.f1Deck #speed{font-size:38px}
+  body.f1Deck header{gap:8px}
+  body.f1Deck #connection{font-size:11px}
   body[data-profile="beamng-default"] #speed,body[data-profile="ets2"] #speed{font-size:53px}
   body[data-profile] .action{min-height:89px;padding:10px;font-size:14px}
   body[data-profile] .actionIcon{width:24px;height:24px}

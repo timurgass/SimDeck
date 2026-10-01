@@ -54,9 +54,15 @@ class MainActivity : ComponentActivity() {
                 Surface(Modifier.fillMaxSize(), color = design.background) {
                     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(horizontal = 15.dp, vertical = 10.dp)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column { Text("SIMDECK", fontSize = 22.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp); Text(design.tag, color = design.muted, fontSize = 10.sp, letterSpacing = 1.sp) }
-                            TextButton(onClick = { model.releaseAll(); connectionTab = !connectionTab }) { Text(if (connectionTab) "ПАНЕЛЬ" else "ПОДКЛЮЧЕНИЕ", fontSize = 11.sp) }
+                            Column(Modifier.weight(1f)) {
+                                Row { Text("SIMDECK", fontSize = 22.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                                    if (state.profileId in setOf("f1-24", "f1-25")) Text(" / ${gameDisplayName(state.profileId, state.profileName)}", fontSize = 20.sp, fontWeight = FontWeight.Black, color = design.accent)
+                                }
+                                Text(design.tag, color = design.muted, fontSize = 10.sp, letterSpacing = 1.sp)
+                            }
+                            TextButton(onClick = { model.releaseAll(); connectionTab = !connectionTab }) { Text(if (connectionTab) "ПАНЕЛЬ" else if (state.profileId in setOf("f1-24", "f1-25")) "СВЯЗЬ" else "ПОДКЛЮЧЕНИЕ", fontSize = 11.sp) }
                         }
+                        if (state.profileId in setOf("f1-24", "f1-25")) Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(3.dp).background(design.accent))
                         Spacer(Modifier.height(12.dp))
                         // Keep the dashboard composed during reconnects so pages and scroll survive.
                         if ((state.connected || state.controls.isNotEmpty()) && !connectionTab) Dashboard(state, model)
@@ -111,12 +117,13 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.9.0 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.9.1 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
     }
 }
 
 @Composable
 private fun Dashboard(state: DeckState, model: DeckModel) {
+    if (state.profileId in setOf("f1-24", "f1-25")) { F1Dashboard(state, model); return }
     if (state.profileId == "fs25") {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Fs25Overview(state)
