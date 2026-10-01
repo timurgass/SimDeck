@@ -1,4 +1,4 @@
-/* Game identity only: controls, pairing and telemetry still use the shared client logic. */
+/* Approved profile compositions. Pairing and input use the shared client logic. */
 body[data-profile]{--p-bg:#17191d;--p-panel:#202226;--p-alt:#2b2526;--p-accent:#e63537;--p-muted:#b7afb0;--p-line:#484044;--p-radius:6px;background:var(--p-bg);color:#f5f7f5;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
 body[data-profile="f1-24"],body[data-profile="f1-25"]{--p-bg:#17191d;--p-panel:#202226;--p-alt:#2b2526;--p-accent:#e63537;--p-muted:#b7afb0;--p-line:#484044;--p-radius:5px}
 body[data-profile="beamng-default"]{--p-bg:#181c1e;--p-panel:#242a2e;--p-alt:#30383c;--p-accent:#f5842d;--p-muted:#aebbbd;--p-line:#435054;--p-radius:8px}

@@ -1,0 +1,6 @@
+{
+  "name": "simdeck-dashboard-qa",
+  "private": true,
+  "scripts": { "check": "node check-dashboards.cjs" },
+  "devDependencies": { "playwright": "1.62.1" }
+}

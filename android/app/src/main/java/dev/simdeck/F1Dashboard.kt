@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 @Composable internal fun F1Dashboard(state: DeckState, model: DeckModel) {
     val design = LocalProfileDesign.current
     var destination by rememberSaveable { mutableStateOf("race") }
-    val tabs = listOf("race" to "ГОНКА", "mfd" to "MFD", "pit" to "ПИТ-СТОП", "track" to "КАРТА", "menu" to "MENU CONTROLS")
+    val tabs = listOf("race" to "ГОНКА", "mfd" to "MFD", "pit" to "ПИТ-СТОП", "track" to "КАРТА", "menu" to "MENU CONTROLS") + state.controls.map { it.page }.distinct().filterNot { it in setOf("Control Scheme","MFD","Menu Controls","Трасса") }.map { "custom:$it" to it }
     fun navigate(next: String) { model.releaseAll(); destination = next }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(Modifier.fillMaxWidth().border(1.dp, design.line).background(design.panel).horizontalScroll(rememberScrollState())) {
@@ -58,7 +58,7 @@ import androidx.compose.ui.unit.sp
         DesignCard {
             key(destination) {
                 F1Controls(state, model,
-                    initialSection = when (destination) { "mfd", "pit" -> "MFD"; "track" -> "Трасса"; "menu" -> "Menu Controls"; else -> "Control Scheme" },
+                    initialSection = when (destination) { "mfd", "pit" -> "MFD"; "track" -> "Трасса"; "menu" -> "Menu Controls"; else -> if(destination.startsWith("custom:")) destination.removePrefix("custom:") else "Control Scheme" },
                     initialPanel = if (destination == "pit") "mfdPit" else "mfdSetup",
                     showSections = false, showRaceShortcuts = false)
             }
@@ -77,6 +77,7 @@ import androidx.compose.ui.unit.sp
         }
         BoxWithConstraints {
         val narrow = maxWidth < 350.dp
+        Column {
         Row(Modifier.fillMaxWidth().heightIn(min = if (narrow) 140.dp else 170.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (narrow) 10.dp else 18.dp)) {
             Column(Modifier.weight(.75f)) {
                 Text(data?.let { Protocol.gear(it.gear, it.gearboxMode) } ?: "—", fontSize = if (narrow) 72.sp else 90.sp, lineHeight = 94.sp, fontWeight = FontWeight.Black, color = design.accent)
@@ -86,7 +87,7 @@ import androidx.compose.ui.unit.sp
                 Text(data?.let { "%.0f".format(it.speedMps * 3.6) } ?: "—", fontSize = if (narrow) 38.sp else 52.sp, fontWeight = FontWeight.Black)
                 F1Caption("КМ/Ч")
             }
-            Column(Modifier.weight(.9f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (!narrow) Column(Modifier.weight(.9f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 F1Caption("ОБОРОТЫ")
                 Text(data?.let { "%.0f".format(it.rpm) } ?: "—", fontSize = if (narrow) 18.sp else 24.sp, fontWeight = FontWeight.Bold)
                 val fraction = ((data?.rpm ?: 0.0) / (data?.maxRpm ?: 15000.0)).coerceIn(0.0, 1.0)
@@ -99,6 +100,12 @@ import androidx.compose.ui.unit.sp
                     }
                 }
             }
+        }
+        if(narrow) Row(Modifier.fillMaxWidth().padding(top=8.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
+            F1Caption("RPM"); Text(data?.let { "%.0f".format(it.rpm) } ?: "—",fontSize=18.sp,fontWeight=FontWeight.Bold)
+            val fraction=((data?.rpm ?: 0.0)/(data?.maxRpm ?: 15000.0)).coerceIn(0.0,1.0)
+            Canvas(Modifier.weight(1f).height(25.dp)) { val step=size.width/12; for(i in 0..11) { val h=size.height*(.3f+.7f*(i+1)/12); drawRect(if(i>=fraction*12) design.line else if(i>=9) androidx.compose.ui.graphics.Color(0xFFFFBC55) else design.accent,Offset(i*step,size.height-h),Size((step-3.dp.toPx()).coerceAtLeast(1f),h)) } }
+        }
         }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {

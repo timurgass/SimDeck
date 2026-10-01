@@ -10,6 +10,12 @@ data class DeckAction(val id: String, val page: String, val label: String, val d
 data class ControlFeedback(val active: Boolean? = null, val headlights: Int? = null, val description: String? = null)
 
 object Protocol {
+    // FS25's file bridge runs every 400 ms and tolerates partial file writes.
+    // Match the server's 1500 ms live-state window; racing telemetry stays at 500 ms.
+    fun telemetryFresh(profileId: String, sourceAge: Long, elapsed: Long): Boolean {
+        val limit = if(profileId == "fs25") 1500L else 500L
+        return sourceAge >= 0 && elapsed >= 0 && sourceAge < limit && elapsed < limit - sourceAge
+    }
     fun controls(root: JSONObject): List<DeckAction> {
         val list = root.optJSONArray("controls") ?: return emptyList()
         require(list.length() <= 96)

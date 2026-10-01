@@ -4,6 +4,13 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ProtocolTest {
+    @Test fun fs25StateSurvivesOneMissedFilePollButStillExpires() {
+        assertTrue(Protocol.telemetryFresh("fs25", 750, 100))
+        assertFalse(Protocol.telemetryFresh("fs25", 1400, 100))
+        assertFalse(Protocol.telemetryFresh("fs25", Long.MAX_VALUE, 100))
+        assertFalse(Protocol.telemetryFresh("f1-25", 500, 0))
+        assertTrue(Protocol.telemetryFresh("acc", 300, 100))
+    }
     @Test fun transportUsesApplicationHeartbeatWithoutCompetingPingDeadline() {
         val client = PinnedTls.client("a".repeat(64))
         assertEquals(0, client.pingIntervalMillis)

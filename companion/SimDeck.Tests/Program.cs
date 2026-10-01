@@ -12,6 +12,12 @@ using System.Text.Json;
 using SimDeck.App;
 using SimDeck.Core;
 
+if (args.Length == 2 && args[0] == "--export-profiles") {
+    var profiles = new[] { new GameProfile("beamng-default", "BeamNG.drive", "BeamNG.drive.x64", [.. BeamNgProfile.Actions]), GameProfiles.F1(), GameProfiles.F125() }.Concat(AdditionalProfiles.All());
+    File.WriteAllText(args[1], JsonSerializer.Serialize(profiles, new JsonSerializerOptions(JsonSerializerDefaults.Web))); return;
+}
+if (args.Length == 2 && args[0] == "--dashboard-server") { await DashboardQa.Run(args[1]); return; }
+if (args.Length >= 3 && args[0] == "--smoke-startup-failure") { await AppSmoke.RunStartupFailure(args[1], args[2]); return; }
 if (args.Length >= 3 && args[0] == "--smoke-app") { await AppSmoke.Run(args[1], args[2]); return; }
 if (args.Length >= 2 && args[0] == "--acc-live")
 {

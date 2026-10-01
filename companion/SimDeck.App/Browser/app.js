@@ -41,7 +41,7 @@ function attachAction(b,a){
  const finish=(e,cancel)=>{const g=gestures.get(e.pointerId);if(!g)return;gestures.delete(e.pointerId);b.classList.remove('down');if(g.hold){presses.delete(g.id);invoke(a,'up',g.id);}else if(!cancel&&!g.cancel){if(a.gesture==='tapThenHold'&&performance.now()-g.time>=500)text('command','Сначала коротко нажми и отпусти, затем удерживай отдельно');else invoke(a,'press',g.id);}};
  b.onpointerup=e=>finish(e,false);b.onpointercancel=e=>finish(e,true);b.onlostpointercapture=e=>finish(e,true);b.onclick=e=>{if(e.detail===0&&a.gesture==='press'&&!b.disabled){resetPit();invoke(a,'press',uid());}};
 }
-function actionIcon(id){const path=profileId==='ets2'?ets2IconPaths[id]:profileId==='fs25'?fs25IconPaths[id]:null;if(!path)return null;const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),shape=document.createElementNS(ns,'path');svg.setAttribute('class','actionIcon');svg.setAttribute('viewBox','0 0 48 48');svg.setAttribute('aria-hidden','true');shape.setAttribute('d',path);shape.setAttribute('fill','none');shape.setAttribute('stroke','currentColor');shape.setAttribute('stroke-width','2.7');shape.setAttribute('stroke-linecap','round');shape.setAttribute('stroke-linejoin','round');svg.append(shape);return svg;}
+function actionIcon(id){const path=profileId==='ets2'?ets2IconPaths[id]:profileId==='fs25'?fs25IconPaths[id]:profileIconPath(id);if(!path)return null;const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),shape=document.createElementNS(ns,'path');svg.setAttribute('class','actionIcon');svg.setAttribute('viewBox','0 0 48 48');svg.setAttribute('aria-hidden','true');shape.setAttribute('d',path);shape.setAttribute('fill','none');shape.setAttribute('stroke','currentColor');shape.setAttribute('stroke-width','2.7');shape.setAttribute('stroke-linecap','round');shape.setAttribute('stroke-linejoin','round');svg.append(shape);return svg;}
 function actionButton(a,label=a.label,description=a.key){const b=node('button','',undefined),s=node('span','',label),hint=node('small','',description);const icon=actionIcon(a.id);if(icon)b.append(icon);b.append(s,hint);attachAction(b,a);return b;}
 function actionGrid(list,target=$('buttons'),labelFn){for(const a of list)target.append(actionButton(a,labelFn?labelFn(a):a.label,a.gesture==='hold'?'Удерживать · '+a.key:a.key));}
 function arrows(prefix,list,target){const grid=node('div','arrows');for(const id of [null,prefix+'Up',null,prefix+'Left',prefix+'Down',prefix+'Right']){const a=id&&list.find(x=>x.id===id);if(a)grid.append(actionButton(a,{Up:'↑',Left:'←',Down:'↓',Right:'→'}[id.slice(prefix.length)],a.label));else grid.append(node('span'));}target.append(grid);}
@@ -56,12 +56,12 @@ function setupF1Dashboard(){
  if(!quick){quick=node('div','f1Quick');quick.id='f1Quick';document.querySelector('.gauges').append(quick);}
  nav.hidden=summary.hidden=quick.hidden=!isF1();
 }
-function f1Destination(){return page==='MFD'?(panel==='mfdPit'?'pit':'mfd'):page==='Трасса'?'track':page==='Menu Controls'?'menu':'race';}
-function goF1(destination){release();panel=destination==='pit'?'mfdPit':'mfdSetup';page=destination==='mfd'||destination==='pit'?'MFD':destination==='track'?'Трасса':destination==='menu'?'Menu Controls':'Control Scheme';group='';renderControls();}
+function f1Destination(){return page==='MFD'?(panel==='mfdPit'?'pit':'mfd'):page==='Трасса'?'track':page==='Menu Controls'?'menu':page==='Control Scheme'?'race':'custom:'+page;}
+function goF1(destination){release();panel=destination==='pit'?'mfdPit':'mfdSetup';page=destination.startsWith('custom:')?destination.slice(7):destination==='mfd'||destination==='pit'?'MFD':destination==='track'?'Трасса':destination==='menu'?'Menu Controls':'Control Scheme';group='';renderControls();}
 function f1QuickIcon(kind){const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('aria-hidden','true');icon.innerHTML={radio:'<path d="M3 8h18v13H3zM5 8l13-6M13 13h5M13 17h5"/><circle cx="7" cy="15" r="2"/>',pit:'<path d="M4 22V2l16 5-16 6"/>',mfd:'<path d="M2 4h20v16H2zM2 9h20M6 13h4M6 16h4"/>'}[kind];return icon;}
 function renderF1Navigation(){
  if(!isF1())return;const destination=f1Destination();document.body.dataset.f1Page=destination;const nav=$('f1Nav');clear(nav);
- for(const [id,label] of [['race','ГОНКА'],['mfd','MFD'],['pit','ПИТ-СТОП'],['track','КАРТА'],['menu','MENU CONTROLS']])tab(nav,label,id===destination,()=>goF1(id));
+ for(const [id,label] of [['race','ГОНКА'],['mfd','MFD'],['pit','ПИТ-СТОП'],['track','КАРТА'],['menu','MENU CONTROLS'],...[...new Set(actions.map(a=>a.page))].filter(p=>!['Control Scheme','MFD','Menu Controls','Трасса'].includes(p)).map(p=>['custom:'+p,p])])tab(nav,label,id===destination,()=>goF1(id));
  const quick=$('f1Quick');clear(quick);for(const [id,label] of [['radio','Радио'],['pit','Пит-стоп'],['mfd','MFD']]){const b=node('button',id==='pit'?'primary':'',label);b.type='button';b.prepend(f1QuickIcon(id));b.disabled=id==='radio'&&!ready();b.onclick=()=>id==='radio'?action('radio')&&invoke(action('radio')):goF1(id);quick.append(b);}
 }
 function drawF1Rpm(data){const canvas=$('f1Rpm');if(!canvas)return;const w=canvas.getBoundingClientRect().width,h=35,dpr=Math.min(2,devicePixelRatio||1);canvas.width=w*dpr;canvas.height=h*dpr;const c=canvas.getContext('2d');c.scale(dpr,dpr);const fraction=Math.max(0,Math.min(1,(data?.rpm||0)/(data?.maxRpm||15000)));for(let i=0;i<12;i++){const height=h*(.3+.7*(i+1)/12);c.fillStyle=i>=fraction*12?'#484044':i>=9?'#ffbc55':'#e63537';c.fillRect(i*w/12,h-height,Math.max(1,w/12-3),height);}}
@@ -86,7 +86,7 @@ function renderControls(){
  else if(f1&&page==='Menu Controls'&&group==='Навигация'){arrows('menu',visible,$('special'));actionGrid(visible.filter(a=>!['menuUp','menuDown','menuLeft','menuRight'].includes(a.id)));}
  else if(f1&&page==='Menu Controls'&&group==='Стики'){$('special').append(node('h3','settingTitle','Левый стик'));arrows('ls',visible,$('special'));$('special').append(node('h3','settingTitle','Правый стик'));arrows('rs',visible,$('special'));actionGrid(visible.filter(a=>!/^([lr]s)(Up|Down|Left|Right)$/.test(a.id)));}
  else{if(f1&&page==='Control Scheme'&&group==='Гонка'){actionGrid(visible.filter(a=>!['pitStop','radio'].includes(a.id)));$('special').append(node('p','hint','Радио инженера — T. Голосовая связь — удержание Y для микрофона ПК; звук с телефона не передаётся.'));}else actionGrid(visible);}
- renderF1Navigation();renderLive();
+ mountProfileDashboard();renderF1Navigation();renderLive();
 }
 function renderMfdNavigation(visible){
  const names=[['mfd','Листать'],['mfdSetup','Машина'],['mfdPit','Пит-стоп'],['mfdDamage','Повреждения'],['mfdEngine','Двигатель'],['mfdTemps','Температуры'],['map','Карта']],tabs=node('div','panelTabs');
@@ -96,7 +96,7 @@ function renderMfdNavigation(visible){
  const split=node('div','mfdTools'),nav=node('div'),settings=node('div');arrows('mfd',visible,nav);adjustments(settings,true);split.append(nav,settings);$('special').append(split);
  actionGrid(visible.filter(a=>!a.id.startsWith('mfd')));
 }
-function currentData(){return frame&&frame.ageMs!==null&&frame.ageMs+performance.now()-frameAt<500?frame.data:null;}
+function currentData(){return frame&&frame.ageMs!==null&&frame.ageMs+performance.now()-frameAt<(profileId==='fs25'?1500:500)?frame.data:null;}
 function raceLive(){return !!currentData()?.f1?.race?.fresh;}
 function onTrack(r=currentData()?.f1?.race){return !!r?.drivers?.some(d=>d.player&&d.result===2&&d.driverStatus!==0);}
 function engineerRequests(type){if(type>=1&&type<=4)return ['В боксы на этом круге','Машина впереди','Машина позади','Обзор сессии','Напарник','Состояние болида','Моя позиция','Прогноз погоды','Топливо','Лучший круг сессии'];if(type>=15&&type<=17)return ['В боксы на этом круге','Обзор гонки','Машина впереди','Машина позади','Состояние шин','Состояние болида','Прогноз погоды','Топливо','Информация о пит-стопе'];return [];}
@@ -145,5 +145,5 @@ function renderLive(){const quickRadio=$('f1Quick')?.firstElementChild;if(quickR
  const wheelOrder=isAcc?[[0,'Переднее левое'],[1,'Переднее правое'],[2,'Заднее левое'],[3,'Заднее правое']]:[[2,'Переднее левое'],[3,'Переднее правое'],[0,'Заднее левое'],[1,'Заднее правое']];
  for(const [i,name] of wheelOrder){const w=(isAcc?acc:f)?.wheels?.[i],item=node('div','wheel'),temperature=isAcc?w?.coreTemperature:w?.surface,extra=isAcc?`Тормоз ${w?Math.round(w.brakeTemperature)+' °C':'—'} · износ ${w?Math.round(w.wear)+'%':'—'} · ${w?Number(w.pressure).toFixed(1)+' PSI':'—'}`:`Износ ${w?.wear!=null?Math.round(w.wear)+'%':'—'} · ${w?Number(w.pressure).toFixed(1)+' PSI':'—'}`;item.append(node('small','',name),node('strong','',temperature!=null?Math.round(temperature)+' °C':'—'),node('small','',extra));$('wheels').append(item);}
  text('engine',isAcc?(acc?`Двигатель ${Math.round(acc.waterTemperature)} °C · трасса ${Math.round(acc.roadTemperature)} °C · воздух ${Math.round(acc.airTemperature)} °C · баланс ${Number(acc.brakeBias).toFixed(1)}%`:'Двигатель: —'):'Двигатель: '+(f?f.engineTemperature+' °C':'—'));$('racePanel').hidden=true;renderDetails();}
-setInterval(()=>{if(session&&!document.hidden){if(presses.size)send('input.renew',{pressIds:[...presses.keys()]});if(performance.now()-lastMessage>10000)ws?.close();}renderLive();},100);
+setInterval(()=>{if(session&&!document.hidden){if(presses.size)send('input.renew',{pressIds:[...presses.keys()]});if(performance.now()-lastMessage>10000)ws?.close();}renderLive();updateProfileDashboard(currentData());},100);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else connect();});window.addEventListener('pagehide',stop);window.addEventListener('blur',release);window.addEventListener('resize',()=>renderDetails(true));window.addEventListener('pageshow',()=>{if(!ws&&!document.hidden)connect();});connect();

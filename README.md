@@ -3,14 +3,14 @@
 <p align="center"><strong>Your rig. One touch.</strong></p>
 
 <p align="center">
-  <img alt="Release 0.9.1" src="https://img.shields.io/badge/release-0.9.1-7dd3c0?style=flat-square">
+  <img alt="Release 0.9.2" src="https://img.shields.io/badge/release-0.9.2-7dd3c0?style=flat-square">
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-4f8cc9?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Android" src="https://img.shields.io/badge/Android-10%2B-3ddc84?style=flat-square&logo=android&logoColor=white">
   <img alt="Safari" src="https://img.shields.io/badge/iPhone-Safari-4f8cc9?style=flat-square&logo=safari&logoColor=white">
 </p>
 
 <p align="center">
-  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.9.1"><strong>Скачать SimDeck 0.9.1</strong></a>
+  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.9.2"><strong>Скачать SimDeck 0.9.2</strong></a>
   · <a href="#быстрый-запуск">Быстрый запуск</a>
   · <a href="TROUBLESHOOTING.md">Решение проблем</a>
 </p>
@@ -22,7 +22,7 @@ SimDeck превращает Android-планшет, телефон или Safar
 
 ## Скачать
 
-Для любой игры сначала скачайте [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.9.1/SimDeck-0.9.1-Windows.zip) и полностью распакуйте архив. Для Android дополнительно установите [APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.1/SimDeck-0.9.1-debug.apk). На iPhone отдельный файл не нужен: откройте локальный Safari-пульт из Companion. [Контрольные суммы файлов версии 0.9.1](https://github.com/timurgass/SimDeck/releases/download/v0.9.1/SimDeck-0.9.1-SHA256SUMS.txt).
+Для любой игры сначала скачайте [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.9.2/SimDeck-0.9.2-Windows.zip) и полностью распакуйте архив. Для Android дополнительно установите [APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.2/SimDeck-0.9.2-debug.apk). На iPhone отдельный файл не нужен: откройте локальный Safari-пульт из Companion. [Контрольные суммы файлов версии 0.9.2](https://github.com/timurgass/SimDeck/releases/download/v0.9.2/SimDeck-0.9.2-SHA256SUMS.txt).
 
 ### Дополнительные файлы по играм
 
@@ -86,11 +86,27 @@ Android-приложение и Safari-пульт выбирают оформл�
 
 ## Интерфейс
 
-| F1 24 / F1 25 | BeamNG.drive |
-|---|---|
-| ![SimDeck для F1: телеметрия, трасса и порядок пилотов](docs/images/f1-interface-clean.png) | ![SimDeck для BeamNG: приборы, свет и зажигание](docs/images/beamng-interface-clean.png) |
+Это снимки **работающего Android-приложения 0.9.2**, а не картинки макета. Системные панели обрезаны; для воспроизводимой проверки использована тестовая телеметрия. В Safari доступны те же композиции и действия. Телефон показывает блоки друг под другом, планшет — в две колонки.
 
-В F1 доступны карта, позиции пилотов, состояние колёс, запросы инженеру и подготовка пит-стопа. Профиль BeamNG показывает реальную передачу и режим коробки, а также подтверждённые состояния света и переключателей.
+| F1 24 / F1 25 · Race Control | BeamNG.drive · приборы и управление |
+|---|---|
+| ![F1 25: приборы, радио, пит-стоп и карта](docs/images/profiles/f1-25-tablet.png) | ![BeamNG: круглый спидометр и кнопки состояния автомобиля](docs/images/profiles/beamng-default-tablet.png) |
+
+| ACC · шины и тормоза | Automobilista 2 · ICM и быстрые действия |
+|---|---|
+| ![ACC: обороты и четыре колеса](docs/images/profiles/acc-tablet.png) | ![AMS2: приборы и управление ICM](docs/images/profiles/ams2-tablet.png) |
+
+| ETS2 · кабина и круиз | SnowRunner · трансмиссия и лебёдка |
+|---|---|
+| ![ETS2: маршрутные метрики и круиз-контроль](docs/images/profiles/ets2-tablet.png) | ![SnowRunner: оборудование и быстрые действия](docs/images/profiles/snowrunner-tablet.png) |
+
+| FS25 · состояние орудия | Телефон · F1 25 |
+|---|---|
+| ![FS25: состояние оборудования и четыре основных действия](docs/images/profiles/fs25-tablet.png) | <img src="docs/images/profiles/f1-25-phone.png" alt="F1 25 на узком экране телефона" width="260"> |
+
+F1 24 и F1 25 используют один красный дизайн. На других профилях полный набор клавиш и пользовательские кнопки открывается через **«Все действия»**. Состояние кнопки меняется по подтверждённым данным игры; устаревшие показания заменяются прочерками. AMS2 и SnowRunner пока работают как пульты без живой телеметрии.
+
+[Проверка интерфейса и снимки всех форматов](docs/UI-VERIFICATION.md).
 
 ### Windows Companion
 
@@ -108,7 +124,7 @@ Companion показывает состояние подключения, вхо
 
 ### 1. Запустите Companion
 
-1. Скачайте и полностью распакуйте `SimDeck-0.9.1-Windows.zip`.
+1. Скачайте и полностью распакуйте `SimDeck-0.9.2-Windows.zip`.
 2. Запустите `SimDeck.exe`. Переносить один EXE из папки нельзя.
 3. Выберите профиль игры и оставьте Companion запущенным.
 
@@ -287,6 +303,8 @@ Android SDK задаётся через `ANDROID_HOME` или локальный
 
 ## Текущий статус
 
-Версия 0.9.1 переносит согласованный экран F1 в Android и Safari: F1 24 и F1 25 используют одинаковый красный Race Control с крупными приборами, картой, ближайшими пилотами и быстрыми переходами к MFD и пит-стопу. Серые кнопки объясняют причину недоступности ввода; выберите профиль нужной игры, включите ввод в Companion и вернитесь в игру. Версия 0.9.0 добавила отдельное оформление Android и Safari для всех восьми игровых профилей. Версия 0.8.9 добавила векторные значки FS25, объединила сцепку в одну кнопку и ввела дополнительный мод живого состояния выбранного орудия, агрегата и двигателя. Для проверки мода на конкретной технике следуйте [инструкции](docs/FS25-TESTING.md). [Установщик всех 29 клавиш ETS2](tools/ets2-preset/README.md) появился в 0.8.7. Настоящая карта дорог ETS2 на планшете требует отдельного источника картографических данных; текущая телеметрия содержит только маршрутные числа. Для AMS2 и SnowRunner пока требуются ручная сверка назначений и адаптеры телеметрии; для F1 25 остаётся полный ручной прогон всех 69 действий.
+Версия **0.9.2** переносит композиции согласованных экранов во все восемь профилей Android и Safari: приборы, баннеры, быстрые действия, состояния и адаптацию под телефон/планшет. F1 24 и F1 25 используют одинаковый красный Race Control; сохранены MFD, радио, пит-стоп, карта, колёса и пользовательские кнопки. Исправлено аварийное закрытие Companion при ошибке запуска, например занятом порте. [Изменения и проверка](RELEASE-NOTES.md).
+
+Живые игровые возможности зависят от источника данных: для FS25 нужен [мод состояния](mods/FS25_SimDeckStatus/README.md), для BeamNG — [мод телеметрии](beamng/README.md), для ETS2 — [плагин SCS](tools/ets2-telemetry/README.md). Настоящая карта дорог ETS2 требует отдельного источника картографических данных; пока отображаются маршрутные числа. Для AMS2 и SnowRunner остаются адаптеры телеметрии и ручная сверка назначений; полный ручной прогон всех 69 действий F1 25 также остаётся отдельной проверкой.
 
 Настройки Companion находятся в `%LOCALAPPDATA%/SimDeck/settings.json`. Доверенные устройства можно отключить кнопкой **«Отозвать доступ»**.

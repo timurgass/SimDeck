@@ -10,3 +10,4 @@ local.properties
 *.keystore
 .vs/
 artifacts/
+**/node_modules/

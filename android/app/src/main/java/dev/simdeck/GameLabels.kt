@@ -11,6 +11,7 @@ internal fun f1UdpFormat(profileId: String): String = if (profileId == "f1-25") 
 internal fun telemetryHint(profileId: String): String = when (profileId) {
     "f1-24", "f1-25" -> "Включите UDP → 127.0.0.1:20777 и выйдите на трассу."
     "beamng-default" -> "Нет телеметрии от игры. Проверьте мод SimDeck в Companion."
+    "acc" -> "Нет свежих данных ACC. Выйдите на трассу и выберите ACC в Companion."
     "ets2" -> "Установите SCS Telemetry Win64 DLL и перезапустите ETS2. Подробности в Companion."
     else -> "Профиль управления готов. Телеметрия для этой игры пока не подключена."
 }

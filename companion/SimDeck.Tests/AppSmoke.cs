@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Net;
+using System.Net.Sockets;
 using System.Text.Json;
 using SimDeck.App;
 
@@ -8,6 +10,10 @@ static class AppSmoke
 {
     public static async Task Run(string executable, string stateDirectory)
     {
+        // Isolate smoke tests from an already running user Companion.
+        var reserve = new TcpListener(IPAddress.Loopback,0); reserve.Start();
+        var store = new SettingsStore(stateDirectory); store.Value.Port=((IPEndPoint)reserve.LocalEndpoint).Port;
+        reserve.Stop(); store.Save();
         var start = new ProcessStartInfo(executable) { UseShellExecute = false, WindowStyle = ProcessWindowStyle.Hidden };
         start.ArgumentList.Add("--data-dir"); start.ArgumentList.Add(stateDirectory); start.ArgumentList.Add("--demo");
         using var process = Process.Start(start) ?? throw new Exception("Cannot start Companion");
@@ -40,7 +46,29 @@ static class AppSmoke
                 try { await process.WaitForExitAsync(exitTimeout.Token); }
                 catch (OperationCanceledException) { process.Kill(); throw new Exception("Companion did not close normally"); }
                 Console.WriteLine("PASS Companion closes normally");
+                if(process.ExitCode!=0) throw new Exception("Companion crashed while closing: " + process.ExitCode);
             }
         }
+    }
+
+    public static async Task RunStartupFailure(string executable, string stateDirectory)
+    {
+        var listener = new TcpListener(IPAddress.Any,0); listener.Start();
+        try {
+            var store = new SettingsStore(stateDirectory); store.Value.Port=((IPEndPoint)listener.LocalEndpoint).Port; store.Save();
+            var start=new ProcessStartInfo(executable) { UseShellExecute=false,WindowStyle=ProcessWindowStyle.Hidden };
+            start.ArgumentList.Add("--data-dir");start.ArgumentList.Add(stateDirectory);
+            using var process=Process.Start(start) ?? throw new Exception("Cannot start Companion");
+            try {
+                // Let WPF render the startup-error screen before closing it.
+                await Task.Delay(2500);
+                if(process.HasExited) throw new Exception("Companion exited instead of showing a recoverable startup error");
+                process.CloseMainWindow();
+                using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                await process.WaitForExitAsync(timeout.Token);
+                if(process.ExitCode!=0) throw new Exception("Companion crashed after occupied-port startup: " + process.ExitCode);
+                Console.WriteLine("PASS Occupied connection port: Companion closes without recursive WPF Closing exception");
+            } finally { if(!process.HasExited) process.Kill(); }
+        } finally { listener.Stop(); }
     }
 }

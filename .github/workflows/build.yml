@@ -10,6 +10,8 @@ jobs:
           dotnet-version: 10.0.401
       - run: dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release
       - run: dotnet publish companion/SimDeck.App/SimDeck.App.csproj -c Release -r win-x64 --self-contained true -o artifacts/Companion
+      - run: dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release --no-build -- --smoke-app artifacts/Companion/SimDeck.exe artifacts/smoke-state
+      - run: dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release --no-build -- --smoke-startup-failure artifacts/Companion/SimDeck.exe artifacts/smoke-failed-state
       - uses: actions/upload-artifact@v4
         with:
           name: SimDeck-Windows

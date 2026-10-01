@@ -19,6 +19,8 @@ static class BrowserTests
         check((await http.GetStringAsync(origin)).Contains("IPHONE / SAFARI"), "Browser serves bundled UI without internet dependencies");
         var design = await http.GetStringAsync(origin + "/profile-design.css");
         check(design.Contains("data-profile=\"fs25\"") && design.Contains("data-profile=\"f1-25\""), "Browser serves game-specific mobile styles");
+        check((await http.GetStringAsync(origin + "/dashboard.js")).Contains("mountProfileDashboard"), "Browser serves functional profile dashboards");
+        check((await http.GetStringAsync(origin + "/dashboard.css")).Contains("beamDial"), "Browser serves dashboard geometry without external assets");
         check((await http.GetStringAsync(origin + "/ets2-icons.js")).Contains("etsHighBeam"), "Browser serves ETS2 dashboard icons to Safari");
         var fs25Icons = await http.GetStringAsync(origin + "/fs25-icons.js");
         check(fs25Icons.Contains("fs25Attach") && fs25Icons.Contains("fs25Lower") && fs25Icons.Contains("fs25TurnOn"), "Browser serves FS25 action icons to Safari");

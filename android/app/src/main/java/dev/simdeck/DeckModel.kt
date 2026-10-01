@@ -64,7 +64,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
             while (isActive) {
                 delay(100)
                 val now = SystemClock.elapsedRealtime()
-                val expired = lastFrame == 0L || sourceAge >= 500 || now - lastFrame + sourceAge >= 500
+                val expired = lastFrame == 0L || !Protocol.telemetryFresh(profileId, sourceAge, now - lastFrame)
                 mutable.update { val s=it.copy(stale = expired)
                     if(s.connected && s.inputAvailability=="ready" && (s.stale || s.telemetry?.f1?.mfdPanelIndex==1)) s
                     else s.copy(pitCursor=null,pitTyre=null,pitRepair=null,pitSent=false)

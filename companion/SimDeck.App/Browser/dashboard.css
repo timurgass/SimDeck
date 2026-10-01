@@ -1,0 +1,107 @@
+/* Geometry matches the profile concepts and Android/ProfileDashboard.kt. */
+body.profileDeck #deck{display:flex;flex-direction:column;gap:14px}
+body.profileDeck .gauges,body.profileDeck #wheelsPanel{display:none!important}
+#profileDashboard{min-width:0}
+.profileBanner{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 22px;margin-bottom:14px;border-radius:var(--p-radius);background:linear-gradient(110deg,var(--p-panel),var(--p-bg))}
+.profileBanner h1{font-size:27px;line-height:1.15;margin:7px 0;max-width:430px}
+.caption{font-size:11px!important;font-weight:800;letter-spacing:.08em;color:var(--p-muted);margin:0 0 9px}
+.reading{font-variant-numeric:tabular-nums;font-weight:850;line-height:1.1;font-size:48px;display:block}
+.profileLayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+body[data-profile] .profileCard{padding:17px;margin:0;min-width:0;border-radius:var(--p-radius)}
+.instrumentLive{float:right;font-size:10px;color:var(--p-accent)}
+.stateRow{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--p-line);padding:12px 0;font-size:12px}
+.stateRow b{color:var(--p-accent);text-align:right}
+.quickTiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+body[data-profile] .quickTiles .action{min-height:124px;justify-content:space-between;padding:12px;line-height:1.25;font-size:13px}
+body[data-profile] .quickTiles .actionIcon{width:31px;height:31px;margin-bottom:10px}
+body[data-profile] .quickTiles small{margin-top:6px;font-size:10px}
+body[data-profile] .allControls,body[data-profile] .farmDetails{border:1px solid var(--p-line);border-radius:var(--p-radius);background:var(--p-panel);overflow:hidden}
+.allControls summary,.farmDetails summary{cursor:pointer;padding:16px;font-size:13px;font-weight:700;color:var(--p-accent)}
+body[data-profile] .allControls .controls{border:0;border-radius:0}
+body[data-profile] .farmDetails #fs25Overview{border:0;border-radius:0;background:var(--p-panel)}
+.profileRpm{display:flex;gap:4px;height:14px;margin:16px 0}
+.profileRpm i{flex:1;background:var(--p-alt);transform:skewX(-12deg)}
+.profileRpm i.filled{background:var(--p-accent)}
+.beamMeters{display:grid;grid-template-columns:1.2fr .7fr;gap:16px;align-items:center;margin:18px 0 23px}
+.beamDial{aspect-ratio:1;border-radius:50%;background:conic-gradient(from 225deg,var(--p-accent) 0deg var(--speed-sweep,0deg),var(--p-alt) var(--speed-sweep,0deg) 270deg,transparent 270deg 360deg);padding:13px;width:100%;max-width:230px}
+.beamRing{height:100%;border-radius:50%;background:var(--p-panel);display:flex;flex-direction:column-reverse;align-items:center;justify-content:center;gap:6px}
+.beamRing .reading{font-size:66px}
+.beamGear .reading{font-size:94px;color:var(--p-accent)}
+.beamGear{display:flex;flex-direction:column;align-items:center;gap:8px}
+.beamGear .caption{order:1}.beamGear small:not(.caption){order:2}
+body[data-profile="beamng-default"] .action.on{background:#583b24}
+.accRpm .reading{font-size:37px}
+.accSpeed{display:flex;align-items:center;justify-content:space-between;margin:25px 0}
+.accSpeed>div:first-child .reading{font-size:93px;color:var(--p-accent)}
+.accSpeed>div:last-child .reading{font-size:54px}
+.accSpeed>div{display:flex;flex-direction:column-reverse;gap:7px}
+body[data-profile] .accSwitches .action{min-height:97px}
+@media(min-width:900px){.accSwitches{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.accTyres{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:18px}
+.accTyres>div{background:var(--p-alt);padding:12px;border-left:4px solid var(--p-accent);min-height:105px}
+.accTyres .reading{font-size:32px;margin:8px 0}
+.accTyres .caption{font-size:9px!important}
+.accTyres small:not(.caption){font-size:10px}
+.pitStrategy{margin-top:17px}
+body[data-profile] .pitStrategy .action{width:100%;min-height:65px;background:var(--p-accent);color:var(--p-bg)}
+body[data-profile] .pitStrategy .action small{color:var(--p-bg)}
+body[data-profile="ams2"] .profileBanner{background:linear-gradient(110deg,#1d5759,var(--p-bg));padding:22px 25px}
+body[data-profile="ams2"] .profileBanner h1{font-size:30px}
+body[data-profile="ams2"] .profileCard{border-radius:14px}
+body[data-profile="ams2"] .stateRow{font-size:16px;padding:17px 0}.stateRow:last-child{border-bottom:0}
+body[data-profile="ams2"] .stateRow b{font-size:26px;color:#edf4f5}
+body[data-profile="ams2"] .action.on{background:#3a5e2f}
+body[data-profile="ets2"] .profileBanner{background:#24434a}
+.routeReading .reading{font-size:22px}
+.profileBanner>div:last-child:not(:first-child) .reading{font-size:22px}
+body[data-profile] .etsGauges{padding:0;border:0;background:transparent;display:grid;grid-template-columns:.9fr 1.1fr;gap:13px}
+.etsDial{border:1px solid var(--p-line);border-radius:125px 125px 16px 16px;background:var(--p-panel);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:14px}
+.etsDial .reading{font-size:83px;color:var(--p-accent)}
+.etsTrip{border:1px solid var(--p-line);border-radius:13px;background:var(--p-panel);padding:14px}
+.etsTrip .reading{font-size:30px}
+.cruiseButtons{display:grid;grid-template-columns:.7fr 1.5fr .7fr;gap:5px;margin:15px 0}
+body[data-profile] .cruiseButtons .action{min-height:52px;font-size:12px;padding:7px;text-align:center;align-items:center}
+.cruiseButtons .actionIcon,.cruiseButtons small{display:none}
+body[data-profile="ets2"] .quickTiles .action{min-height:100px}
+body[data-profile="ets2"] .action.on{background:#4d4630}
+body[data-profile="snowrunner"] .profileBanner{background:linear-gradient(110deg,#344a3c,var(--p-bg));min-height:167px;padding:26px}
+.compass{width:101px;height:101px;border:2px solid var(--p-line);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+.compass svg{width:43px;height:43px;fill:none;stroke:var(--p-accent);stroke-width:2}
+.compass small{font-size:9px;letter-spacing:.1em}
+body[data-profile="snowrunner"] .profileLayout{grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr)}
+body[data-profile="snowrunner"] .quickTiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+body[data-profile="snowrunner"] .quickTiles .action{min-height:112px}
+.snowGear{margin-top:20px}.snowGear .reading{font-size:63px;color:var(--p-accent)}
+body[data-profile="fs25"] .profileBanner{background:linear-gradient(100deg,#315b3a,var(--p-bg));padding:21px 24px}
+.farmVehicle{display:flex;gap:12px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--p-line)}
+.farmVehicle .actionIcon{width:41px!important;height:41px!important;flex:none;margin:0!important}
+.farmVehicle .reading{font-size:19px}
+#profileDashboard progress{height:9px;margin-top:16px;accent-color:var(--p-accent)}
+#profileDashboard progress::-webkit-progress-bar{background:var(--p-alt);border-radius:4px}
+#profileDashboard progress::-webkit-progress-value{background:var(--p-accent);border-radius:4px}
+body[data-profile] .action.low,body[data-profile] .action.low span,body[data-profile] .action.low .actionIcon{color:#83efad}
+body[data-profile] .action.high,body[data-profile] .action.high span,body[data-profile] .action.high .actionIcon{color:#9ac5ff}
+body[data-profile] .action.low{background:#164932;border-color:#5cdd8e}
+body[data-profile] .action.high{background:#143a70;border-color:#62a6ff}
+@media(max-width:650px){
+ .profileLayout,body[data-profile="snowrunner"] .profileLayout{grid-template-columns:minmax(0,1fr);gap:12px}
+ .profileBanner{padding:14px!important;min-height:0!important}.profileBanner h1,body[data-profile="ams2"] .profileBanner h1{font-size:22px}
+ .beamMeters{margin:8px 0}.beamDial{max-width:175px}.beamRing .reading{font-size:50px}.beamGear .reading{font-size:70px}
+ .compass{width:70px;height:70px}.compass svg{width:29px;height:29px}
+ .etsDial .reading{font-size:60px}.etsTrip{padding:12px}
+ .accSpeed{margin:8px 0}.accSpeed>div:first-child .reading{font-size:70px}.accSpeed>div:last-child .reading{font-size:43px}
+ .accTyres>div{min-height:83px}.accTyres .reading{font-size:25px}
+ body[data-profile] .quickTiles .action{min-height:100px}
+ .routeReading .reading{font-size:17px}.profileBanner>div:last-child:not(:first-child) .reading{font-size:17px}
+}
+@media(max-width:399px){
+ body.f1Deck .gauges{grid-template-columns:.7fr 1.3fr;grid-template-rows:auto 115px auto auto;gap:6px}
+ body.f1Deck .numbers>div:first-child{grid-row:2;grid-column:1}
+ body.f1Deck .numbers>div:last-child{grid-row:2;grid-column:2}
+ body.f1Deck .gauges>label{grid-column:1;grid-row:3;align-self:center}
+ body.f1Deck #rpm{grid-column:2;grid-row:3;font-size:18px}
+ body.f1Deck #f1Rpm{grid-column:1 / -1;grid-row:4;height:25px}
+ body.f1Deck #f1Quick{grid-row:5;margin-top:8px}
+ .beamRing .reading{font-size:42px}.beamGear .reading{font-size:63px}
+ .profileBanner h1{font-size:20px}.profileBanner{gap:8px}
+}

@@ -15,6 +15,7 @@ public partial class MainWindow : Window
     CompanionHost? host;
     readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     bool closing;
+    bool closeRequested;
     readonly ObservableCollection<ButtonRow> rows = [];
     public MainWindow()
     {
@@ -190,9 +191,16 @@ public partial class MainWindow : Window
     async void WindowClosing(object? sender, CancelEventArgs e)
     {
         if (closing) return;
-        e.Cancel = true; timer.Stop(); IsEnabled = false;
-        if (host is not null) await host.DisposeAsync();
-        closing = true; Close();
+        e.Cancel = true;
+        if (closeRequested) return;
+        closeRequested = true; timer.Stop(); IsEnabled = false;
+        try { if (host is not null) await host.DisposeAsync(); }
+        catch (Exception ex) { ErrorLabel.Text = "Ошибка завершения Companion: " + ex.Message; }
+        finally {
+            // Dispose may complete synchronously after startup failure. Defer Close
+            // until WPF has left the original Closing handler; avoid recursive Close.
+            _ = Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => { closing = true; Close(); }));
+        }
     }
 }
 
