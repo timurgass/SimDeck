@@ -46,21 +46,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContent {
-            MaterialTheme(colorScheme = darkColorScheme(primary = Amber, onPrimary = Background, background = Background, surface = Panel, onBackground = White, onSurface = White)) {
-                val state by model.state.collectAsState()
+            val state by model.state.collectAsState()
+            val design = remember(state.profileId) { profileDesign(state.profileId) }
+            CompositionLocalProvider(LocalProfileDesign provides design) {
+            MaterialTheme(colorScheme = darkColorScheme(primary = design.accent, onPrimary = design.background, primaryContainer = design.panelAlt, onPrimaryContainer = design.accent, secondary = design.accent, onSecondary = design.background, secondaryContainer = design.panelAlt, onSecondaryContainer = White, background = design.background, surface = design.panel, surfaceVariant = design.panelAlt, onBackground = White, onSurface = White, outline = design.line)) {
                 var connectionTab by rememberSaveable { mutableStateOf(false) }
-                Surface(Modifier.fillMaxSize(), color = Background) {
-                    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(horizontal = 22.dp, vertical = 12.dp)) {
+                Surface(Modifier.fillMaxSize(), color = design.background) {
+                    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(horizontal = 15.dp, vertical = 10.dp)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column { Text("SIMDECK", fontSize = 24.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp); Text("YOUR RIG. ONE TOUCH.", color = Muted, fontSize = 10.sp, letterSpacing = 1.sp) }
+                            Column { Text("SIMDECK", fontSize = 22.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp); Text(design.tag, color = design.muted, fontSize = 10.sp, letterSpacing = 1.sp) }
                             TextButton(onClick = { model.releaseAll(); connectionTab = !connectionTab }) { Text(if (connectionTab) "ПАНЕЛЬ" else "ПОДКЛЮЧЕНИЕ", fontSize = 11.sp) }
                         }
-                        Spacer(Modifier.height(18.dp))
+                        Spacer(Modifier.height(12.dp))
                         // Keep the dashboard composed during reconnects so pages and scroll survive.
                         if ((state.connected || state.controls.isNotEmpty()) && !connectionTab) Dashboard(state, model)
                         else Connection(state, model) { connectionTab = false }
                     }
                 }
+            }
             }
         }
     }
@@ -108,7 +111,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.8.9 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.9.0 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
     }
 }
 
@@ -116,7 +119,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
 private fun Dashboard(state: DeckState, model: DeckModel) {
     if (state.profileId == "fs25") {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Fs25Overview(state.telemetry?.fs25)
+            Fs25Overview(state)
             Controls(state, model)
             StatusFootnote(state)
         }
@@ -126,10 +129,10 @@ private fun Dashboard(state: DeckState, model: DeckModel) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth > 700.dp
         if (wide) Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-            Column(Modifier.weight(if (state.profileId in setOf("f1-24","f1-25")) 1f else 1.5f).verticalScroll(rememberScrollState())) { Instruments(state, data) }
+            Column(Modifier.weight(if (state.profileId in setOf("f1-24","f1-25")) 1f else 1.5f).verticalScroll(rememberScrollState())) { ProfileInstruments(state, data) }
             Column(Modifier.weight(if (state.profileId in setOf("f1-24","f1-25")) 1.8f else 1f).verticalScroll(rememberScrollState())) { Controls(state, model); StatusFootnote(state) }
         } else Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            Instruments(state, data); Controls(state, model); StatusFootnote(state)
+            ProfileInstruments(state, data); Controls(state, model); StatusFootnote(state)
         }
     }
 }
@@ -173,22 +176,39 @@ private fun Instruments(state: DeckState, data: Telemetry?) {
 }
 
 @Composable
-private fun Fs25Overview(data: Fs25Data?) {
+private fun Fs25Overview(state: DeckState) {
+    val data = state.telemetry?.fs25
+    val design = LocalProfileDesign.current
     var allFields by rememberSaveable { mutableStateOf(false) }
-    Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
+    Card(colors = CardDefaults.cardColors(containerColor = design.panel), shape = RoundedCornerShape(design.radius.dp), modifier = Modifier.border(1.dp, design.line, RoundedCornerShape(design.radius.dp))) {
         Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-            Text("ХОЗЯЙСТВО · ДАННЫЕ СОХРАНЕНИЯ", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Amber)
+            Text("FARM OPERATIONS · FS25", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = design.accent)
             if (data == null) {
-                Text("Сохранение FS25 пока не найдено. Сохраните игру и проверьте путь в Companion.", color = Muted)
+                Text("Сохранение FS25 пока не найдено. Сохраните игру и проверьте путь в Companion.", color = design.muted)
                 return@Column
             }
             Text(data.saveName.ifBlank { "Без названия" }, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text(listOf(data.mapName, data.period).filter(String::isNotBlank).joinToString(" · "), color = Muted)
-            Text("Сохранено: ${data.savedAt}" + if (data.stale) " · ДАННЫЕ УСТАРЕЛИ" else "", color = if (data.stale) Amber else Color(0xFF9ED8B0), fontSize = 12.sp)
+            Text(listOf(data.mapName, data.period).filter(String::isNotBlank).joinToString(" · "), color = design.muted)
+            Text("Сохранено: ${data.savedAt}" + if (data.stale) " · ДАННЫЕ УСТАРЕЛИ" else "", color = if (data.stale) Amber else design.accent, fontSize = 12.sp)
             data.money?.let { money ->
                 Text("Деньги: ${"%,.0f".format(money)} €" + (data.loan?.let { " · кредит ${"%,.0f".format(it)} €" } ?: ""), fontSize = 15.sp)
             }
-            HorizontalDivider(color = Color(0xFF304049))
+            val states = state.telemetry?.actionStates.orEmpty()
+            if (!state.stale && listOf("fs25Lower", "fs25TurnOn", "fs25Motor").any { it in states }) {
+                HorizontalDivider(color = design.line)
+                Text("ТЕКУЩЕЕ СОСТОЯНИЕ ТЕХНИКИ", color = design.accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                listOf(
+                    listOf("fs25Lower", "Орудие", "Опущено", "Поднято"),
+                    listOf("fs25TurnOn", "Рабочий режим", "Включён", "Выключен"),
+                    listOf("fs25Motor", "Двигатель", "Работает", "Остановлен")
+                ).forEach { (id, label, active, inactive) ->
+                    Row(Modifier.fillMaxWidth().background(design.panelAlt, RoundedCornerShape(6.dp)).padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(label, fontSize = 12.sp)
+                        Text(states[id]?.let { if (it) active else inactive } ?: "—", color = design.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            HorizontalDivider(color = design.line)
             Text("ПОЛЯ · ${data.fields.size}", fontWeight = FontWeight.Bold)
             (if (allFields) data.fields else data.fields.take(6)).forEach { field ->
                 Text("№${field.id} · ${field.crop.ifBlank { "пусто" }} · ${field.ground.ifBlank { "состояние неизвестно" }} · сорняки ${field.weeds}/9 · известь ${field.lime}/3", fontSize = 12.sp)
@@ -197,14 +217,14 @@ private fun Fs25Overview(data: Fs25Data?) {
                 Text(if (allFields) "Свернуть поля" else "Показать все поля")
             }
             if (data.alerts.isNotEmpty()) {
-                HorizontalDivider(color = Color(0xFF304049))
+                HorizontalDivider(color = design.line)
                 Text("СОВЕТНИК · ${data.alerts.size} уведомлений", fontWeight = FontWeight.Bold)
                 data.alerts.take(6).forEach { alert ->
                     Text(alert.message, color = if (alert.severity >= 2) Color(0xFFFF7770) else Amber, fontSize = 12.sp)
                 }
             }
-            data.planName?.let { name ->
-                HorizontalDivider(color = Color(0xFF304049))
+            data.planName?.takeUnless { it.isBlank() || it.equals("null", ignoreCase = true) }?.let { name ->
+                HorizontalDivider(color = design.line)
                 Text("ПЛАН: $name", fontWeight = FontWeight.Bold)
                 data.tasks.take(6).forEach { task ->
                     val status = when (task.status) { 1 -> "✓"; 2 -> "Вне сезона"; 3 -> "Нет поля"; else -> "К исполнению" }
@@ -215,39 +235,41 @@ private fun Fs25Overview(data: Fs25Data?) {
     }
 }
 
-@Composable private fun Ets2Route(route: Ets2Navigation?) {
+@Composable internal fun Ets2Route(route: Ets2Navigation?) {
+    val design = LocalProfileDesign.current
     Spacer(Modifier.height(14.dp))
-    HorizontalDivider(color = Color(0xFF304049))
+    HorizontalDivider(color = design.line)
     Text("МАРШРУТ", fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
     Row(Modifier.fillMaxWidth().padding(top = 9.dp), horizontalArrangement = Arrangement.SpaceBetween) {
         Metric("ОСТАЛОСЬ", route?.remainingKm?.let { "%.0f".format(it) } ?: "—", "км")
         Metric("В ПУТИ", route?.remainingMinutes?.let { "%.0f".format(it) } ?: "—", "мин")
         Metric("ЛИМИТ", route?.speedLimitKmh?.let { "%.0f".format(it) } ?: "—", "км/ч")
     }
-    Text("Карта дорог открывается кнопкой «Карта». Маршрут и время — из игры.", fontSize = 11.sp, color = Muted, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+    Text("Карта дорог открывается кнопкой «Карта». Маршрут и время — из игры.", fontSize = 11.sp, color = design.muted, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
 }
 
-@Composable private fun AccWheels(acc: AccData?) {
+@Composable internal fun AccWheels(acc: AccData?) {
+    val design = LocalProfileDesign.current
     Spacer(Modifier.height(10.dp))
-    HorizontalDivider(color = Color(0xFF304049))
+    HorizontalDivider(color = design.line)
     Text("ШИНЫ И ТОРМОЗА", fontSize = 15.sp, modifier = Modifier.padding(top = 8.dp))
     val names = listOf("Передняя левая", "Передняя правая", "Задняя левая", "Задняя правая")
     names.indices.chunked(2).forEach { row ->
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             row.forEach { index ->
                 val wheel = acc?.wheels?.getOrNull(index)
-                Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFF17252D))) {
+                Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = design.panelAlt)) {
                     Column(Modifier.padding(10.dp)) {
-                        Text(names[index], fontSize = 11.sp, color = Muted)
-                        Text(wheel?.let { "%.1f PSI · %.0f °C".format(it.pressure, it.coreTemperature) } ?: "—", fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                        Text(wheel?.let { "Тормоз %.0f °C · износ %.0f%%".format(it.brakeTemperature, it.wear) } ?: "Тормоз — · износ —", fontSize = 10.sp, color = Muted)
+                        Text(names[index], fontSize = 11.sp, color = design.muted)
+                        Text(wheel?.let { "%.1f PSI · %.0f °C".format(it.pressure, it.coreTemperature) } ?: "—", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = design.accent)
+                        Text(wheel?.let { "Тормоз %.0f °C · износ %.0f%%".format(it.brakeTemperature, it.wear) } ?: "Тормоз — · износ —", fontSize = 10.sp, color = design.muted)
                     }
                 }
             }
         }
     }
     Text(acc?.let { "Двигатель %.0f °C · трасса %.0f °C · воздух %.0f °C · баланс %.1f%%".format(it.waterTemperature, it.roadTemperature, it.airTemperature, it.brakeBias) }
-        ?: "Двигатель — · трасса — · воздух —", fontSize = 11.sp, color = Muted)
+        ?: "Двигатель — · трасса — · воздух —", fontSize = 11.sp, color = design.muted)
 }
 
 @Composable private fun F1Instruments(state: DeckState, data: Telemetry?) {
@@ -282,10 +304,12 @@ private fun Fs25Overview(data: Fs25Data?) {
 }
 
 @Composable private fun Metric(label: String, value: String, unit: String) {
-    Column { Text(label, color = Muted, fontSize = 10.sp, letterSpacing = 1.sp); Row(verticalAlignment = Alignment.Bottom) { Text(value, color = Amber, fontSize = 24.sp, fontWeight = FontWeight.Bold); Text(" $unit", color = Muted, fontSize = 10.sp, modifier = Modifier.padding(bottom = 5.dp)) } }
+    val design = LocalProfileDesign.current
+    Column { Text(label, color = design.muted, fontSize = 10.sp, letterSpacing = 1.sp); Row(verticalAlignment = Alignment.Bottom) { Text(value, color = design.accent, fontSize = 24.sp, fontWeight = FontWeight.Bold); Text(" $unit", color = design.muted, fontSize = 10.sp, modifier = Modifier.padding(bottom = 5.dp)) } }
 }
 
 @Composable private fun Controls(state: DeckState, model: DeckModel) {
+    val design = LocalProfileDesign.current
     if (state.profileId in setOf("f1-24","f1-25") && state.controls.isNotEmpty()) { F1Controls(state, model); return }
     var selectedPage by rememberSaveable(state.profileId) { mutableStateOf("Основное") }
     val actions = state.controls.ifEmpty { listOf(
@@ -297,7 +321,7 @@ private fun Fs25Overview(data: Fs25Data?) {
     val pages = actions.map { it.page }.distinct()
     val page = selectedPage.takeIf { it in pages } ?: pages.first()
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(state.profileName.uppercase() + " · ПРОФИЛЬ УПРАВЛЕНИЯ", fontSize = 10.sp, letterSpacing = 1.sp, color = Muted)
+        Text(state.profileName.uppercase() + " · ПРОФИЛЬ УПРАВЛЕНИЯ", fontSize = 11.sp, letterSpacing = 1.sp, color = design.accent, fontWeight = FontWeight.Bold)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             pages.forEach { name -> FilterChip(selected = page == name, onClick = { model.releaseAll(); selectedPage = name }, label = { Text(name, fontSize = 11.sp) }) }
         }
@@ -323,6 +347,7 @@ private fun Fs25Overview(data: Fs25Data?) {
 }
 
 @Composable internal fun Control(label: String, subtitle: String, action: String, hold: Boolean, state: DeckState, model: DeckModel, modifier: Modifier, heightDp: Int = 98) {
+    val design = LocalProfileDesign.current
     var down by remember { mutableStateOf(false) }
     var startingIgnition by remember { mutableStateOf(false) }
     val enabled = state.connected && !state.demo
@@ -335,7 +360,7 @@ private fun Fs25Overview(data: Fs25Data?) {
         ets2 && active && action == "etsParkingBrake" -> Color(0xFFFF7770)
         ets2 && active && action == "etsCruise" -> Color(0xFF69D9CE)
         feedback.headlights == 1 -> Color(0xFF5CDD8E)
-        active -> Amber
+        active -> design.accent
         else -> White
     }
     val fill = when {
@@ -343,13 +368,13 @@ private fun Fs25Overview(data: Fs25Data?) {
         feedback.headlights == 2 || ets2 && active && action == "etsHighBeam" -> Color(0xFF123F8C)
         ets2 && active && action == "etsParkingBrake" -> Color(0xFF4B2528)
         ets2 && active && action == "etsCruise" -> Color(0xFF164B4B)
-        active -> Color(0xFF182F35)
-        down -> Color(0xFF373020)
-        else -> Panel
+        active -> design.panelAlt
+        down -> design.panelAlt
+        else -> design.panel
     }
     val displaySubtitle = feedback.description ?: subtitle
-    Box(modifier.height(heightDp.dp).background(fill, RoundedCornerShape(14.dp))
-        .border(if (active) 2.dp else 1.dp, if (active) accent else if (down) Amber else Color(0xFF304049), RoundedCornerShape(14.dp))
+    Box(modifier.height(heightDp.dp).background(fill, RoundedCornerShape(design.radius.dp))
+        .border(if (active) 2.dp else 1.dp, if (active || down) accent else design.line, RoundedCornerShape(design.radius.dp))
         .semantics { contentDescription = "$label, $displaySubtitle"; stateDescription = when(feedback.active) { true -> "Включено"; false -> "Выключено"; null -> "" } }
         .pointerInput(enabled, action, hold) {
             if (enabled) detectTapGestures(onPress = {
@@ -379,10 +404,10 @@ private fun Fs25Overview(data: Fs25Data?) {
             if (fs25) Fs25Icon(action, if (enabled) accent else Muted)
             if (active) Text(when(action) { "fs25Lower" -> "● ОПУЩЕНО"; "fs25TurnOn" -> "● РАБОТАЕТ"; "fs25Motor" -> "● ЗАПУЩЕН"; else -> "● ВКЛ" }, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = accent)
             Text(label, fontSize = if (state.profileId in setOf("f1-24","f1-25")) { if (label in listOf("↑", "←", "↓", "→")) 30.sp else 16.sp } else 14.sp, maxLines = 2, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, color = if (enabled) accent else Muted)
-            Text(if (startingIgnition && down) "Запуск · держите кнопку" else displaySubtitle, fontSize = if (state.profileId in setOf("f1-24","f1-25")) 13.sp else 11.sp, textAlign = TextAlign.Center, color = if (active) Color(0xFFBDD0D8) else Muted, modifier = Modifier.padding(top = 6.dp))
+            Text(if (startingIgnition && down) "Запуск · держите кнопку" else displaySubtitle, fontSize = if (state.profileId in setOf("f1-24","f1-25")) 13.sp else 11.sp, textAlign = TextAlign.Center, color = design.muted, modifier = Modifier.padding(top = 6.dp))
         }
     }
 }
 
-@Composable private fun StatusFootnote(state: DeckState) { Text(state.status, color = Muted, fontSize = 10.sp, modifier = Modifier.padding(vertical = 14.dp)) }
+@Composable private fun StatusFootnote(state: DeckState) { Text(state.status, color = LocalProfileDesign.current.muted, fontSize = 10.sp, modifier = Modifier.padding(vertical = 14.dp)) }
 

@@ -7,6 +7,8 @@ let circuits=new Map(),circuitLoading=false;
 const presses=new Map(),gestures=new Map(),acks=new Map();
 const uid=()=>Date.now().toString(36)+'-'+(++sequence).toString(36), text=(id,value)=>{$(id).textContent=value;};
 const isF1=()=>profileId==='f1-24'||profileId==='f1-25';
+const profileTags={'f1-24':'RACE CONTROL','f1-25':'PRECISION DISPLAY','beamng-default':'VEHICLE CONTROL UNIT','acc':'GT COCKPIT','ams2':'COCKPIT CONTROL','ets2':'LONG HAUL DASHBOARD','snowrunner':'FIELD OPERATIONS','fs25':'FARM OPERATIONS'};
+function setProfileDesign(id){document.body.dataset.profile=id;const label=$('brandTag');if(label)label.textContent=profileTags[id]||'YOUR RIG. ONE TOUCH.';}
 const action=id=>actions.find(a=>a.id===id), inputReady=()=>session&&availability==='ready', ready=()=>inputReady()&&!menuBusy;
 function send(type,body={}){if(!session||ws?.readyState!==1)return false;ws.send(JSON.stringify({protocolMajor:1,sessionId:session,type,...body}));return true;}
 function sendInvoke(a,phase,pressId,commandId=uid()){return send('control.invoke',{commandId,profileId,profileRevision:revision,actionId:a.id||a,phase,pressId});}
@@ -21,7 +23,7 @@ async function connect(){
  try{const r=await fetch('/status',{cache:'no-store'});if(r.status===401){$('pairing').hidden=false;$('deck').hidden=true;text('connection','Нужен код с ПК');return;}if(!r.ok)throw Error('HTTP '+r.status);if(document.hidden)return;
  const socket=new WebSocket('ws://'+location.host+'/ws');ws=socket;
  socket.onmessage=e=>{if(ws!==socket)return;try{const m=JSON.parse(e.data);if(m.protocolMajor!==1)throw Error('Версия протокола');lastMessage=performance.now();
-  if(m.type==='hello'){session=m.sessionId;profileId=m.profileId;revision=m.profileRevision;actions=m.controls;frame=null;ignition=false;$('pairing').hidden=true;$('deck').hidden=false;text('profile',m.profileName);text('connection','Подключено');page=isF1()?'Control Scheme':actions[0]?.page||'';group='';loadCircuits();renderControls();}
+  if(m.type==='hello'){session=m.sessionId;profileId=m.profileId;setProfileDesign(profileId);revision=m.profileRevision;actions=m.controls;frame=null;ignition=false;$('pairing').hidden=true;$('deck').hidden=false;text('profile',m.profileName);text('connection','Подключено');page=isF1()?'Control Scheme':actions[0]?.page||'';group='';loadCircuits();renderControls();}
   else if(m.sessionId!==session)throw Error('Сессия изменилась');
   else if(m.type==='telemetry.snapshot'){frame=m;frameAt=performance.now();renderLive();}
   else if(m.type==='input.state'){availability=m.availability;ignition=m.ignitionReady;renderLive();}

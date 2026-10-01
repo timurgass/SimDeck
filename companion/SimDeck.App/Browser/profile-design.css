@@ -1,0 +1,137 @@
+/* Game identity only: controls, pairing and telemetry still use the shared client logic. */
+body[data-profile]{--p-bg:#17191d;--p-panel:#202226;--p-alt:#2b2526;--p-accent:#e63537;--p-muted:#b7afb0;--p-line:#484044;--p-radius:6px;background:var(--p-bg);color:#f5f7f5;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+body[data-profile="f1-25"]{--p-bg:#08151b;--p-panel:#0e242d;--p-alt:#17333d;--p-accent:#21c6d7;--p-muted:#8db0ba;--p-line:#31515c;--p-radius:18px}
+body[data-profile="beamng-default"]{--p-bg:#181c1e;--p-panel:#242a2e;--p-alt:#30383c;--p-accent:#f5842d;--p-muted:#aebbbd;--p-line:#435054;--p-radius:8px}
+body[data-profile="acc"]{--p-bg:#111314;--p-panel:#1d2020;--p-alt:#2a3030;--p-accent:#ffae3b;--p-muted:#a9b9b2;--p-line:#3a4843;--p-radius:5px}
+body[data-profile="ams2"]{--p-bg:#0c1c24;--p-panel:#132e37;--p-alt:#1c4248;--p-accent:#b8e44b;--p-muted:#a6c4c0;--p-line:#356061;--p-radius:16px}
+body[data-profile="ets2"]{--p-bg:#1b2325;--p-panel:#273133;--p-alt:#334144;--p-accent:#ddb66a;--p-muted:#b0beb7;--p-line:#4c5f59;--p-radius:19px}
+body[data-profile="snowrunner"]{--p-bg:#1a221e;--p-panel:#27322b;--p-alt:#364239;--p-accent:#d8a961;--p-muted:#afbdad;--p-line:#4c5b4b;--p-radius:7px}
+body[data-profile="fs25"]{--p-bg:#17241d;--p-panel:#223428;--p-alt:#314837;--p-accent:#76bb59;--p-muted:#a6bea8;--p-line:#49654c;--p-radius:17px}
+body[data-profile] header{background:var(--p-panel);border-bottom:1px solid var(--p-line);padding:16px 19px}
+body[data-profile] header strong{font-size:22px;letter-spacing:.05em}
+body[data-profile] header small{color:var(--p-muted);font-weight:700}
+body[data-profile] #connection{color:var(--p-accent);font-weight:700}
+body[data-profile] main{padding:15px}
+body[data-profile] .card,body[data-profile] .detailCard,body[data-profile] .controls{background:var(--p-panel);border:1px solid var(--p-line);border-radius:var(--p-radius);color:#f5f7f5}
+body[data-profile] .controls{padding:16px;min-width:0}
+body[data-profile] .gauges{border-top:4px solid var(--p-accent);padding:17px}
+body[data-profile] .gauges>.inline{margin:0 0 16px}
+body[data-profile] #profile{font-size:12px;font-weight:800;letter-spacing:.065em;text-transform:uppercase}
+body[data-profile] #live{color:var(--p-accent);font-size:11px;font-weight:700;white-space:nowrap}
+body[data-profile] .gauges>label{color:var(--p-muted);font-weight:700}
+body[data-profile] #rpm{color:var(--p-accent);font-size:23px;font-weight:800}
+body[data-profile] #rpmBar{accent-color:var(--p-accent)}
+body[data-profile] #rpmBar::-webkit-progress-bar{background:var(--p-alt);border-radius:8px}
+body[data-profile] #rpmBar::-webkit-progress-value{background:var(--p-accent);border-radius:8px}
+body[data-profile] .numbers{gap:12px;margin-top:13px}
+body[data-profile] .numbers>div{min-width:0;flex:1;background:var(--p-alt);padding:13px 8px;border-radius:calc(var(--p-radius) / 2)}
+body[data-profile] .numbers strong{color:var(--p-accent);font-size:54px;line-height:1.05}
+body[data-profile] .numbers small,body[data-profile] small,body[data-profile] .hint,body[data-profile] footer{color:var(--p-muted)}
+body[data-profile] #fuel{border-top:1px solid var(--p-line);padding-top:12px;color:var(--p-muted)}
+body[data-profile] #inputState{color:var(--p-accent);font-size:13px;font-weight:800}
+body[data-profile] #command{color:#f2dcae}
+body[data-profile] button{border-color:var(--p-line);background:var(--p-alt);border-radius:calc(var(--p-radius) * .75)}
+body[data-profile] button.selected,body[data-profile] button.primary{background:var(--p-accent);border-color:var(--p-accent);color:var(--p-bg);font-weight:800}
+body[data-profile] nav button{font-size:13px;font-weight:700}
+body[data-profile] .action{background:var(--p-alt);border:1px solid var(--p-line);min-height:91px;text-align:left;padding:12px;font-size:15px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;overflow-wrap:anywhere}
+body[data-profile] .action small{margin-top:5px;font-size:11px}
+body[data-profile] .action.on{background:var(--p-alt);border:2px solid var(--p-accent);box-shadow:inset 4px 0 0 var(--p-accent)}
+body[data-profile] .action.on span{color:var(--p-accent)}
+body[data-profile] .action.down{background:var(--p-line)}
+body[data-profile] .actionIcon{margin:0 0 8px;width:28px;height:28px;color:var(--p-accent)}
+body[data-profile] .action.low{background:#164932;border-color:#5cdd8e;color:#83efad}
+body[data-profile] .action.high{background:#143a70;border-color:#62a6ff;color:#9ac5ff}
+body[data-profile] .action.brakeOn{background:#4b2528;border-color:#ff7770;color:#ffc0bd}
+body[data-profile] .detailCard{background:var(--p-panel)}
+body[data-profile] .bigValue,body[data-profile] .wheel strong{color:var(--p-accent)}
+body[data-profile] .wheel,body[data-profile] .metric,body[data-profile] #fs25Overview .fs25Row{background:var(--p-alt);border-color:var(--p-line)}
+body[data-profile] .driver{background:var(--p-alt);border-bottom-color:var(--p-line)}
+body[data-profile] .driver.player{box-shadow:inset 4px 0 0 var(--p-accent)}
+body[data-profile] .route{border-top-color:var(--p-line)}
+body[data-profile] .routeValues{color:var(--p-accent)}
+body[data-profile] .settingHead{background:var(--p-alt);text-align:left}
+body[data-profile] .tyre.selectedTyre{background:var(--p-alt);border-color:var(--p-accent)}
+
+/* F1 24: angular red race display with a large gear readout. */
+body[data-profile="f1-24"] header{border-top:5px solid var(--p-accent)}
+body[data-profile="f1-24"] .gauges{border-top:0;border-left:5px solid var(--p-accent)}
+body[data-profile="f1-24"] .numbers>div{background:transparent;text-align:left;padding:5px 0}
+body[data-profile="f1-24"] #gear{font-size:76px;font-weight:900}
+body[data-profile="f1-24"] #speed{font-size:52px;color:#f5f7f5}
+body[data-profile="f1-24"] .action{border-radius:3px}
+body[data-profile="f1-24"] .panelTabs button{border-radius:3px}
+
+/* F1 25: cyan instrument pod and compact command strips. */
+body[data-profile="f1-25"] .gauges{border-top:1px solid var(--p-line);border-radius:22px;text-align:center}
+body[data-profile="f1-25"] .gauges>.inline{text-align:left}
+body[data-profile="f1-25"] .numbers{justify-content:center}
+body[data-profile="f1-25"] .numbers>div:first-child{border-radius:100px 100px 15px 15px;border-top:6px solid var(--p-accent);background:var(--p-alt)}
+body[data-profile="f1-25"] #gear{font-size:78px}
+body[data-profile="f1-25"] #speed{font-size:49px;color:#f5f7f5}
+body[data-profile="f1-25"] .action{border-radius:10px}
+
+/* BeamNG: workshop panel; vehicle state stays in the button labels. */
+body[data-profile="beamng-default"] header{border-left:7px solid var(--p-accent)}
+body[data-profile="beamng-default"] .gauges{border-top:0}
+body[data-profile="beamng-default"] #speed{font-size:69px;color:#f5f7f5}
+body[data-profile="beamng-default"] .action.on{background:#583b24}
+body[data-profile="beamng-default"] .action{min-height:105px}
+
+/* ACC: GT timing strip, tyre blocks and pit controls. */
+body[data-profile="acc"] header{border-bottom:3px solid var(--p-accent)}
+body[data-profile="acc"] .gauges{border-top:0}
+body[data-profile="acc"] #rpmBar{height:14px}
+body[data-profile="acc"] #gear{font-size:74px}
+body[data-profile="acc"] .wheel{border-left:4px solid var(--p-accent);border-radius:0}
+body[data-profile="acc"] #wheelsPanel{border-top:3px solid var(--p-accent)}
+body[data-profile="acc"] .action.on{background:#4e3d25}
+
+/* AMS2: larger ICM targets and a calm cyan cockpit. */
+body[data-profile="ams2"] header{background:#0c1c24}
+body[data-profile="ams2"] .gauges{border-top:0;background:linear-gradient(120deg,#17454a,var(--p-panel))}
+body[data-profile="ams2"] .numbers>div{border-radius:13px}
+body[data-profile="ams2"] .action{min-height:112px;border:0;border-radius:12px}
+body[data-profile="ams2"] .action.on{background:#3a5e2f}
+
+/* ETS2: route first, then road instruments and cabin switches. */
+body[data-profile="ets2"] .gauges{display:flex;flex-direction:column;border-top:0}
+body[data-profile="ets2"] .gauges>.inline{order:-2}
+body[data-profile="ets2"] .gauges>.route{order:-1;border-top:0;border-bottom:1px solid var(--p-line);padding:0 0 15px;margin:0 0 15px;background:#24434a;border-radius:10px;padding:12px}
+body[data-profile="ets2"] .numbers>div:first-child{border-radius:80px 80px 12px 12px}
+body[data-profile="ets2"] #speed{font-size:64px}
+body[data-profile="ets2"] .action.on{background:#4d4630}
+
+/* SnowRunner: dense, square equipment buttons. */
+body[data-profile="snowrunner"] header{background:var(--p-alt)}
+body[data-profile="snowrunner"] .gauges{border-top:0;background:linear-gradient(145deg,#344a3c,var(--p-panel))}
+body[data-profile="snowrunner"] .numbers>div{border-radius:2px}
+body[data-profile="snowrunner"] .action{min-height:112px;border-radius:2px}
+body[data-profile="snowrunner"] .action.on{background:#5b4d34}
+
+/* FS25: saved farm and live equipment come before the button box. */
+body[data-profile="fs25"] header{background:var(--p-bg)}
+body[data-profile="fs25"] .gauges{display:none}
+body[data-profile="fs25"] #fs25Overview{background:linear-gradient(145deg,#315b3a,var(--p-panel) 45%);border-top:3px solid var(--p-accent)}
+body[data-profile="fs25"] #fs25Overview h2{color:#f5f7f5}
+body[data-profile="fs25"] .action{min-height:120px;border-radius:10px}
+body[data-profile="fs25"] .action.on{background:#355b3a}
+
+@media(max-width:759px){
+  body[data-profile] #deck{display:flex;flex-direction:column;gap:13px}
+  body[data-profile] #deck>.card,body[data-profile] #deck>.controls{margin:0}
+  body[data-profile="acc"] #wheelsPanel{order:1}
+  body[data-profile="acc"] .controls{order:2}
+  body[data-profile="fs25"] #fs25Overview{order:0}
+  body[data-profile="fs25"] .controls{order:1}
+}
+@media(max-width:520px){
+  body[data-profile] main{padding:10px}
+  body[data-profile] header{padding:12px}
+  body[data-profile] header strong{font-size:19px}
+  body[data-profile] .gauges,body[data-profile] .controls{padding:13px}
+  body[data-profile] .numbers strong{font-size:43px}
+  body[data-profile="f1-24"] #gear,body[data-profile="f1-25"] #gear{font-size:60px}
+  body[data-profile="beamng-default"] #speed,body[data-profile="ets2"] #speed{font-size:53px}
+  body[data-profile] .action{min-height:89px;padding:10px;font-size:14px}
+  body[data-profile] .actionIcon{width:24px;height:24px}
+}
