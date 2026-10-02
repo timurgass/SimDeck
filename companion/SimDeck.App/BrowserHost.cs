@@ -54,6 +54,7 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
         app.MapGet("/style.css", () => Asset("style.css", "text/css; charset=utf-8"));
         app.MapGet("/profile-design.css", () => Asset("profile-design.css", "text/css; charset=utf-8"));
         app.MapGet("/dashboard.css", () => Asset("dashboard.css", "text/css; charset=utf-8"));
+        app.MapGet("/vehicle.js", () => Asset("vehicle.js", "text/javascript; charset=utf-8"));
         app.MapGet("/dashboard.js", () => Asset("dashboard.js", "text/javascript; charset=utf-8"));
         app.MapGet("/f1-circuits.json", () => Asset("f1-circuits.json", "application/json; charset=utf-8"));
         app.MapPost("/pair", async (HttpContext c) => {

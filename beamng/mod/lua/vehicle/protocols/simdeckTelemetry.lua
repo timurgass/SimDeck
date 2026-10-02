@@ -1,5 +1,6 @@
--- SimDeck telemetry v2. Local UDP only; no vehicle control or game-file overrides.
+-- SimDeck telemetry v3. Local UDP only; no vehicle control or game-file overrides.
 local M = {}
+local metadata
 function M.getAddress() return "127.0.0.1" end
 function M.getPort() return 4444 end
 function M.getMaxUpdateRate() return 30 end
@@ -21,9 +22,23 @@ function M.getStructDefinition()
     unsigned int stateKnown;
     unsigned int stateActive;
     int headlights;
+    char model[64];
+    char name[96];
+    char category[32];
+    unsigned int wheelCount;
+    struct { float x; float z; unsigned int flags; } wheels[16];
   ]]
 end
 local function fraction(value) return math.min(1, math.max(0, tonumber(value) or 0)) end
+local function utf8Bound(s, limit)
+  if #s <= limit then return s end
+  local start = limit
+  while start > 0 and s:byte(start) >= 128 and s:byte(start) < 192 do start = start - 1 end
+  if start == 0 then return "" end
+  local b = s:byte(start)
+  local width = b >= 240 and 4 or b >= 224 and 3 or b >= 192 and 2 or 1
+  return s:sub(1, start + width - 1 > limit and start - 1 or limit)
+end
 local function isOn(value) return value == true or (type(value) == "number" and value > 0) end
 local function state(packet, index, value)
   if value == nil then return end
@@ -55,8 +70,8 @@ function M.fillStruct(packet, dt)
   local e = electrics.values
   -- Zeroed packets before the controller initializes intentionally have no signature.
   if e.gearIndex == nil or e.rpm == nil then return end
-  packet.magic = "SMD2"
-  packet.version = 2
+  packet.magic = "SMD3"
+  packet.version = 3
   packet.speed = math.abs(e.wheelspeed or e.airspeed or 0)
   packet.rpm = math.max(0, e.rpm)
   packet.gear = e.gearIndex
@@ -86,6 +101,36 @@ function M.fillStruct(packet, dt)
     packet.headlights = e.lights_state
   elseif e.highbeam ~= nil or e.lowbeam ~= nil then
     packet.headlights = isOn(e.highbeam) and 2 or (isOn(e.lowbeam) or isOn(e.lowhighbeam)) and 1 or 0
+  end
+  local model = tostring(v.data.model or (v.vehicleDirectory or ""):match("vehicles/([^/]+)") or "")
+  if not metadata or metadata.model ~= model then
+    local info = {}
+    if type(jsonReadFile) == "function" and type(v.vehicleDirectory) == "string" then
+      local ok, result = pcall(jsonReadFile, v.vehicleDirectory .. "info.json")
+      if ok and type(result) == "table" then info = result end
+    end
+    local name = tostring(info.Name or (v.data.information and v.data.information.name) or model)
+    if info.Brand then name = tostring(info.Brand) .. " " .. name end
+    local category = info["Body Style"] or info.Type or "unknown"
+    -- Only explicit stock model identifiers supplement broad metadata categories.
+    local catalog = { semi="truck", pickup="pickup", van="van", citybus="bus", roamer="suv" }
+    metadata = { model=model, name=name, category=tostring(catalog[model] or category) }
+  end
+  -- ASCII identifiers and bounded UTF-8 display names; incomplete UTF-8 is rejected by Companion.
+  packet.model = utf8Bound(metadata.model, 63)
+  packet.name = utf8Bound(metadata.name, 95)
+  packet.category = utf8Bound(metadata.category, 31)
+  packet.wheelCount = 0
+  for _, wheel in pairs(wheels.wheels or {}) do
+    if packet.wheelCount >= 16 then break end
+    local node = v.data.nodes and v.data.nodes[wheel.node1]
+    local pos = node and node.pos
+    if pos and type(pos.x) == "number" and type(pos.y) == "number" and pos.x == pos.x and pos.y == pos.y then
+      local item = packet.wheels[packet.wheelCount]
+      item.x, item.z = pos.x, pos.y
+      item.flags = type(wheel.isPropulsed) == "boolean" and (wheel.isPropulsed and 3 or 1) or 0
+      packet.wheelCount = packet.wheelCount + 1
+    end
   end
 end
 return M

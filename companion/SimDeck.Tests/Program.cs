@@ -109,6 +109,7 @@ ScsTelemetryTests.Run(Check);
 Fs25CatalogTests.Run(Check);
 Fs25SaveTests.Run(Check);
 Fs25LiveTests.Run(Check);
+VehicleTests.Run(Check);
 Fs25PlanTests.Run(Check);
 Fs25RulesTests.Run(Check);
 Fs25SaveWatcherTests.Run(Check);

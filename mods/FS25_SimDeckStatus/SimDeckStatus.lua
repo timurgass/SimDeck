@@ -1,7 +1,7 @@
 -- Optional local bridge. Reads only the player's currently controlled machine.
 -- Missing capabilities are omitted, never guessed from the last button press.
 local SimDeckStatus = { elapsed = 0, sequence = 0, reportedWrite = false }
-print("SimDeckStatus 1.0.5: script loaded")
+print("SimDeckStatus 1.1.0: script loaded")
 
 local function status(object, method)
     if object ~= nil and type(object[method]) == "function" then
@@ -11,13 +11,96 @@ local function status(object, method)
     return nil
 end
 
+local function value(object, method)
+    if object ~= nil and type(object[method]) == "function" then
+        local ok, result = pcall(object[method], object)
+        if ok then return result end
+    end
+end
+local function text(s)
+    s = tostring(s or ""):gsub("[%z\1-\31]", "")
+    if #s <= 160 then return s end
+    local start = 160
+    while start > 0 and s:byte(start) >= 128 and s:byte(start) < 192 do start = start - 1 end
+    if start == 0 then return "" end
+    local b = s:byte(start)
+    local width = b >= 240 and 4 or b >= 224 and 3 or b >= 192 and 2 or 1
+    return s:sub(1, start + width - 1 > 160 and start - 1 or 160)
+end
+local function kind(vehicle)
+    local t = tostring(vehicle.typeName or ""):lower()
+    if t:find("crawler", 1, true) or t:find("tracked", 1, true) then return "tracked" end
+    if vehicle.spec_combine ~= nil then return "combine" end
+    if vehicle.spec_woodHarvester ~= nil or vehicle.spec_forwarder ~= nil then return "forestry" end
+    if t:find("telehandler", 1, true) then return "telehandler" end
+    if t:find("loader", 1, true) then return "loader" end
+    if t:find("tractor", 1, true) then return "tractor" end
+    if t:find("truck", 1, true) then return "truck" end
+    if t:find("car", 1, true) then return "car" end
+    if vehicle.spec_motorized ~= nil and vehicle.spec_sprayer ~= nil then return "sprayer" end
+    if vehicle.spec_trailer ~= nil then return "trailer" end
+    if vehicle.spec_attachable ~= nil then return "implement" end
+    return "unknown"
+end
+local function writeVehicle(xml, key, vehicle, id, parentId, depth, visited, counter)
+    if vehicle == nil or visited[vehicle] or depth > 8 or counter.count >= 32 then return end
+    visited[vehicle] = true
+    counter.count = counter.count + 1
+    local filename = tostring(vehicle.configFileName or ""):gsub("\\", "/")
+    setXMLString(xml, key .. "#id", id)
+    setXMLString(xml, key .. "#parentId", parentId or "")
+    setXMLString(xml, key .. "#model", text(filename:match("([^/]+)%.xml$") or ""))
+    setXMLString(xml, key .. "#instance", text(value(vehicle, "getUniqueId") or vehicle.uniqueId or ""))
+    setXMLString(xml, key .. "#name", text(value(vehicle, "getName") or ""))
+    setXMLString(xml, key .. "#kind", kind(vehicle))
+    local lowered = status(vehicle, "getIsLowered")
+    if lowered ~= nil then setXMLBool(xml, key .. "#lowered", lowered) end
+    if vehicle.spec_turnOnVehicle ~= nil then
+        local turnedOn = status(vehicle, "getIsTurnedOn")
+        if turnedOn ~= nil then setXMLBool(xml, key .. "#turnedOn", turnedOn) end
+    end
+    local fold = value(vehicle, "getFoldAnimTime")
+    if type(fold) == "number" and fold == fold and fold >= 0 and fold <= 1 then setXMLFloat(xml, key .. "#fold", fold) end
+    local root = vehicle.rootNode or (vehicle.components and vehicle.components[1] and vehicle.components[1].node)
+    local wheelIndex = 0
+    for _, wheel in pairs(vehicle.spec_wheels and vehicle.spec_wheels.wheels or {}) do
+        local node = wheel.repr or wheel.driveNode
+        if wheelIndex < 32 and counter.wheelCount < 256 and root ~= nil and root ~= 0 and node ~= nil and node ~= 0 and type(localToLocal) == "function" then
+            local ok, x, _, z = pcall(localToLocal, node, root, 0, 0, 0)
+            if ok and type(x) == "number" and type(z) == "number" and x == x and z == z and math.abs(x) < 100 and math.abs(z) < 100 then
+                local wkey = key .. string.format(".wheel(%d)", wheelIndex)
+                setXMLFloat(xml, wkey .. "#x", x)
+                setXMLFloat(xml, wkey .. "#z", -z)
+                wheelIndex = wheelIndex + 1
+                counter.wheelCount = counter.wheelCount + 1
+            end
+        end
+    end
+    local attached = value(vehicle, "getAttachedImplements") or (vehicle.spec_attacherJoints and vehicle.spec_attacherJoints.attachedImplements) or {}
+    for _, entry in ipairs(attached) do
+        if entry.object ~= nil and not visited[entry.object] and counter.count < 32 then
+            local nextId = tostring(counter.count)
+            writeVehicle(xml, "simdeckStatus.vehicle(" .. counter.count .. ")", entry.object, nextId, id, depth + 1, visited, counter)
+        end
+    end
+end
+
 function SimDeckStatus:update(dt)
     self.elapsed = self.elapsed + dt
     if self.elapsed < 400 then return end
     self.elapsed = 0
     local player = g_localPlayer
     local vehicle = player ~= nil and player:getCurrentVehicle() or nil
-    if vehicle == nil then return end
+    if vehicle == nil then
+        -- Explicitly clear the previous machine as soon as the player gets out.
+        local xml = createXMLFile("simdeckStatus", getUserProfileAppPath() .. "simdeckStatus.xml", "simdeckStatus")
+        if xml ~= nil and xml ~= 0 then
+            setXMLInt(xml, "simdeckStatus#version", 2)
+            setXMLBool(xml, "simdeckStatus#controlled", false)
+            saveXMLFile(xml); delete(xml)
+        end
+        return
+    end
 
     local implement = vehicle
     if type(vehicle.getSelectedVehicle) == "function" then
@@ -62,7 +145,7 @@ function SimDeckStatus:update(dt)
         local first = attachmentSpec.attachedImplements[1]
         local joint = first ~= nil and attachmentSpec.attacherJoints ~= nil
             and attachmentSpec.attacherJoints[first.jointDescIndex] or nil
-        print(string.format("SimDeckStatus 1.0.5: lowering unavailable; attached=%s joint=%s moveDown=%s",
+        print(string.format("SimDeckStatus 1.1.0: lowering unavailable; attached=%s joint=%s moveDown=%s",
             tostring(#attachmentSpec.attachedImplements),
             tostring(first ~= nil and first.jointDescIndex or nil),
             tostring(joint ~= nil and joint.moveDown or nil)))
@@ -78,16 +161,18 @@ function SimDeckStatus:update(dt)
     local xml = createXMLFile("simdeckStatus", path, "simdeckStatus")
     if xml == nil or xml == 0 then return end
     self.sequence = self.sequence + 1
-    setXMLInt(xml, "simdeckStatus#version", 1)
+    setXMLInt(xml, "simdeckStatus#version", 2)
+    setXMLBool(xml, "simdeckStatus#controlled", true)
     setXMLInt(xml, "simdeckStatus#sequence", self.sequence)
     if lowered ~= nil then setXMLBool(xml, "simdeckStatus#lowered", lowered) end
     if turnedOn ~= nil then setXMLBool(xml, "simdeckStatus#turnedOn", turnedOn) end
     if motor ~= nil then setXMLBool(xml, "simdeckStatus#motor", motor) end
+    writeVehicle(xml, "simdeckStatus.vehicle(0)", vehicle, "0", nil, 0, {}, { count = 0, wheelCount = 0 })
     saveXMLFile(xml)
     delete(xml)
     if not self.reportedWrite then
         self.reportedWrite = true
-        print("SimDeckStatus 1.0.5: live state file active")
+        print("SimDeckStatus 1.1.0: live state file active")
     end
 end
 

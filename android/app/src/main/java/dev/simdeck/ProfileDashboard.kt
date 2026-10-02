@@ -49,6 +49,7 @@ internal fun profileShortName(id: String) = when(id) {
         }
         if(state.command.isNotBlank()) Text(state.command, color = design.accent, fontSize = 12.sp)
         if(more) DesignCard { Controls(state, model) }
+        if(state.profileId in setOf("fs25","ets2","beamng-default")) VehiclePanel(state)
         if(state.profileId == "fs25") Fs25Overview(state)
     }
 }
@@ -138,7 +139,7 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
             "ams2" -> { Caption("ПРИБОРЫ"); StateRow("Скорость","$speed КМ/Ч"); StateRow("Передача",gear); StateRow("Обороты","$rpm RPM"); RpmBlocks(data,data?.maxRpm ?: 8000.0) }
             "snowrunner" -> { Caption("ТРАНСМИССИЯ"); Caption("ТЕКУЩАЯ ПЕРЕДАЧА"); Value(gear,63,true); StateRow("Топливо",fuel); LinearProgressIndicator(progress={data?.fuelFraction?.toFloat() ?: 0f},modifier=Modifier.fillMaxWidth(),color=d.accent,trackColor=d.panelAlt); Text("Профиль кнопок. Живая телеметрия SnowRunner пока недоступна.",color=d.muted,fontSize=11.sp) }
             "fs25" -> {
-                Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) { Fs25Icon("fs25Motor",d.accent); Column { Caption("ВЫБРАННАЯ ТЕХНИКА"); Text("Техника и орудие",fontSize=19.sp,fontWeight=FontWeight.Bold); Text("Состояние из игрового мода",fontSize=11.sp,color=d.muted) } }
+                Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) { Fs25Icon("fs25Motor",d.accent); Column { Caption("ВЫБРАННАЯ ТЕХНИКА"); Text(data?.vehicle?.name?.ifBlank { "Неизвестная модель" } ?: "Ждём технику",fontSize=19.sp,fontWeight=FontWeight.Bold); Text("Состояние из игрового мода",fontSize=11.sp,color=d.muted) } }
                 StateRow("Положение орудия",switchValue(state,"fs25Lower","Опущено","Поднято")); StateRow("Рабочий режим",switchValue(state,"fs25TurnOn","Работает","Выключен")); StateRow("Двигатель",switchValue(state,"fs25Motor","Запущен","Остановлен"))
                 val tasks=state.telemetry?.fs25?.tasks.orEmpty(); val done=tasks.count { it.status==1 }
                 Caption("ЗАДАЧИ ПЛАНА · ${if(tasks.isEmpty()) "—" else "$done / ${tasks.size}"}")

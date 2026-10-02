@@ -6,14 +6,15 @@ namespace SimDeck.Core;
 // Offsets follow SCSSdkConvert.cs in its MIT-licensed C# client.
 public static class ScsTelemetryParser
 {
-    public const int SnapshotSize = 2048;
+    public const int SnapshotSize = 21620;
+    public const int MinimumSnapshotSize = 2048;
     public const int PluginRevision = 12;
 
     public static bool TryParse(ReadOnlySpan<byte> data, out ulong timestamp, out Telemetry? telemetry)
     {
         timestamp = 0;
         telemetry = null;
-        if (data.Length < SnapshotSize || data[0] != 1 || data[4] != 0 || U(data, 40) != PluginRevision || U(data, 52) != 1)
+        if (data.Length < MinimumSnapshotSize || data[0] != 1 || data[4] != 0 || U(data, 40) != PluginRevision || U(data, 52) != 1)
             return false;
 
         timestamp = BinaryPrimitives.ReadUInt64LittleEndian(data[8..]);
@@ -59,7 +60,7 @@ public static class ScsTelemetryParser
             Finite(speedLimitMps, 0, 100) && speedLimitMps > 0 ? speedLimitMps * 3.6 : null);
         telemetry = new(Math.Abs(speed), rpm, gear, Math.Clamp(fuelLiters / fuelCapacity, 0, 1),
             throttle, brake, clutch, maxRpm, fuelLiters, "realistic", (int)forwardGears,
-            highBeam ? 2 : lowBeam ? 1 : 0, states, Ets2Navigation: navigation);
+            highBeam ? 2 : lowBeam ? 1 : 0, states, Ets2Navigation: navigation, Vehicle: Vehicle(data));
         return true;
     }
 
@@ -69,4 +70,40 @@ public static class ScsTelemetryParser
     static bool On(ReadOnlySpan<byte> data, int offset) => data[offset] != 0;
     static bool Finite(float value, float min, float max) => float.IsFinite(value) && value >= min && value <= max;
     static bool Fraction(float value) => Finite(value, 0, 1);
+
+    static VehicleInfo? Vehicle(ReadOnlySpan<byte> data) {
+        if (data.Length < 2556) return null; // Old short buffers retain all existing telemetry.
+        var id = VehicleKinds.Text(data.Slice(2428,64));
+        var name = string.Join(" ", new[]{VehicleKinds.Text(data.Slice(2364,64)), VehicleKinds.Text(data.Slice(2492,64))}.Where(s => s.Length > 0));
+        if (id.Length == 0 && name.Length == 0) return null;
+        if (id.Length == 0) id = "truck";
+        var wheels = Wheels(data, U(data,80), 1676,1804,1532);
+        var attachments = new List<VehicleAttachment>();
+        for(var i=0;i<10;i++) {
+            var offset=6000+i*1560;
+            if(data.Length < offset+1560) break;
+            var t=data.Slice(offset,1560);
+            if(t[80]!=1) continue; // Detached trailers never remain on the schematic.
+            var trailerId = VehicleKinds.Text(t.Slice(920,64));
+            var trailerName = VehicleKinds.Text(t.Slice(1240,64));
+            var body = VehicleKinds.Text(t.Slice(1048,64));
+            attachments.Add(new("trailer-"+i+":"+trailerId, i == 0 || attachments.Count == 0 ? id : attachments[^1].Id, trailerName.Length>0?trailerName:body,
+                "trailer", Wheels(t,U(t,148),676,804,32)));
+        }
+        var wear=new Dictionary<string,double>();
+        string[] names=["engine","transmission","cabin","chassis","wheels"];
+        for(var i=0;i<names.Length;i++) { var d=F(data,1036+i*4);if(Fraction(d))wear[names[i]]=d; }
+        return new(id, name, "truck", wheels, attachments, Wear:wear);
+    }
+    static IReadOnlyList<VehicleWheel> Wheels(ReadOnlySpan<byte> data, uint count, int xOffset, int zOffset, int poweredOffset) {
+        if(count is <1 or >16) return [];
+        var result=new List<VehicleWheel>();
+        for(var i=0;i<count;i++) {
+            var x=F(data,xOffset+i*4);var z=F(data,zOffset+i*4);
+            if(!Finite(x,-100,100)||!Finite(z,-100,100))return [];
+            result.Add(new(x,-z, data[poweredOffset+i] is 0 or 1 ? data[poweredOffset+i]==1 : null));
+        }
+        // All-zero/uninitialised coordinates convey no wheel geometry.
+        return result.All(w=>w.X==0&&w.Z==0)?[]:result;
+    }
 }

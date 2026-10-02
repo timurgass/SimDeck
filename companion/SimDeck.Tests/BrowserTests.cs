@@ -20,6 +20,7 @@ static class BrowserTests
         var design = await http.GetStringAsync(origin + "/profile-design.css");
         check(design.Contains("data-profile=\"fs25\"") && design.Contains("data-profile=\"f1-25\""), "Browser serves game-specific mobile styles");
         check((await http.GetStringAsync(origin + "/dashboard.js")).Contains("mountProfileDashboard"), "Browser serves functional profile dashboards");
+        check((await http.GetStringAsync(origin + "/vehicle.js")).Contains("updateVehiclePanel"), "Browser bundles automatic vehicle renderer without external assets");
         check((await http.GetStringAsync(origin + "/dashboard.css")).Contains("beamDial"), "Browser serves dashboard geometry without external assets");
         check((await http.GetStringAsync(origin + "/ets2-icons.js")).Contains("etsHighBeam"), "Browser serves ETS2 dashboard icons to Safari");
         var fs25Icons = await http.GetStringAsync(origin + "/fs25-icons.js");

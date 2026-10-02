@@ -1,5 +1,13 @@
 # SimDeck wire protocol 1 — implemented subset (0.8.2)
 
+## Vehicle identity (0.9.3, optional)
+
+Optional `data.vehicle` preserves protocol major 1. See [fields and limits](../docs/AUTO-VEHICLE.md). Local positions are metres, negative Z forward. Unknown capabilities stay absent/null. Clear diagrams on stale telemetry, controlled=false or profile change; never infer equipment state from command acknowledgements.
+
+BeamNG SMD3 is exactly 448 bytes, little-endian: offsets 0–59 retain SMD2 fields with magic SMD3 and version 3. Offset 60: UTF-8 model[64]; 124: name[96]; 220: category[32]; 252: uint32 wheel count (0–16); 256: 16 wheel slots (float X, float Z, uint32 flags), 12 bytes each. Strings are NUL-terminated. Flags: 0 unknown, 1 known non-driven, 3 known driven; other values invalid. SMD1/SMD2 remain supported.
+
+FS25 XML v2 adds controlled, flat ordered vehicle elements with id/parentId, bounded wheel elements and optional lowered/turnedOn/fold. Controlled=false immediately clears the previous vehicle and states. XML v1 remains supported. ETS2 reads revision-12 shared memory including trailer zones without plugin protocol changes.
+
 Android transport: UTF-8 JSON over WSS. Pairing: HTTPS POST `/pair`, `{ "code": "123456", "name": "Tablet" }`; response `{ "token": "…", "protocolMajor": 1 }`. Pairing is closed until opened on the PC, expires in 120 seconds and closes after success or five failed attempts.
 
 The Android user compares the complete SHA-256 certificate fingerprint with Companion before pairing. Discovery TXT data is not authenticated. TLS uses a pinned certificate; changing the certificate requires pairing again. Do not log PINs, bearer tokens or authorization headers.

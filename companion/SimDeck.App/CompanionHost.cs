@@ -250,8 +250,8 @@ public sealed class CompanionHost : IAsyncDisposable
                         try
                         {
                             userDataDir ??= Fs25GamePaths.FindUserDataDir();
-                            var states = userDataDir is null ? null : Fs25LiveReader.Read(userDataDir, DateTime.UtcNow);
-                            if (states is not null) Telemetry.PublishFs25Live(states);
+                            var live = userDataDir is null ? null : Fs25LiveReader.ReadSnapshot(userDataDir, DateTime.UtcNow);
+                            if (live is not null) Telemetry.PublishFs25Live(live.States, live.Vehicle);
                             if (Environment.TickCount64 >= nextSavePoll)
                             {
                                 nextSavePoll = Environment.TickCount64 + 5000;
