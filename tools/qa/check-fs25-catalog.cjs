@@ -26,6 +26,12 @@ const manifest=JSON.parse(fs.readFileSync('assets/fs25-equipment.json','utf8'));
     for(const sprite of sprites){const source=sprite.getAttribute('viewBox').split(' ').map(Number);if(Math.abs(Number(sprite.getAttribute('width'))/Number(sprite.getAttribute('height'))-source[2]/source[3])>1e-8)throw Error('Rendered SVG stretched');}
     svg.remove();
    }
+   updateVehiclePanel({vehicle:{id:'jitter',kind:'tractor',controlled:true,wheels:[{x:-1,z:-1},{x:1,z:-1},{x:-1,z:1},{x:1,z:1}],attachments:[{id:'tool',parentId:'jitter',kind:'cultivator',mount:'rear',lowered:true}]}});
+   const first=document.querySelector('.vehicleImplement'),fresh=document.querySelector('.vehicleFreshness'),before=fresh.getBoundingClientRect().height;
+   updateVehiclePanel({vehicle:{id:'jitter',kind:'tractor',controlled:true,wheels:[{x:-1.0001,z:-1.0001},{x:1.0001,z:-1.0001},{x:-1.0001,z:1.0001},{x:1.0001,z:1.0001}],attachments:[{id:'tool',parentId:'jitter',kind:'cultivator',mount:'rear',lowered:false}]}});
+   if(first!==document.querySelector('.vehicleImplement'))throw Error('FS25 wheel jitter rebuilt hitch animation');
+   updateVehiclePanel(null);
+   if(fresh.getBoundingClientRect().height!==before)throw Error('Stale label changed layout height');
   },manifest.kinds);
   for(const[kind,info] of Object.entries(manifest.kinds)){
    const result=await page.evaluate(async({kind,info})=>{

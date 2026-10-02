@@ -51,7 +51,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
         } else {
             Text(v.name.ifBlank { "Неизвестная модель" },fontSize=22.sp,color=d.accent,fontWeight=FontWeight.Bold)
             Text("АВТО · ${vehicleLabels[v.kind]} · ${v.axleCount?.let { "$it оси" } ?: "Геометрия колёс неизвестна"}",fontSize=12.sp,color=d.muted)
-            Text(if(!live) "Последняя известная техника · данные устарели" else "Состояние техники · живые данные",fontSize=12.sp,color=d.muted)
+            Text(if(!live) "Последняя известная техника · данные устарели" else "Состояние техники · живые данные",fontSize=12.sp,color=d.muted,minLines=2,maxLines=2)
             val linked=v.attachments.firstOrNull { it.parentId==v.id && farmSprite(it.kind)!=null && (it.mount!="unknown" || it.kind=="header") }
             if(farm) key(v.id,linked?.id) { FarmDrawing(v.kind,linked) } else {
                 val trailer=v.attachments.firstOrNull { it.kind=="trailer" }.takeIf { state.profileId=="ets2" }
