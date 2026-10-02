@@ -5,6 +5,14 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class VehicleInfoTest {
+    @Test fun everyEquipmentClassSurvivesWireParsing() {
+        fs25EquipmentLabels.forEach { (kind,label) ->
+            val v=VehicleInfo.parse(JSONObject().put("id","root").put("kind",kind))!!
+            assertEquals(kind,v.kind)
+            assertTrue(label.isNotBlank())
+            assertNotNull(fs25EquipmentSprites[kind])
+        }
+    }
     @Test fun cutterMountAndDetachAreDistinctFromGenericEquipment() {
         val v=VehicleInfo.parse(JSONObject("""{"id":"combine","name":"MF8570","kind":"combine","attachments":[{"id":"cutter","parentId":"combine","kind":"header","mount":"front"}]}"""))!!
         assertEquals("header",v.attachments.single().kind)

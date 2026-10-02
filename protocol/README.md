@@ -74,3 +74,7 @@ Profile revision 3 removes shiftUp, shiftDown, parkingBrake, handbrakeHold and a
 ## Vehicle attachments (0.9.5)
 
 Optional attachment `mount` is `front`, `rear` or `unknown` (default for older data). FS25 also distinguishes `header`, `plow`, `cultivator`, and `seeder` from a generic `implement`. These are metadata for rendering; action IDs and input gestures do not change. An attachment is removed on a fresh snapshot where it is absent. Clients may retain the last known vehicle across missing/stale telemetry, with an explicit stale label and no live switch/gauge values. A fresh `controlled: false` or profile change invalidates retained identity.
+
+## FS25 classes (0.9.6)
+
+Optional `kind` uses the lowercase keys in [the equipment registry](../assets/fs25-equipment.json). FS25 mod 1.3.0.0 resolves shop categories and capabilities to those keys; held hand tools can also be the controlled root. Unknown keys remain unknown on older clients, so upgrade Companion and Android together. `id`, attachments and action IDs retain their existing semantics.

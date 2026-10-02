@@ -1,7 +1,7 @@
 -- Optional local bridge. Reads only the player's currently controlled machine.
 -- Missing capabilities are omitted, never guessed from the last button press.
 local SimDeckStatus = { elapsed = 0, sequence = 0, reportedWrite = false }
-print("SimDeckStatus 1.2.0: script loaded")
+print("SimDeckStatus 1.3.0: script loaded")
 
 local function status(object, method)
     if object ~= nil and type(object[method]) == "function" then
@@ -29,6 +29,56 @@ local function text(s)
 end
 local function kind(vehicle)
     local t = tostring(vehicle.typeName or ""):lower()
+    -- Store categories distinguish machines that share a technical type (e.g.
+    -- wheel loaders and trucks both use 'tractor'). Use the live shop registry.
+    local item
+    if g_storeManager ~= nil and type(g_storeManager.getItemByXMLFilename) == "function" then
+        local ok, result = pcall(g_storeManager.getItemByXMLFilename, g_storeManager, vehicle.configFileName)
+        if ok then item = result end
+    end
+    local categories = type(item)=="table" and type(item.categoryNames)=="table" and item.categoryNames or {}
+    local category = table.concat(categories, " "):lower()
+    -- Shared tool categories need a more specific capability before their default.
+    if category:find("tools", 1, true) or category:find("misc", 1, true) or category:find("grape", 1, true) then
+        if vehicle.spec_dynamicMountAttacher ~= nil and t:find("fork", 1, true) then return "palletfork" end
+        if t:find("balegrab", 1, true) then return "balegrab" end
+        if t:find("loggrab", 1, true) then return "loggrab" end
+        if t:find("shovel", 1, true) then return "bucket" end
+        if t:find("vineprepruner", 1, true) then return "vinepruner" end
+        if vehicle.spec_plow ~= nil then return "plow" end
+        if vehicle.spec_cultivator ~= nil then return "cultivator" end
+        if vehicle.spec_mulcher ~= nil then return "mulcher" end
+        if vehicle.spec_sprayer ~= nil then return "fronttank" end
+        if vehicle.spec_manureSpreader ~= nil then return "manurespreader" end
+        if t:find("saltspreader", 1, true) then return "saltspreader" end
+        if t:find("fueltrailer", 1, true) then return "fueltank" end
+        if t:find("locomotive", 1, true) then return "train" end
+        if t:find("highpressurewasher", 1, true) then return "washer" end
+        if t:find("handtoolmower", 1, true) then return "handmower" end
+    end
+    for _, name in ipairs(categories) do
+        local mapped = SimDeckEquipmentCategories and SimDeckEquipmentCategories[tostring(name):lower()]
+        if mapped ~= nil then
+            if vehicle.spec_motorized ~= nil then
+                if mapped == "sprayer" then return "selfsprayer" end
+                if mapped == "mower" then return "selfmower" end
+                if mapped == "mixerwagon" then return "selfmixer" end
+                if mapped == "slurrytank" then return "selfslurry" end
+                if mapped == "baler" then return "balerdrivable" end
+                if mapped == "tractor" and vehicle.spec_combine ~= nil then return "modularcarrier" end
+            elseif vehicle.spec_attachable ~= nil then
+                if mapped == "rootharvester" then return "rootimplement" end
+                if mapped == "forageharvester" then return "forageimplement" end
+            end
+            if t:find("balerstationary", 1, true) then return "balerstationary" end
+            if tostring(name):lower() == "sugarcaneharvesters" then return "sugarcaneharvester" end
+            if tostring(name):lower() == "vegetableharvesters" and vehicle.spec_motorized ~= nil then return "vegetableharvester" end
+            return mapped
+        end
+    end
+    if t:find("chainsaw", 1, true) then return "chainsaw" end
+    if t:find("handtoolmower", 1, true) then return "handmower" end
+    if t:find("highpressurewasher", 1, true) then return "washer" end
     if t:find("crawler", 1, true) or t:find("tracked", 1, true) then return "tracked" end
     if vehicle.spec_combine ~= nil then return "combine" end
     if vehicle.spec_woodHarvester ~= nil or vehicle.spec_forwarder ~= nil then return "forestry" end
@@ -104,7 +154,7 @@ function SimDeckStatus:update(dt)
     if self.elapsed < 400 then return end
     self.elapsed = 0
     local player = g_localPlayer
-    local vehicle = player ~= nil and player:getCurrentVehicle() or nil
+    local vehicle = value(player, "getCurrentVehicle") or value(player, "getHeldHandTool")
     if vehicle == nil then
         -- Explicitly clear the previous machine as soon as the player gets out.
         local xml = createXMLFile("simdeckStatus", getUserProfileAppPath() .. "simdeckStatus.xml", "simdeckStatus")
@@ -159,7 +209,7 @@ function SimDeckStatus:update(dt)
         local first = attachmentSpec.attachedImplements[1]
         local joint = first ~= nil and attachmentSpec.attacherJoints ~= nil
             and attachmentSpec.attacherJoints[first.jointDescIndex] or nil
-        print(string.format("SimDeckStatus 1.2.0: lowering unavailable; attached=%s joint=%s moveDown=%s",
+        print(string.format("SimDeckStatus 1.3.0: lowering unavailable; attached=%s joint=%s moveDown=%s",
             tostring(#attachmentSpec.attachedImplements),
             tostring(first ~= nil and first.jointDescIndex or nil),
             tostring(joint ~= nil and joint.moveDown or nil)))
@@ -186,7 +236,7 @@ function SimDeckStatus:update(dt)
     delete(xml)
     if not self.reportedWrite then
         self.reportedWrite = true
-        print("SimDeckStatus 1.2.0: live state file active")
+        print("SimDeckStatus 1.3.0: live state file active")
     end
 end
 

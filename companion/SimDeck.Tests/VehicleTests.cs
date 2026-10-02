@@ -17,7 +17,8 @@ static class VehicleTests {
         var invalid=b.ToArray();BinaryPrimitives.WriteUInt32LittleEndian(invalid.AsSpan(252),17);
         check(!SimDeckParser.TryParse(invalid,out _),"BeamNG rejects oversized wheel array");
         Float(256,float.NaN);check(!SimDeckParser.TryParse(b,out _),"BeamNG rejects non-finite wheel geometry");
-        check(VehicleKinds.Resolve("WoodHarvester")=="forestry"&&VehicleKinds.Resolve("customDragon")=="unknown","Unknown model never becomes a guessed tractor or car");
+        check(VehicleKinds.Resolve("WoodHarvester")=="woodharvester"&&VehicleKinds.Resolve("customDragon")=="unknown","Unknown model never becomes a guessed tractor or car");
+        foreach(var kind in VehicleKinds.All) check(VehicleKinds.Resolve(kind)==kind,"Vehicle kind round trip: "+kind);
         var dir=Path.Combine(Path.GetTempPath(),"simdeck-vehicles-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);
         try {
             var path=Path.Combine(dir,Fs25LiveReader.FileName);

@@ -1,5 +1,5 @@
 'use strict';
-const vehicleLabels={unknown:'Неизвестный класс',car:'Легковая',suv:'Внедорожник',pickup:'Пикап',van:'Фургон',bus:'Автобус',truck:'Грузовик / тягач',trailer:'Прицеп',tractor:'Трактор',combine:'Комбайн',loader:'Погрузчик',telehandler:'Телескопический погрузчик',forestry:'Лесная техника',sprayer:'Опрыскиватель',tracked:'Гусеничная техника',implement:'Орудие',header:'Жатка',cultivator:'Культиватор',plow:'Плуг',seeder:'Сеялка'};
+const vehicleLabels={unknown:'Неизвестный класс',car:'Легковая',suv:'Внедорожник',pickup:'Пикап',van:'Фургон',bus:'Автобус',truck:'Грузовик / тягач',trailer:'Прицеп',tractor:'Трактор',combine:'Комбайн',loader:'Погрузчик',telehandler:'Телескопический погрузчик',forestry:'Лесная техника',sprayer:'Опрыскиватель',tracked:'Гусеничная техника',implement:'Орудие',header:'Жатка',cultivator:'Культиватор',plow:'Плуг',seeder:'Сеялка',...fs25EquipmentLabels};
 const farmSprites={tractor:[0,130,354,320],truck:[772,210,368,220],loader:[1145,150,391,290],telehandler:[20,565,350,320],forestry:[390,555,378,340],sprayer:[775,615,370,265]};
 function vehicleWheels(w){return Array.isArray(w)&&w.length<=32&&w.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.z)&&Math.abs(p.x)<=100&&Math.abs(p.z)<=100)?w:[];}
 function vehicleAxles(w){const axles=[];for(const z of w.map(w=>w.z).sort((a,b)=>a-b))if(!axles.length||z-axles.at(-1)>.35)axles.push(z);return axles.length||null;}
@@ -8,9 +8,9 @@ function vehicleSvgRoot(height=290,label='Схема техники'){
 }
 function vElement(parent,tag,attrs={}){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,v]of Object.entries(attrs))e.setAttribute(k,String(v));parent.append(e);return e;}
 function vehicleSprite(parent,atlas,rect,x,y,w,h,cls=''){
- const sprite=vElement(parent,'svg',{x,y,width:w,height:h,viewBox:rect.join(' '),overflow:'hidden',class:'vehicleSprite '+cls});const dims={farm:[1536,1024],road:[1254,1254],equipment:[2172,724],gt:[1024,1536],harvest:[1254,1254]};vElement(sprite,'image',{href:'/vehicles/'+atlas+'.png',width:dims[atlas][0],height:dims[atlas][1]});return sprite;
+ const sprite=vElement(parent,'svg',{x,y,width:w,height:h,viewBox:rect.join(' '),overflow:'hidden',class:'vehicleSprite '+cls});const dims={...fs25AtlasSizes,farm:[1536,1024],road:[1254,1254],equipment:[2172,724],gt:[1024,1536],harvest:[1254,1254]};vElement(sprite,'image',{href:'/vehicles/'+atlas+'.png',width:dims[atlas][0],height:dims[atlas][1]});return sprite;
 }
-function farmSprite(kind){const harvest={combine:[50,135,570,410],header:[650,310,565,215],cultivator:[35,817,580,255],plow:[655,808,580,265]};if(harvest[kind])return ["harvest",harvest[kind]];if(farmSprites[kind])return ['farm',farmSprites[kind]];if(kind==='tracked')return ['equipment',[0,0,724,724]];if(kind==='trailer')return ['equipment',[724,0,724,724]];return null;}
+function farmSprite(kind){return fs25EquipmentSprites[kind]||fs25EquipmentSprites[kind==="forestry"?"woodharvester":kind]||null;}
 function roadRect(kind){return ({car:[120,9,233,391],suv:[523,6,209,412],pickup:[905,9,223,394],van:[124,418,225,409],bus:[534,418,186,410],truck:[917,418,199,410],formula:[510,840,235,404],trailer:[945,840,144,401],gt:[0,0,1024,1536]})[kind]||null;}
 function farmSvg(kind,attachment){
  const svg=vehicleSvgRoot(230,vehicleLabels[kind]);const root=farmSprite(kind),tool=attachment&&farmSprite(attachment.kind);if(!root)return node('p','hint','Схема этого класса пока не определена');

@@ -2,7 +2,7 @@ package dev.simdeck
 
 import org.json.JSONObject
 
-internal val vehicleLabels = mapOf("unknown" to "Общая схема", "car" to "Легковая", "suv" to "Внедорожник", "pickup" to "Пикап", "van" to "Фургон", "bus" to "Автобус", "truck" to "Грузовик / тягач", "trailer" to "Прицеп", "tractor" to "Трактор", "combine" to "Комбайн", "loader" to "Погрузчик", "telehandler" to "Телескопический погрузчик", "forestry" to "Лесная техника", "sprayer" to "Опрыскиватель", "tracked" to "Гусеничная техника", "implement" to "Орудие", "header" to "Жатка", "cultivator" to "Культиватор", "plow" to "Плуг", "seeder" to "Сеялка")
+internal val vehicleLabels = mapOf("unknown" to "Общая схема", "car" to "Легковая", "suv" to "Внедорожник", "pickup" to "Пикап", "van" to "Фургон", "bus" to "Автобус", "truck" to "Грузовик / тягач", "trailer" to "Прицеп", "tractor" to "Трактор", "combine" to "Комбайн", "loader" to "Погрузчик", "telehandler" to "Телескопический погрузчик", "forestry" to "Лесная техника", "sprayer" to "Опрыскиватель", "tracked" to "Гусеничная техника", "implement" to "Орудие", "header" to "Жатка", "cultivator" to "Культиватор", "plow" to "Плуг", "seeder" to "Сеялка") + fs25EquipmentLabels
 data class VehicleWheel(val x: Double, val z: Double, val powered: Boolean?)
 data class VehicleAttachment(val id: String, val parentId: String, val name: String, val kind: String, val wheels: List<VehicleWheel>, val lowered: Boolean?, val turnedOn: Boolean?, val fold: Double?, val mount: String = "unknown")
 data class VehicleInfo(val id: String, val name: String, val kind: String, val wheels: List<VehicleWheel>, val attachments: List<VehicleAttachment>, val controlled: Boolean, val wear: Map<String, Double>) {

@@ -12,6 +12,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install lupa==2.8
+      - run: python tools/qa/generate-fs25-registry.py --check
       - run: python tools/qa/check-vehicle-mods.py
       - run: dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release
       - run: dotnet publish companion/SimDeck.App/SimDeck.App.csproj -c Release -r win-x64 --self-contained true -o artifacts/Companion

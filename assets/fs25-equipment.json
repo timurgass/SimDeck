@@ -1,0 +1,1057 @@
+{
+  "schema": 1,
+  "projection": "left-side-orthographic",
+  "kinds": {
+    "tractor": {
+      "label": "Трактор",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        24,
+        113,
+        261,
+        195
+      ]
+    },
+    "combine": {
+      "label": "Комбайн",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        342,
+        113,
+        285,
+        191
+      ]
+    },
+    "header": {
+      "label": "Жатка",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        656,
+        151,
+        254,
+        150
+      ]
+    },
+    "plow": {
+      "label": "Плуг",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        961,
+        168,
+        269,
+        126
+      ]
+    },
+    "cultivator": {
+      "label": "Культиватор",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        32,
+        463,
+        258,
+        123
+      ]
+    },
+    "seeder": {
+      "label": "Сеялка",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        332,
+        413,
+        289,
+        181
+      ]
+    },
+    "baler": {
+      "label": "Пресс-подборщик",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        657,
+        426,
+        253,
+        175
+      ]
+    },
+    "trailer": {
+      "label": "Прицеп",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        955,
+        423,
+        268,
+        174
+      ]
+    },
+    "truck": {
+      "label": "Грузовик",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        32,
+        718,
+        261,
+        167
+      ]
+    },
+    "car": {
+      "label": "Легковая машина",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        336,
+        764,
+        273,
+        120
+      ]
+    },
+    "loader": {
+      "label": "Погрузчик",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        632,
+        983,
+        301,
+        179
+      ]
+    },
+    "telehandler": {
+      "label": "Телескопический погрузчик",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        946,
+        995,
+        291,
+        168
+      ]
+    },
+    "forklift": {
+      "label": "Вилочный погрузчик",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        39,
+        1011,
+        240,
+        160
+      ]
+    },
+    "skidsteer": {
+      "label": "Мини-погрузчик",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        337,
+        1015,
+        251,
+        159
+      ]
+    },
+    "tracked": {
+      "label": "Гусеничный трактор",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        653,
+        997,
+        259,
+        181
+      ]
+    },
+    "motorbike": {
+      "label": "Мотоцикл",
+      "atlas": "fs25-flat-1",
+      "rect": [
+        975,
+        1026,
+        242,
+        151
+      ]
+    },
+    "forageharvester": {
+      "label": "Кормоуборочный комбайн",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        30,
+        60,
+        275,
+        253
+      ]
+    },
+    "rootharvester": {
+      "label": "Корнеуборочная машина",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        331,
+        103,
+        286,
+        210
+      ]
+    },
+    "cottonharvester": {
+      "label": "Хлопкоуборочный комбайн",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        627,
+        87,
+        303,
+        226
+      ]
+    },
+    "vineharvester": {
+      "label": "Комбайн для винограда / оливок",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        975,
+        109,
+        266,
+        204
+      ]
+    },
+    "riceharvester": {
+      "label": "Рисоуборочный комбайн",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        12,
+        313,
+        295,
+        288
+      ]
+    },
+    "riceplanter": {
+      "label": "Рисовая посадочная машина",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        337,
+        313,
+        268,
+        288
+      ]
+    },
+    "planter": {
+      "label": "Сажалка",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        636,
+        313,
+        297,
+        291
+      ]
+    },
+    "sprayer": {
+      "label": "Опрыскиватель",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        950,
+        313,
+        291,
+        297
+      ]
+    },
+    "discharrow": {
+      "label": "Дисковая борона",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        13,
+        764,
+        298,
+        130
+      ]
+    },
+    "powerharrow": {
+      "label": "Активная борона",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        329,
+        738,
+        288,
+        154
+      ]
+    },
+    "subsoiler": {
+      "label": "Глубокорыхлитель",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        642,
+        710,
+        287,
+        187
+      ]
+    },
+    "spader": {
+      "label": "Лопаточная машина",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        956,
+        710,
+        284,
+        187
+      ]
+    },
+    "roller": {
+      "label": "Каток",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        14,
+        1075,
+        299,
+        89
+      ]
+    },
+    "weeder": {
+      "label": "Пропольщик",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        339,
+        1031,
+        273,
+        141
+      ]
+    },
+    "mulcher": {
+      "label": "Мульчер",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        637,
+        1035,
+        286,
+        140
+      ]
+    },
+    "stonepicker": {
+      "label": "Камнеуборочная машина",
+      "atlas": "fs25-flat-2",
+      "rect": [
+        951,
+        1002,
+        278,
+        168
+      ]
+    },
+    "mower": {
+      "label": "Косилка",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        20,
+        136,
+        286,
+        115
+      ]
+    },
+    "tedder": {
+      "label": "Ворошилка",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        325,
+        93,
+        292,
+        177
+      ]
+    },
+    "windrower": {
+      "label": "Валкователь",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        636,
+        140,
+        290,
+        134
+      ]
+    },
+    "foragewagon": {
+      "label": "Прицеп-подборщик",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        948,
+        79,
+        288,
+        197
+      ]
+    },
+    "balewrapper": {
+      "label": "Обмотчик тюков",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        23,
+        361,
+        279,
+        236
+      ]
+    },
+    "baleloader": {
+      "label": "Подборщик тюков",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        325,
+        412,
+        293,
+        165
+      ]
+    },
+    "balegrab": {
+      "label": "Захват тюков",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        672,
+        412,
+        245,
+        146
+      ]
+    },
+    "strawblower": {
+      "label": "Измельчитель соломы",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        948,
+        364,
+        282,
+        225
+      ]
+    },
+    "spreader": {
+      "label": "Разбрасыватель удобрений",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        22,
+        693,
+        274,
+        193
+      ]
+    },
+    "manurespreader": {
+      "label": "Разбрасыватель навоза",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        319,
+        689,
+        308,
+        196
+      ]
+    },
+    "slurrytank": {
+      "label": "Цистерна для жижи",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        638,
+        687,
+        292,
+        200
+      ]
+    },
+    "slurryinjector": {
+      "label": "Аппликатор жижи",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        948,
+        698,
+        282,
+        186
+      ]
+    },
+    "fronttank": {
+      "label": "Передний бак",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        82,
+        989,
+        164,
+        192
+      ]
+    },
+    "mixerwagon": {
+      "label": "Кормосмеситель",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        319,
+        970,
+        297,
+        217
+      ]
+    },
+    "watertank": {
+      "label": "Цистерна для воды",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        636,
+        1000,
+        300,
+        187
+      ]
+    },
+    "augerwagon": {
+      "label": "Бункер-перегрузчик",
+      "atlas": "fs25-flat-3",
+      "rect": [
+        948,
+        947,
+        286,
+        245
+      ]
+    },
+    "headertrailer": {
+      "label": "Прицеп для жатки",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        16,
+        165,
+        290,
+        100
+      ]
+    },
+    "flatbed": {
+      "label": "Платформа",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        325,
+        122,
+        293,
+        143
+      ]
+    },
+    "lowloader": {
+      "label": "Низкорамный прицеп",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        637,
+        122,
+        297,
+        138
+      ]
+    },
+    "livestocktrailer": {
+      "label": "Скотовоз",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        950,
+        103,
+        289,
+        162
+      ]
+    },
+    "timbertrailer": {
+      "label": "Лесовозный прицеп",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        16,
+        390,
+        292,
+        191
+      ]
+    },
+    "fueltank": {
+      "label": "Топливная цистерна",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        325,
+        399,
+        295,
+        181
+      ]
+    },
+    "dolly": {
+      "label": "Подкатная тележка",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        637,
+        466,
+        291,
+        121
+      ]
+    },
+    "woodharvester": {
+      "label": "Лесной харвестер",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        951,
+        338,
+        288,
+        245
+      ]
+    },
+    "forwarder": {
+      "label": "Форвардер",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        15,
+        681,
+        294,
+        201
+      ]
+    },
+    "excavator": {
+      "label": "Экскаватор",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        331,
+        636,
+        289,
+        244
+      ]
+    },
+    "woodchipper": {
+      "label": "Измельчитель древесины",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        638,
+        659,
+        283,
+        229
+      ]
+    },
+    "stumpcutter": {
+      "label": "Измельчитель пней",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        960,
+        725,
+        272,
+        155
+      ]
+    },
+    "treeplanter": {
+      "label": "Лесопосадочная машина",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        18,
+        971,
+        284,
+        206
+      ]
+    },
+    "loggrab": {
+      "label": "Захват брёвен",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        366,
+        940,
+        238,
+        211
+      ]
+    },
+    "winch": {
+      "label": "Лебёдка",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        17,
+        993,
+        268,
+        170
+      ]
+    },
+    "conveyor": {
+      "label": "Транспортёр",
+      "atlas": "fs25-flat-4",
+      "rect": [
+        951,
+        960,
+        286,
+        217
+      ]
+    },
+    "frontloaderarm": {
+      "label": "Фронтальный погрузчик",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        16,
+        80,
+        292,
+        195
+      ]
+    },
+    "bucket": {
+      "label": "Ковш",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        344,
+        126,
+        255,
+        161
+      ]
+    },
+    "palletfork": {
+      "label": "Паллетные вилы",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        641,
+        83,
+        276,
+        203
+      ]
+    },
+    "leveler": {
+      "label": "Отвал",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        949,
+        106,
+        283,
+        171
+      ]
+    },
+    "snowplow": {
+      "label": "Снегоочиститель",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        89,
+        369,
+        188,
+        218
+      ]
+    },
+    "saltspreader": {
+      "label": "Разбрасыватель соли",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        326,
+        363,
+        283,
+        224
+      ]
+    },
+    "weight": {
+      "label": "Противовес",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        737,
+        373,
+        111,
+        212
+      ]
+    },
+    "cornheader": {
+      "label": "Кукурузная жатка",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        946,
+        414,
+        291,
+        160
+      ]
+    },
+    "forageheader": {
+      "label": "Жатка кормоуборочного комбайна",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        24,
+        704,
+        274,
+        177
+      ]
+    },
+    "roottopper": {
+      "label": "Ботвоудалитель",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        334,
+        709,
+        277,
+        165
+      ]
+    },
+    "vinepruner": {
+      "label": "Обрезчик лозы",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        671,
+        641,
+        224,
+        256
+      ]
+    },
+    "bedformer": {
+      "label": "Грядообразователь",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        950,
+        709,
+        286,
+        172
+      ]
+    },
+    "chainsaw": {
+      "label": "Бензопила",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        15,
+        1025,
+        298,
+        130
+      ]
+    },
+    "handmower": {
+      "label": "Ручная газонокосилка",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        355,
+        968,
+        256,
+        213
+      ]
+    },
+    "washer": {
+      "label": "Мойка высокого давления",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        660,
+        953,
+        280,
+        245
+      ]
+    },
+    "train": {
+      "label": "Поезд",
+      "atlas": "fs25-flat-5",
+      "rect": [
+        940,
+        997,
+        302,
+        167
+      ]
+    },
+    "selfsprayer": {
+      "label": "Самоходный опрыскиватель",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        23,
+        120,
+        288,
+        190
+      ]
+    },
+    "selfmower": {
+      "label": "Самоходная косилка",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        328,
+        155,
+        287,
+        154
+      ]
+    },
+    "selfmixer": {
+      "label": "Самоходный кормосмеситель",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        638,
+        126,
+        292,
+        185
+      ]
+    },
+    "selfslurry": {
+      "label": "Самоходный аппликатор жижи",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        947,
+        131,
+        297,
+        179
+      ]
+    },
+    "rootimplement": {
+      "label": "Прицепная корнеуборочная машина",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        14,
+        446,
+        296,
+        148
+      ]
+    },
+    "forageimplement": {
+      "label": "Прицепной кормоуборочный комбайн",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        327,
+        398,
+        287,
+        204
+      ]
+    },
+    "balerdrivable": {
+      "label": "Самоходный пресс-подборщик",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        647,
+        405,
+        281,
+        200
+      ]
+    },
+    "beetloader": {
+      "label": "Свеклопогрузчик",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        945,
+        380,
+        299,
+        226
+      ]
+    },
+    "sugarcaneharvester": {
+      "label": "Комбайн для сахарного тростника",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        10,
+        669,
+        300,
+        210
+      ]
+    },
+    "vegetableharvester": {
+      "label": "Овощной комбайн",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        321,
+        705,
+        302,
+        178
+      ]
+    },
+    "modularcarrier": {
+      "label": "Модульный носитель",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        652,
+        679,
+        279,
+        203
+      ]
+    },
+    "balerstationary": {
+      "label": "Стационарный пресс",
+      "atlas": "fs25-flat-6",
+      "rect": [
+        943,
+        716,
+        301,
+        145
+      ]
+    }
+  },
+  "categories": {
+    "tractorsl": "tractor",
+    "tractorsm": "tractor",
+    "tractorss": "tractor",
+    "frontloadervehicles": "tractor",
+    "trucks": "truck",
+    "cars": "car",
+    "wheelloadervehicles": "loader",
+    "teleloadervehicles": "telehandler",
+    "forklifts": "forklift",
+    "skidsteervehicles": "skidsteer",
+    "harvesters": "combine",
+    "forageharvesters": "forageharvester",
+    "beetharvesters": "rootharvester",
+    "potatoharvesting": "rootharvester",
+    "vegetableharvesters": "rootharvester",
+    "peaharvesters": "rootharvester",
+    "greenbeanharvesters": "rootharvester",
+    "spinachharvesters": "rootharvester",
+    "sugarcaneharvesters": "sugarcaneharvester",
+    "cottonharvesters": "cottonharvester",
+    "grapeharvesters": "vineharvester",
+    "oliveharvesters": "vineharvester",
+    "riceharvesters": "riceharvester",
+    "riceplanters": "riceplanter",
+    "cutters": "header",
+    "beetharvestercutters": "header",
+    "cornheaders": "cornheader",
+    "forageharvestercutters": "forageheader",
+    "specialheaders": "forageheader",
+    "plows": "plow",
+    "cultivators": "cultivator",
+    "discharrows": "discharrow",
+    "powerharrows": "powerharrow",
+    "subsoilers": "subsoiler",
+    "spaders": "spader",
+    "rollers": "roller",
+    "grasslandcare": "roller",
+    "silocompaction": "roller",
+    "weeders": "weeder",
+    "mulchers": "mulcher",
+    "forestrymulchers": "mulcher",
+    "stonepickers": "stonepicker",
+    "seeders": "seeder",
+    "planters": "planter",
+    "potatoplanting": "planter",
+    "sugarcaneplanters": "planter",
+    "vegetableplanters": "planter",
+    "trailers": "trailer",
+    "trailerschangingsystem": "trailer",
+    "trailerssemi": "trailer",
+    "grapetrailers": "trailer",
+    "trailersflatbed": "flatbed",
+    "augerwagons": "augerwagon",
+    "sugarcanetransport": "augerwagon",
+    "cuttertrailers": "headertrailer",
+    "forageharvestercuttertrailers": "headertrailer",
+    "lowloaders": "lowloader",
+    "animaltransport": "livestocktrailer",
+    "woodtransport": "timbertrailer",
+    "barrels": "watertank",
+    "seedtanks": "fronttank",
+    "balers": "baler",
+    "balersround": "baler",
+    "balerssquare": "baler",
+    "balewrappers": "balewrapper",
+    "baleloaders": "baleloader",
+    "cottontransport": "baleloader",
+    "strawblowers": "strawblower",
+    "loaderwagons": "foragewagon",
+    "mowers": "mower",
+    "tedders": "tedder",
+    "windrowers": "windrower",
+    "fertilizerspreaders": "spreader",
+    "manurespreaders": "manurespreader",
+    "slurrytanks": "slurrytank",
+    "slurrytransport": "slurrytank",
+    "slurrytools": "slurryinjector",
+    "foragemixers": "mixerwagon",
+    "forestryexcavators": "excavator",
+    "forestryharvesters": "woodharvester",
+    "forestryforwarders": "forwarder",
+    "forestrymisc": "forwarder",
+    "forestryplanters": "treeplanter",
+    "forestrystumpcutters": "stumpcutter",
+    "forestrywinches": "winch",
+    "woodchippers": "woodchipper",
+    "belts": "conveyor",
+    "frontloaders": "frontloaderarm",
+    "weights": "weight",
+    "leveler": "leveler",
+    "miscdrivables": "leveler",
+    "frontloadertools": "bucket",
+    "teleloadertools": "bucket",
+    "wheelloadertools": "bucket",
+    "skidsteertools": "bucket",
+    "forestryexcavatortools": "loggrab",
+    "grapetools": "vinepruner",
+    "winterequipment": "snowplow",
+    "balingmisc": "palletfork",
+    "misc": "dolly",
+    "handtoolsmisc": "washer",
+    "beetloading": "beetloader",
+    "sprayers": "sprayer"
+  },
+  "atlases": {
+    "fs25-flat-1": [
+      1254,
+      1254
+    ],
+    "fs25-flat-2": [
+      1254,
+      1254
+    ],
+    "fs25-flat-3": [
+      1254,
+      1254
+    ],
+    "fs25-flat-4": [
+      1254,
+      1254
+    ],
+    "fs25-flat-5": [
+      1254,
+      1254
+    ],
+    "fs25-flat-6": [
+      1254,
+      1254
+    ]
+  }
+}

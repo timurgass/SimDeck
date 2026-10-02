@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <modDesc descVersion="96">
     <author>SimDeck</author>
-    <version>1.2.0.0</version>
+    <version>1.3.0.0</version>
     <title><en>SimDeck equipment status</en><ru>SimDeck: состояние орудий</ru></title>
     <description><en>Read-only status for the local SimDeck dashboard.</en><ru>Передаёт модель техники, колёса и состояние подключённых орудий локальному пульту SimDeck.</ru></description>
     <iconFilename>icon.dds</iconFilename>
     <multiplayer supported="true"/>
-    <extraSourceFiles><sourceFile filename="SimDeckStatus.lua"/></extraSourceFiles>
+    <extraSourceFiles><sourceFile filename="EquipmentCategories.lua"/><sourceFile filename="SimDeckStatus.lua"/></extraSourceFiles>
 </modDesc>

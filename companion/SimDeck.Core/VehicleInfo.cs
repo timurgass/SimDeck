@@ -24,7 +24,7 @@ public sealed record VehicleInfo(string Id, string Name, string Kind, IReadOnlyL
 public static class VehicleKinds
 {
     public static readonly string[] All = ["unknown", "car", "suv", "pickup", "van", "bus", "truck", "trailer",
-        "tractor", "combine", "loader", "telehandler", "forestry", "sprayer", "tracked", "implement", "header", "cultivator", "plow", "seeder"];
+        "tractor", "combine", "loader", "telehandler", "forestry", "sprayer", "tracked", "implement", "header", "cultivator", "plow", "seeder", .. Fs25EquipmentRegistry.Labels.Keys];
     public static string Resolve(string? category)
     {
         var value = (category ?? "").Replace("_", "").Replace(" ", "").Replace("-", "").ToLowerInvariant();
@@ -45,7 +45,7 @@ public static class VehicleKinds
         if (value.Contains("sedan") || value.Contains("coupe") || value.Contains("hatch") || value.Contains("wagon")) return "car";
         return "unknown";
     }
-    public static string Label(string kind) => kind switch {
+    public static string Label(string kind) => Fs25EquipmentRegistry.Labels.TryGetValue(kind, out var label) ? label : kind switch {
         "car" => "Легковая", "suv" => "Внедорожник", "pickup" => "Пикап", "van" => "Фургон", "bus" => "Автобус",
         "truck" => "Грузовик / тягач", "trailer" => "Прицеп", "tractor" => "Трактор", "combine" => "Комбайн",
         "loader" => "Погрузчик", "telehandler" => "Телескопический погрузчик", "forestry" => "Лесная техника",
