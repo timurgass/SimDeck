@@ -51,7 +51,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
         } else {
             Text(v.name.ifBlank { "Неизвестная модель" },fontSize=22.sp,color=d.accent,fontWeight=FontWeight.Bold)
             Text("АВТО · ${vehicleLabels[v.kind]} · ${v.axleCount?.let { "$it оси" } ?: "Геометрия колёс неизвестна"}",fontSize=12.sp,color=d.muted)
-            if(!live) Text("Последняя известная техника · данные устарели",fontSize=12.sp,color=d.muted)
+            Text(if(!live) "Последняя известная техника · данные устарели" else "Состояние техники · живые данные",fontSize=12.sp,color=d.muted)
             val linked=v.attachments.firstOrNull { it.parentId==v.id && farmSprite(it.kind)!=null && (it.mount!="unknown" || it.kind=="header") }
             if(farm) key(v.id,linked?.id) { FarmDrawing(v.kind,linked) } else {
                 val trailer=v.attachments.firstOrNull { it.kind=="trailer" }.takeIf { state.profileId=="ets2" }
@@ -89,13 +89,13 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
     if(root==null) { Text("Схема для этого класса пока не определена",color=d.muted);return }
     Canvas(Modifier.fillMaxWidth().height(if(small) 135.dp else 185.dp)) {
         val front=attachment?.mount=="front" || (kind=="combine" && attachment?.kind=="header")
-        val ground=size.height*.9f;val width=size.width*(if(tool!=null) .58f else .98f)
-        val h=(width*root.h/root.w).coerceAtMost(size.height*.83f);val w=h*root.w/root.h
-        val x=if(tool!=null) { if(front) size.width*.37f else 0f } else (size.width-w)/2
-        drawLine(d.line,Offset(0f,ground),Offset(size.width,ground),1.dp.toPx());sprite(rootImage!!,root,x,ground-h,w,h)
+        val ground=size.height*.9f
+        val geometry=farmGeometry(size.width,size.height,root.w.toFloat()/root.h,tool?.let { it.w.toFloat()/it.h },front)
+        val r=geometry.root
+        drawLine(d.line,Offset(0f,ground),Offset(size.width,ground),1.dp.toPx());sprite(rootImage!!,root,r.x,r.y,r.w,r.h)
         if(tool!=null) {
-            val tx=if(front) 0f else x+w*.93f;val tw=if(front) x+w*.12f else size.width-tx;val th=(tw*tool.h/tool.w).coerceAtMost(size.height*.7f);val pivot=Offset(tx,ground-th*.6f)
-            withTransform({rotate(-lift*12f,pivot)}) { sprite(toolImage!!,tool,tx,ground-th-lift*size.height*.09f,tw,th) }
+            val t=geometry.tool!!;val pivot=Offset(geometry.pivotX,geometry.pivotY)
+            withTransform({rotate(lift*(if(front) 12f else -12f),pivot)}) { sprite(toolImage!!,tool,t.x,t.y-lift*size.height*.06f,t.w,t.h) }
             drawCircle(if(attachment.lowered==null) d.muted else d.accent,3.dp.toPx(),pivot)
         }
     }

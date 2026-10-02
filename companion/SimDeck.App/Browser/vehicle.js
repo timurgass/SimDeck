@@ -12,10 +12,16 @@ function vehicleSprite(parent,atlas,rect,x,y,w,h,cls=''){
 }
 function farmSprite(kind){return fs25EquipmentSprites[kind]||fs25EquipmentSprites[kind==="forestry"?"woodharvester":kind]||null;}
 function roadRect(kind){return ({car:[120,9,233,391],suv:[523,6,209,412],pickup:[905,9,223,394],van:[124,418,225,409],bus:[534,418,186,410],truck:[917,418,199,410],formula:[510,840,235,404],trailer:[945,840,144,401],gt:[0,0,1024,1536]})[kind]||null;}
+function farmGeometry(width,height,rootAspect,toolAspect,front){
+ const ground=height*.9,rh=height*.74,rw=rh*rootAspect,th=toolAspect!==null?height*.48:0,tw=th*(toolAspect||0),overlap=toolAspect!==null?Math.min(rw,tw)*.08:0,total=rw+tw-overlap,scale=Math.min(1,width*.96/total),start=(width-total*scale)/2;
+ const rx=start+(front&&toolAspect!==null?(tw-overlap)*scale:0),tx=front?start:start+(rw-overlap)*scale;
+ return {root:{x:rx,y:ground-rh*scale,w:rw*scale,h:rh*scale},tool:toolAspect!==null?{x:tx,y:ground-th*scale,w:tw*scale,h:th*scale}:null,pivotX:front?tx+tw*scale:tx,pivotY:ground-th*scale*.45};
+}
 function farmSvg(kind,attachment){
  const svg=vehicleSvgRoot(230,vehicleLabels[kind]);const root=farmSprite(kind),tool=attachment&&farmSprite(attachment.kind);if(!root)return node('p','hint','Схема этого класса пока не определена');
- vElement(svg,'path',{d:'M0 205H320',class:'vehicleGround'});const front=attachment&&(attachment.mount==='front'||(kind==='combine'&&attachment.kind==='header')),w=tool?185:250,h=Math.min(190,w*root[1][3]/root[1][2]),rw=h*root[1][2]/root[1][3],x=tool?(front?120:0):(320-rw)/2;vehicleSprite(svg,root[0],root[1],x,205-h,rw,h);
- if(tool){const tx=front?0:x+rw*.93,tw=front?x+rw*.12:320-tx,th=Math.min(160,tw*tool[1][3]/tool[1][2]);const g=vElement(svg,'g',{class:'vehicleImplement'});g.dataset.pivot=tx+','+(205-th*.6);g.style.transformOrigin=tx+'px '+(205-th*.6)+'px';vehicleSprite(g,tool[0],tool[1],tx,205-th,tw,th);vElement(svg,'circle',{cx:tx,cy:205-th*.6,r:3,class:'vehicleHitch'});}
+ const front=!!(attachment&&(attachment.mount==='front'||(kind==='combine'&&attachment.kind==='header'))),geometry=farmGeometry(320,230,root[1][2]/root[1][3],tool?tool[1][2]/tool[1][3]:null,front),r=geometry.root;
+ vElement(svg,'path',{d:'M0 207H320',class:'vehicleGround'});vehicleSprite(svg,root[0],root[1],r.x,r.y,r.w,r.h);
+ if(tool){const t=geometry.tool,g=vElement(svg,'g',{class:'vehicleImplement'});g.dataset.front=String(front);g.style.transformOrigin=geometry.pivotX+'px '+geometry.pivotY+'px';vehicleSprite(g,tool[0],tool[1],t.x,t.y,t.w,t.h);vElement(svg,'circle',{cx:geometry.pivotX,cy:geometry.pivotY,r:3,class:'vehicleHitch'});}
  return svg;
 }
 function vehicleSvg(kind,wheels,trailer=null){
@@ -42,8 +48,8 @@ function updateVehiclePanel(data){
   const scene=node('div','vehicleScene');scene.append(farm?farmSvg(kind,linked):vehicleSvg(kind,wheels,trailer),node('div','vehicleWear'));panel.append(scene,node('small','hint','Иллюстрация класса · модель и состояния из игры'),node('p','hint vehicleFreshness',''));
   const stats=node('div','vehicleStats');panel.append(stats);
  }
- textIfVehicle();function textIfVehicle(){const label=panel.querySelector('.vehicleFreshness');if(label)label.textContent=stale?'Последняя известная техника · данные устарели':'';}
- const implement=panel.querySelector('.vehicleImplement');if(implement)implement.style.transform=linked?.lowered===false?'translateY(-20px) rotate(-12deg)':'translateY(0) rotate(0)';
+ textIfVehicle();function textIfVehicle(){const label=panel.querySelector('.vehicleFreshness');if(label)label.textContent=stale?'Последняя известная техника · данные устарели':'Состояние техники · живые данные';}
+ const implement=panel.querySelector('.vehicleImplement');if(implement)implement.style.transform=linked?.lowered===false?`translateY(-13.8px) rotate(${implement.dataset.front==='true'?12:-12}deg)`:'translateY(0) rotate(0)';
  const stats=panel.querySelector('.vehicleStats');stats.replaceChildren();
  for(const a of attachments){const item=node('div','vehicleAttachment');item.append(node('strong','','↳ '+String(a.name||vehicleLabels[a.kind]||'Орудие').slice(0,160)));if(farm&&a!==linked)item.append(farmSvg(a.kind,null));const values=[];if(typeof a.lowered==='boolean')values.push(a.lowered?'ОПУЩЕНО':'ПОДНЯТО');if(typeof a.turnedOn==='boolean')values.push(a.turnedOn?'РАБОТАЕТ':'ВЫКЛЮЧЕНО');if(Number.isFinite(a.fold)&&a.fold>=0&&a.fold<=1)values.push('Складывание '+Math.round(a.fold*100)+'%');item.append(node('small','',stale?'Состояние орудия: данные устарели':values.join(' · ')||'Состояние не передано игрой'));stats.append(item);}
  const wearArea=panel.querySelector('.vehicleWear');wearArea.replaceChildren();

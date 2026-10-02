@@ -39,6 +39,7 @@ public sealed class Fs25SaveWatcher : IDisposable
     readonly Func<Fs25SavegameDir, DateTime, Fs25Details> read;
     readonly Func<Fs25Plan?> plan;
     readonly Func<Fs25CropCatalogView?> catalog;
+    readonly Action<Telemetry> publish;
 
     CancellationTokenSource? cts;
     Task? loop;
@@ -56,7 +57,8 @@ public sealed class Fs25SaveWatcher : IDisposable
         Action<TimeSpan, CancellationToken>? sleep = null,
         Func<Fs25SavegameDir, DateTime, Fs25Details>? read = null,
         Func<Fs25Plan?>? plan = null,
-        Func<Fs25CropCatalogView?>? catalog = null)
+        Func<Fs25CropCatalogView?>? catalog = null,
+        Action<Telemetry>? publish = null)
     {
         this.hub = hub;
         this.dir = dir;
@@ -67,6 +69,7 @@ public sealed class Fs25SaveWatcher : IDisposable
         this.read = read ?? ((d, n) => Fs25SaveReader.Read(d, n));
         this.plan = plan ?? (() => null);
         this.catalog = catalog ?? (() => null);
+        this.publish = publish ?? hub.Publish;
     }
 
     public void Start()
@@ -137,7 +140,7 @@ public sealed class Fs25SaveWatcher : IDisposable
             if (lastGoodDetails is null || lastPublishedStale == true)
                 return new Fs25WatcherPoll(Published: false, IsStale: true, Details: lastGoodDetails, Error: lastError);
             var staleDetails = lastGoodDetails with { IsStale = true };
-            hub.Publish(new Telemetry(0, 0, 0, null, 0, 0, 0, Fs25: staleDetails,
+            publish(new Telemetry(0, 0, 0, null, 0, 0, 0, Fs25: staleDetails,
                 Fs25Advisor: Fs25Rules.Evaluate(staleDetails, plan(), catalog())));
             lastPublishedStale = true;
             return new Fs25WatcherPoll(Published: true, IsStale: true, Details: staleDetails, Error: lastError);
@@ -156,7 +159,7 @@ public sealed class Fs25SaveWatcher : IDisposable
             || !ReferenceEquals(currentPlan, lastPublishedPlan);
         if (changed)
         {
-            hub.Publish(new Telemetry(
+            publish(new Telemetry(
                 SpeedMps: 0, Rpm: 0, Gear: 0, FuelFraction: null,
                 Throttle: 0, Brake: 0, Clutch: 0,
                 Fs25: effective,

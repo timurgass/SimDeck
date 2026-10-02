@@ -19,7 +19,7 @@ namespace SimDeck.App;
 /// </remarks>
 public static class Fs25Profile
 {
-    public const int Revision = 2;
+    public const int Revision = 3;
 
     /// <summary>Process name without ".exe", from the game's own FarmingSimulator2025.xml cmdline.</summary>
     public const string TargetProcess = "FarmingSimulator2025Game";
@@ -62,6 +62,18 @@ public static class Fs25Profile
         };
     }
 
+    /// <summary>Add the ground-unload control without resetting any existing pages or custom bindings.</summary>
+    public static GameProfile UpgradeUnloading(GameProfile existing, Fs25Bindings bindings)
+    {
+        var shipped=Build(bindings).Actions;
+        var unload=shipped.Single(a=>a.Id=="fs25Unload");
+        var updated=existing.Actions.Select(a=>a.Id==unload.Id
+            ? a with { Label=unload.Label, Description=unload.Description, Key=bindings.Key("TOGGLE_TIPSTATE") ?? a.Key }
+            : a).ToList();
+        if(updated.All(a=>a.Id!="fs25UnloadHere")) updated.Add(shipped.Single(a=>a.Id=="fs25UnloadHere"));
+        return existing with { Actions=updated, Revision=checked(existing.Revision+1) };
+    }
+
     static readonly Spec[] Specs =
     [
         // ---- Орудие: основной рабочий цикл в поле ----
@@ -101,8 +113,10 @@ public static class Fs25Profile
             "Удвоенный расход удобрения за проход", "OemComma", Group: "Внесение"),
         new("fs25Pipe", "TOGGLE_PIPE", "Посев", "ТРУБА ВЫГРУЗКИ",
             "Выдвигает трубу комбайна", "O", Group: "Уборка"),
-        new("fs25Unload", "UNLOAD", "Посев", "РАЗГРУЗИТЬ",
-            "Выгрузка из комбайна или прицепа", "I", Group: "Уборка"),
+        new("fs25Unload", "TOGGLE_TIPSTATE", "Посев", "РАЗГРУЗИТЬ В ТОЧКЕ",
+            "Запускает/останавливает выгрузку прицепа в зоне приёма; нужна непустая ёмкость", "I", Group: "Уборка"),
+        new("fs25UnloadHere", "TOGGLE_TIPSTATE_GROUND", "Посев", "РАЗГРУЗИТЬ ЗДЕСЬ",
+            "Выгрузка на землю в разрешённом месте; нужна непустая ёмкость и выбранный прицеп", "Ctrl+I", Group: "Уборка"),
         new("fs25TipSide", "TOGGLE_TIPSIDE", "Посев", "СТОРОНА СВАЛКИ",
             "Выбирает сторону разгрузки прицепа", "U", Group: "Уборка"),
         new("fs25Cover", "TOGGLE_COVER", "Посев", "ТЕНТ / КРЫШКА",

@@ -79,6 +79,7 @@ public sealed class CompanionHost : IAsyncDisposable
     string? fs25SavePath;
     Fs25CropCatalogView? fs25Crops;
     Fs25Plan? fs25Plan;
+    readonly Func<Fs25SavegameDir, DateTime, Fs25Details>? readFs25Save;
     int lastAccPacket = int.MinValue;
     long lastAccPacketAt;
     long lastAccReconnect;
@@ -88,10 +89,12 @@ public sealed class CompanionHost : IAsyncDisposable
     X509Certificate2? certificate;
     Task[] loops = [];
 
-    public CompanionHost(string dataDirectory, IInputBackend? inputBackend = null)
+    public CompanionHost(string dataDirectory, IInputBackend? inputBackend = null,
+        Func<Fs25SavegameDir, DateTime, Fs25Details>? readFs25Save = null)
     {
         Store = new(dataDirectory);
         this.inputBackend = inputBackend ?? Backend;
+        this.readFs25Save = readFs25Save;
         Input = new(this.inputBackend);
         Backend.UseVirtualKey = Store.Value.UseVirtualKeyInput;
         if (!string.IsNullOrWhiteSpace(Store.Value.Fs25PlanPath))
@@ -225,7 +228,7 @@ public sealed class CompanionHost : IAsyncDisposable
         Telemetry.Reset(GameId);
         try
         {
-            if (localOnly) { loops = [Task.Run(ReceiveTelemetry), Task.Run(ReceiveF1), Task.Run(RunTick), Task.Run(MonitorFs25)]; return; }
+            if (localOnly) { loops = [Task.Run(ReceiveTelemetry), Task.Run(ReceiveF1), Task.Run(RunTick), Task.Run(MonitorFs25), Task.Run(MonitorFs25Live)]; return; }
             discovery = new ServiceDiscovery();
             var service = new ServiceProfile("SimDeck-" + Environment.MachineName, "_simdeck._tcp", (ushort)Store.Value.Port);
             service.AddProperty("fingerprint", Fingerprint);
@@ -233,25 +236,38 @@ public sealed class CompanionHost : IAsyncDisposable
             discovery.Advertise(service);
         }
         catch (Exception ex) { Status += " · автопоиск: " + ex.GetType().Name; }
-        loops = [Task.Run(ReceiveTelemetry), Task.Run(ReceiveF1), Task.Run(RunTick), Task.Run(MonitorFs25)];
+        loops = [Task.Run(ReceiveTelemetry), Task.Run(ReceiveF1), Task.Run(RunTick), Task.Run(MonitorFs25), Task.Run(MonitorFs25Live)];
+    }
+    // Live polling must never wait for a large save, its retry ladder, or the profile lock.
+    async Task MonitorFs25Live()
+    {
+        string? userDataDir=null;
+        try {
+            while(!stop.IsCancellationRequested) {
+                bool active;lock(profileGate) active=IsFs25 && !Demo;
+                if(active) try {
+                    userDataDir ??= Fs25GamePaths.FindUserDataDir();
+                    var live=userDataDir is null?null:Fs25LiveReader.ReadSnapshot(userDataDir,DateTime.UtcNow);
+                    if(live is not null) lock(profileGate) {
+                        if(IsFs25 && !Demo) Telemetry.PublishFs25Live(live.States,live.Vehicle);
+                    }
+                } catch(Exception ex) { fs25Diagnostic="FS25: ошибка чтения живого состояния ("+ex.GetType().Name+")."; }
+                await Task.Delay(250,stop.Token);
+            }
+        } catch(OperationCanceledException) { }
     }
     async Task MonitorFs25()
     {
         try
         {
             var nextSavePoll = 0L;
-            string? userDataDir = null;
             while (!stop.IsCancellationRequested)
             {
-                lock (profileGate)
+                bool active; lock (profileGate) active = IsFs25 && !Demo;
+                if (active)
                 {
-                    if (IsFs25 && !Demo)
-                    {
                         try
                         {
-                            userDataDir ??= Fs25GamePaths.FindUserDataDir();
-                            var live = userDataDir is null ? null : Fs25LiveReader.ReadSnapshot(userDataDir, DateTime.UtcNow);
-                            if (live is not null) Telemetry.PublishFs25Live(live.States, live.Vehicle);
                             if (Environment.TickCount64 >= nextSavePoll)
                             {
                                 nextSavePoll = Environment.TickCount64 + 5000;
@@ -259,23 +275,28 @@ public sealed class CompanionHost : IAsyncDisposable
                                 if (save is null) fs25Diagnostic = "Сохранение FS25 не найдено. Сохраните игру и проверьте папку My Games/FarmingSimulator2025.";
                                 else
                                 {
-                                    if (fs25SavePath != save.Path)
+                                    // Discover/read files outside profileGate; only publish to the still-active profile.
+                                    Fs25SaveWatcher? watcher;lock(profileGate) watcher=fs25SavePath==save.Path?fs25Watcher:null;
+                                    if (watcher is null)
                                     {
-                                        fs25SavePath = save.Path;
-                                        fs25Crops = LoadFs25Crops();
-                                        fs25Watcher = new Fs25SaveWatcher(Telemetry, save,
-                                            plan: () => fs25Plan, catalog: () => fs25Crops);
+                                        var crops=LoadFs25Crops();
+                                        watcher = new Fs25SaveWatcher(Telemetry, save,
+                                            plan: () => fs25Plan, catalog: () => crops, read: readFs25Save,
+                                            publish: data => { lock(profileGate) { if(IsFs25 && !Demo) Telemetry.Publish(data); } });
+                                        lock(profileGate) if(IsFs25 && !Demo) {
+                                            fs25SavePath=save.Path;fs25Crops=crops;fs25Watcher=watcher;
+                                        }
                                     }
-                                    var poll = fs25Watcher!.PollOnce();
-                                    fs25Diagnostic = poll.Error is not null
+                                    var poll = watcher.PollOnce();
+                                    var diagnostic = poll.Error is not null
                                         ? "FS25: сохранение пока не читается (" + poll.Error.GetType().Name + "). Повторим через 5 с."
                                         : $"FS25: {save.Name} · {poll.Details?.Period.RussianMonth ?? "ожидание"} · "
                                             + (poll.IsStale ? "данные устарели" : "сохранение прочитано") + ".";
+                                    lock(profileGate) if(IsFs25 && !Demo) fs25Diagnostic=diagnostic;
                                 }
                             }
                         }
                         catch (Exception ex) { fs25Diagnostic = "FS25: ошибка чтения сохранения (" + ex.GetType().Name + ")."; }
-                    }
                 }
                 await Task.Delay(TimeSpan.FromMilliseconds(250), stop.Token);
             }

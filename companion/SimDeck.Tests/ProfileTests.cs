@@ -37,10 +37,10 @@ static class ProfileTests
         foreach (var key in Fs25Profile.Default().Actions.Select(a => a.Key))
             WindowsInput.ParseBinding("probe", key, "press");
         var fs25 = Fs25Profile.Default();
-        check(fs25.Actions.Count == 53 && fs25.Actions.Select(a => a.Page).Distinct().Count() == 5
+        check(fs25.Actions.Count == 54 && fs25.Actions.Select(a => a.Page).Distinct().Count() == 5
             && fs25.Actions.All(a => a.Id is not ("ignition" or "fs25Detach")) && fs25.Actions.Single(a => a.Id == "fs25Attach").Label == "ПРИЦЕПИТЬ / ОТЦЕПИТЬ"
             && fs25.TargetProcess == "FarmingSimulator2025Game",
-            "FS25 ships one contextual hitch button and 53 parseable actions over five pages");
+            "FS25 ships one contextual hitch button and 54 parseable actions over five pages");
         var reboundSample = Fs25Bindings.Read(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(
             """<inputBinding><actionBinding action="LOWER_IMPLEMENT"><binding device="KB_MOUSE_DEFAULT" input="KEY_k"/></actionBinding></inputBinding>""")));
         check(Fs25Profile.Build(reboundSample).Actions.Single(a => a.Id == "fs25Lower").Key == "K"
@@ -49,11 +49,21 @@ static class ProfileTests
         var fs25Custom = new GameProfile("fs25", "Farming Simulator 25", "FarmingSimulator2025Game",
             [new("fs25Lower", "Орудие", "ОПУСТИТЬ", "", "F11"), new("fs25Attach", "Орудие", "ПРИЦЕПИТЬ", "", "F10"), new("fs25Detach", "Орудие", "ОТЦЕПИТЬ", "", "Ctrl+Q"), new("fs25-mine", "Свои", "CUSTOM", "", "F12")], 1);
         var fs25Upgraded = Fs25Profile.Upgrade(fs25Custom, Fs25Bindings.Empty);
-        check(fs25Upgraded.Actions.Any(a => a.Id == "fs25-mine") && fs25Upgraded.Actions.Count == 54
+        check(fs25Upgraded.Actions.Any(a => a.Id == "fs25-mine") && fs25Upgraded.Actions.Count == 55
             && fs25Upgraded.Actions.All(a => a.Id != "fs25Detach")
             && fs25Upgraded.Actions.Single(a => a.Id == "fs25Lower").Key == "F11"
             && fs25Upgraded.Actions.Single(a => a.Id == "fs25Attach").Key == "F10"
-            && fs25Upgraded.Revision == 2, "FS25 upgrade removes redundant detach and keeps custom actions and keys");
+            && fs25Upgraded.Revision == 3, "FS25 upgrade removes redundant detach and keeps custom actions and keys");
+        var dischargeBindings=Fs25Bindings.Read(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(
+            """<inputBinding><actionBinding action="UNLOAD"><binding device="KB_MOUSE_DEFAULT" input="KEY_j"/></actionBinding><actionBinding action="TOGGLE_TIPSTATE"><binding device="KB_MOUSE_DEFAULT" input="KEY_k"/></actionBinding><actionBinding action="TOGGLE_TIPSTATE_GROUND"><binding device="KB_MOUSE_DEFAULT" input="KEY_lalt KEY_l"/></actionBinding></inputBinding>""")));
+        var dischargeProfile=Fs25Profile.Build(dischargeBindings);
+        check(dischargeProfile.Actions.Single(a=>a.Id=="fs25Unload").Key=="K"
+            && dischargeProfile.Actions.Single(a=>a.Id=="fs25UnloadHere").Key=="Alt+L",
+            "Trailer unloading imports the tip-state bindings, not the seed-pallet UNLOAD binding");
+        var unloadingUpgrade=Fs25Profile.UpgradeUnloading(fs25Custom,dischargeBindings);
+        check(fs25Custom.Actions.All(a=>unloadingUpgrade.Actions.Contains(a))
+            && unloadingUpgrade.Actions.Single(a=>a.Id=="fs25UnloadHere").Key=="Alt+L",
+            "Ground-unload migration preserves all other actions, pages, groups and keys");
         var imported = Fs25Profile.ApplyPlayerBindings(fs25Custom, reboundSample);
         check(imported.Actions.Single(a => a.Id == "fs25Lower").Key == "K"
             && imported.Actions.Single(a => a.Id == "fs25-mine").Key == "F12"

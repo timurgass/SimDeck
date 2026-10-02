@@ -113,6 +113,7 @@ VehicleTests.Run(Check);
 Fs25PlanTests.Run(Check);
 Fs25RulesTests.Run(Check);
 Fs25SaveWatcherTests.Run(Check);
+await Fs25PollingTests.Run(Check,Path.Combine(Path.GetTempPath(),"simdeck-poll-tests-"+Guid.NewGuid().ToString("N")));
 var fs25Hub = new TelemetryHub();
 var fs25Save = Fs25SaveReader.Read(new Fs25SavegameDir(Path.Combine(AppContext.BaseDirectory, "fixtures", "fs25", "save-mid-season")));
 fs25Hub.Publish(new Telemetry(0, 0, 0, null, 0, 0, 0, Fs25: fs25Save, Fs25Advisor: Fs25Rules.Evaluate(fs25Save, null)));

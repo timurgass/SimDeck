@@ -27,7 +27,7 @@ const fs25IconKinds = Object.freeze({
   fs25Attach:'hitch',fs25NextImplement:'implement',fs25PrevImplement:'implement',
   fs25Extra2:'implement',fs25Extra3:'implement',fs25Extra4:'implement',
   fs25Seeds:'crop',fs25SeedsBack:'crop',fs25DoubleSpray:'spray',
-  fs25Pipe:'pipe',fs25Unload:'unload',fs25TipSide:'unload',fs25Cover:'cover',fs25Chopper:'chopper',
+  fs25Pipe:'pipe',fs25Unload:'unload',fs25UnloadHere:'unload',fs25TipSide:'unload',fs25Cover:'cover',fs25Chopper:'chopper',
   fs25Motor:'engine',fs25Direction:'direction',fs25Cruise:'cruise',
   fs25GearUp:'gear',fs25GearDown:'gear',fs25GroupUp:'gear',fs25GroupDown:'gear',
   fs25Lights:'lights',fs25HighBeam:'high',fs25WorkLightFront:'lights',fs25WorkLightBack:'lights',fs25Beacon:'beacon',

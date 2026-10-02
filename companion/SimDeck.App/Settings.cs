@@ -83,6 +83,11 @@ public sealed class SettingsStore
                     Backup("before-fs25-actions");
                     Value.Profiles[index] = Fs25Profile.Upgrade(Value.Profiles[index], Fs25Bindings.Empty);
                 }
+                else if (profile.Id == "fs25" && Value.ProfileCatalogVersion < 8)
+                {
+                    Backup("before-fs25-unloading");
+                    Value.Profiles[index] = Fs25Profile.UpgradeUnloading(Value.Profiles[index], Fs25Bindings.Empty);
+                }
             }
             Value.ProfileCatalogVersion = AdditionalProfiles.CatalogVersion;
             Save();

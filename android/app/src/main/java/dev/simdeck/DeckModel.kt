@@ -161,7 +161,8 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                                 lastFrame = SystemClock.elapsedRealtime()
                                 sourceAge = if (root.isNull("ageMs")) Long.MAX_VALUE else root.getLong("ageMs")
                                 val telemetry = Protocol.telemetry(root)
-                                mutable.update { it.copy(telemetry = telemetry, lastVehicle = telemetry?.vehicle ?: it.lastVehicle, demo = root.optString("source") == "demo") }
+                                mutable.update { it.copy(telemetry = telemetry, lastVehicle = telemetry?.vehicle ?: it.lastVehicle,
+                                    stale = !Protocol.telemetryFresh(profileId,sourceAge,0), demo = root.optString("source") == "demo") }
                             }
                             "input.state" -> {
                                 require(root.getString("sessionId") == session)

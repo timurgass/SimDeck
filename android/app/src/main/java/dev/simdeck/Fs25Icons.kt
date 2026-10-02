@@ -42,7 +42,7 @@ private val kinds = mapOf(
     "fs25Fold" to "fold", "fs25WorkWidth" to "width", "fs25WorkMode" to "mode", "fs25Attach" to "hitch",
     "fs25NextImplement" to "implement", "fs25PrevImplement" to "implement", "fs25Extra2" to "implement",
     "fs25Extra3" to "implement", "fs25Extra4" to "implement", "fs25Seeds" to "crop", "fs25SeedsBack" to "crop",
-    "fs25DoubleSpray" to "spray", "fs25Pipe" to "pipe", "fs25Unload" to "unload", "fs25TipSide" to "unload",
+    "fs25DoubleSpray" to "spray", "fs25Pipe" to "pipe", "fs25Unload" to "unload", "fs25UnloadHere" to "unload", "fs25TipSide" to "unload",
     "fs25Cover" to "cover", "fs25Chopper" to "chopper", "fs25Motor" to "engine", "fs25Direction" to "direction",
     "fs25Cruise" to "cruise", "fs25GearUp" to "gear", "fs25GearDown" to "gear", "fs25GroupUp" to "gear",
     "fs25GroupDown" to "gear", "fs25Lights" to "lights", "fs25HighBeam" to "high", "fs25WorkLightFront" to "lights",

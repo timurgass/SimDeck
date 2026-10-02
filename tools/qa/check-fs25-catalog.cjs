@@ -9,6 +9,24 @@ const manifest=JSON.parse(fs.readFileSync('assets/fs25-equipment.json','utf8'));
   page.on('pageerror',e=>errors.push(e.message));await page.route('**/status',r=>r.fulfill({json:{}}));
   await page.goto(process.argv[2]||'http://127.0.0.1:18978/');await page.waitForFunction(()=>typeof farmSvg==='function');
   await page.evaluate(()=>{profileId='fs25';document.querySelectorAll('body>header,body>main,body>footer').forEach(e=>e.hidden=true);const qa=document.createElement('main');qa.id='catalogQa';document.body.append(qa);mountVehiclePanel(qa);});
+  // Real hitch compositions must retain BOTH source aspect ratios, on either side.
+  await page.evaluate(kinds=>{
+   for(const root of Object.values(kinds))for(const tool of Object.values(kinds))for(const front of [false,true]){
+    const g=farmGeometry(320,230,root.rect[2]/root.rect[3],tool.rect[2]/tool.rect[3],front);
+    for(const [r,source] of [[g.root,root],[g.tool,tool]]){
+     if(Math.abs(r.w/r.h-source.rect[2]/source.rect[3])>1e-8)throw Error('Stretched hitch sprite');
+     if(r.x<-.001||r.x+r.w>320.001||r.y<0||r.y+r.h>230.001)throw Error('Hitch composition outside viewport');
+    }
+    if(g.tool.h>=g.root.h)throw Error('Attachment taller than its machine');
+   }
+   const qa=document.querySelector('#catalogQa');
+   for(const [kind,tool,mount] of [['tractor','trailer','rear'],['combine','header','front'],['tractor','seeder','rear']]){
+    const svg=farmSvg(kind,{kind:tool,mount});qa.append(svg);
+    const sprites=svg.querySelectorAll('.vehicleSprite');
+    for(const sprite of sprites){const source=sprite.getAttribute('viewBox').split(' ').map(Number);if(Math.abs(Number(sprite.getAttribute('width'))/Number(sprite.getAttribute('height'))-source[2]/source[3])>1e-8)throw Error('Rendered SVG stretched');}
+    svg.remove();
+   }
+  },manifest.kinds);
   for(const[kind,info] of Object.entries(manifest.kinds)){
    const result=await page.evaluate(async({kind,info})=>{
     updateVehiclePanel({vehicle:{id:'fixture',name:info.label,kind,controlled:true,wheels:[],attachments:[]}});
