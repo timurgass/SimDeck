@@ -21,7 +21,7 @@ private fun compound(value: Double?) = when(value?.toInt()) { 16, 20 -> "Soft"; 
     val data = state.telemetry?.f1.takeUnless { state.stale }
     val v = data?.values.orEmpty()
     val gameName = gameDisplayName(state.profileId, state.profileName)
-    Surface(color = Color(0xFF202D35), shape = MaterialTheme.shapes.medium) {
+    Surface(color = LocalProfileDesign.current.panel, shape = MaterialTheme.shapes.medium) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(when(panel) { "mfdPit" -> "ПИТ-СТОП"; "mfdDamage" -> "ШИНЫ И ПОВРЕЖДЕНИЯ"; "mfdEngine" -> "ДВИГАТЕЛЬ"; "mfdTemps" -> "ТЕМПЕРАТУРЫ И ДАВЛЕНИЕ"; "map" -> "ТРАЕКТОРИЯ"; else -> "СОСТОЯНИЕ БОЛИДА" }, fontSize = 19.sp)
             if (data == null && panel != "map") Text("Нет свежих данных $gameName. На трассе: UDP ${f1UdpFormat(state.profileId)} → ПК, порт 20777.", fontSize = 15.sp, color = Color(0xFFFFCC80))
@@ -29,23 +29,7 @@ private fun compound(value: Double?) = when(value?.toInt()) { 16, 20 -> "Soft"; 
                 "map" -> F1CircuitMap(state.telemetry?.f1?.race, state.stale)
                 "mfdDamage", "mfdTemps" -> {
                     Text("${compound(v["compound"])} · возраст ${n(v["tyreAge"], " круг.")}", fontSize = 16.sp)
-                    // Screen order: front axle, rear axle. Wire order: RL, RR, FL, FR.
-                    listOf(listOf(2 to "Передняя левая", 3 to "Передняя правая"), listOf(0 to "Задняя левая", 1 to "Задняя правая")).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            row.forEach { (i, name) ->
-                                val w = data?.wheels?.getOrNull(i)
-                                Surface(Modifier.weight(1f), color = Color(0xFF111C23), shape = MaterialTheme.shapes.small) {
-                                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Text(name, fontSize = 15.sp)
-                                        Text(if (panel == "mfdDamage") "Износ ${n(w?.wear, "%", 1)}" else "${n(w?.surface, " °C")} / ${n(w?.inner, " °C")}", fontSize = 21.sp, color = if ((w?.wear ?: 0.0) >= 60) Color(0xFFFF9E80) else Color(0xFF90E0D0))
-                                        Text(if (panel == "mfdDamage") "Повреждение ${n(w?.damage, "%")}" else "Поверхность / внутри", fontSize = 14.sp)
-                                        Text("${n(w?.pressure, " psi", 1)} · тормоз ${n(w?.brake, " °C")}", fontSize = 14.sp)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (panel == "mfdDamage") Metrics(v, listOf("frontLeftWingDamage" to "Переднее крыло Л", "frontRightWingDamage" to "Переднее крыло П", "rearWingDamage" to "Заднее крыло", "floorDamage" to "Днище"), "%")
+                    F1Schematic(data)
                 }
                 "mfdEngine" -> {
                     Text("Охлаждение ${n(data?.engineTemperature, " °C")}", fontSize = 24.sp)

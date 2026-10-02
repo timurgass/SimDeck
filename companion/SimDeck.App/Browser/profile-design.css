@@ -173,3 +173,7 @@ body.f1Deck:not([data-f1-page="race"]) .gauges,body.f1Deck:not([data-f1-page="ra
   body[data-profile] .action{min-height:89px;padding:10px;font-size:14px}
   body[data-profile] .actionIcon{width:24px;height:24px}
 }
+
+/* Vehicle concepts share a technical dark surface with profile accents. */
+body[data-profile]{--p-bg:#0b1519;--p-panel:#101e23;--p-alt:#1b2c33;--p-muted:#abbdc7;--p-line:#324b56;--p-radius:6px}
+body[data-profile="fs25"]{--p-accent:#9cda65}body[data-profile="snowrunner"]{--p-accent:#b8e44b}

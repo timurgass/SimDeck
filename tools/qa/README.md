@@ -10,7 +10,7 @@
 
 ```powershell
 dotnet run --project companion/SimDeck.Tests -c Release -- --export-profiles artifacts/profiles.json
-python -m http.server 8765 --directory companion/SimDeck.App/Browser
+python tools/qa/serve-dashboard.py --port 8765
 ```
 
 В другом терминале установите зависимости и выполните проверку:

@@ -21,6 +21,12 @@ static class BrowserTests
         check(design.Contains("data-profile=\"fs25\"") && design.Contains("data-profile=\"f1-25\""), "Browser serves game-specific mobile styles");
         check((await http.GetStringAsync(origin + "/dashboard.js")).Contains("mountProfileDashboard"), "Browser serves functional profile dashboards");
         check((await http.GetStringAsync(origin + "/vehicle.js")).Contains("updateVehiclePanel"), "Browser bundles automatic vehicle renderer without external assets");
+        foreach (var image in new[] { "farm.png", "road.png", "equipment.png", "gt.png" }) {
+            using var response = await http.GetAsync(origin + "/vehicles/" + image);
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            check(response.IsSuccessStatusCode && response.Content.Headers.ContentType?.MediaType == "image/png" && bytes.Length > 10000 && bytes.Take(8).SequenceEqual(new byte[] {137,80,78,71,13,10,26,10}), "Browser serves binary sprite " + image + " without text corruption");
+        }
+        check((await http.GetAsync(origin + "/vehicles/private.png")).StatusCode == HttpStatusCode.NotFound, "Sprite endpoint exposes only bundled image names");
         check((await http.GetStringAsync(origin + "/dashboard.css")).Contains("beamDial"), "Browser serves dashboard geometry without external assets");
         check((await http.GetStringAsync(origin + "/ets2-icons.js")).Contains("etsHighBeam"), "Browser serves ETS2 dashboard icons to Safari");
         var fs25Icons = await http.GetStringAsync(origin + "/fs25-icons.js");

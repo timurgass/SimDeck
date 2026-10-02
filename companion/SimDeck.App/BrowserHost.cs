@@ -55,6 +55,12 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
         app.MapGet("/profile-design.css", () => Asset("profile-design.css", "text/css; charset=utf-8"));
         app.MapGet("/dashboard.css", () => Asset("dashboard.css", "text/css; charset=utf-8"));
         app.MapGet("/vehicle.js", () => Asset("vehicle.js", "text/javascript; charset=utf-8"));
+        app.MapGet("/vehicles/{name}", (string name) => {
+            if (name is not ("farm.png" or "road.png" or "equipment.png" or "gt.png")) return Results.NotFound();
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("SimDeck.Vehicle." + name)!;
+            using var bytes = new MemoryStream(); stream.CopyTo(bytes);
+            return Results.Bytes(bytes.ToArray(), "image/png");
+        });
         app.MapGet("/dashboard.js", () => Asset("dashboard.js", "text/javascript; charset=utf-8"));
         app.MapGet("/f1-circuits.json", () => Asset("f1-circuits.json", "application/json; charset=utf-8"));
         app.MapPost("/pair", async (HttpContext c) => {

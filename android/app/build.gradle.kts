@@ -3,13 +3,14 @@ android {
     namespace = "dev.simdeck"
     compileSdk = 35
     buildToolsVersion = "36.0.0"
-    defaultConfig { applicationId = "dev.simdeck"; minSdk = 29; targetSdk = 35; versionCode = 29; versionName = "0.9.3"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    defaultConfig { applicationId = "dev.simdeck"; minSdk = 29; targetSdk = 35; versionCode = 30; versionName = "0.9.4"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
     buildFeatures { compose = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
     buildTypes { release { isMinifyEnabled = false } }
     sourceSets["test"].resources.srcDir("../../protocol/fixtures")
     sourceSets["test"].resources.srcDir("src/main/assets")
+    sourceSets["main"].assets.srcDir("../../assets")
 }
 dependencies {
     implementation("androidx.activity:activity-compose:1.9.3")

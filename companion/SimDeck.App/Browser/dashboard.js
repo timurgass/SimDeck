@@ -41,14 +41,14 @@ function mountProfileDashboard(){
  if(dashboardProfile===profileId&&dashboardRevision===revision)return;
  dashboardProfile=profileId;dashboardRevision=revision;clear(root);
  const banner=node('div','profileBanner');root.append(banner);
- banner.hidden=['beamng-default','acc'].includes(profileId);
+ banner.hidden=['beamng-default','acc','fs25','snowrunner'].includes(profileId);
  if(['ams2','snowrunner','fs25'].includes(profileId)){
   const info=node('div');info.append(node('small','caption',profileId==='fs25'?'ХОЗЯЙСТВО':profileNames[profileId]),node('h1','',({ams2:'Гонка под контролем.',snowrunner:'Любая дорога начинается здесь.',fs25:'Хороший день для работы.'})[profileId]));
   const sub=node('small','',({ams2:'Важные действия под рукой',snowrunner:'Трансмиссия · лебёдка · груз',fs25:'Сохраните ферму в игре'})[profileId]);if(profileId==='fs25')sub.dataset.metric='farm';info.append(sub);banner.append(info);
   if(profileId==='snowrunner'){const compass=node('div','compass');compass.innerHTML='<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M40 12 58 62 40 52 22 62Z"/></svg><small>СЕВЕР</small>';banner.append(compass);}
  }else if(profileId==='ets2'){banner.append(dashboardMetric('МАРШРУТ ИЗ ИГРЫ','route','routeReading'),dashboardMetric('ЛИМИТ','limit'));}
  else{banner.append(node('strong','caption',profileId==='acc'?'GT COCKPIT · ACC':'VEHICLE CONTROL UNIT'));const status=node('span','caption');status.dataset.metric='live';banner.append(status);}
- const layout=node('div','profileLayout'),left=dashboardCard(),right=dashboardCard();layout.append(left,right);root.append(layout);
+ const layout=node('div','profileLayout'),stack=node('div','vehicleStack'),left=dashboardCard(),right=dashboardCard();mountVehiclePanel(stack);stack.append(left);layout.append(stack,right);root.append(layout);
  if(['beamng-default','acc'].includes(profileId)){const live=node('span','instrumentLive');live.dataset.metric='live';left.append(live);}
  switch(profileId){
   case 'beamng-default': {
@@ -69,7 +69,7 @@ function mountProfileDashboard(){
   }
  }
  if(profileQuick[profileId]){right.append(node('h2','caption',profileQuick[profileId][0]),dashboardButtons(profileQuick[profileId][1]));}
- mountVehiclePanel(root); root.append(dashboardRow('Управление','input'));const result=node('small');result.dataset.metric='command';root.append(result);
+ root.append(dashboardRow('Управление','input'));const result=node('small');result.dataset.metric='command';root.append(result);
 }
 function updateProfileDashboard(data){
  updateVehiclePanel(data);

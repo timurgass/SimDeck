@@ -36,10 +36,15 @@ internal fun profileShortName(id: String) = when(id) {
         ProfileBanner(state)
         BoxWithConstraints {
             val wide = maxWidth >= 650.dp
-            val left: @Composable () -> Unit = { ProfileReadout(state, model) }
+            val left: @Composable () -> Unit = {
+                if(state.profileId in setOf("fs25","ets2","beamng-default")) VehiclePanel(state)
+                if(state.profileId=="snowrunner") SnowVehiclePanel(state)
+                if(state.profileId in setOf("acc","ams2")) DesignCard { RoadDrawing(if(state.profileId=="acc") "gt" else "formula"); Text("Схема класса · параметры из доступной телеметрии",fontSize=11.sp,color=design.muted) }
+                ProfileReadout(state, model)
+            }
             val right: @Composable () -> Unit = { ProfileQuickPanel(state, model) }
             if (wide) Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                Column(Modifier.weight(if(state.profileId == "snowrunner") .7f else 1f)) { left() }
+                Column(Modifier.weight(if(state.profileId == "snowrunner") .9f else 1.3f),verticalArrangement=Arrangement.spacedBy(12.dp)) { left() }
                 Column(Modifier.weight(if(state.profileId == "snowrunner") 1.3f else 1f)) { right() }
             } else Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { left(); right() }
         }
@@ -49,7 +54,6 @@ internal fun profileShortName(id: String) = when(id) {
         }
         if(state.command.isNotBlank()) Text(state.command, color = design.accent, fontSize = 12.sp)
         if(more) DesignCard { Controls(state, model) }
-        if(state.profileId in setOf("fs25","ets2","beamng-default")) VehiclePanel(state)
         if(state.profileId == "fs25") Fs25Overview(state)
     }
 }
@@ -64,7 +68,7 @@ internal fun profileShortName(id: String) = when(id) {
 private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off: String = "ВЫКЛ") = if(state.stale) "—" else when(state.telemetry?.actionStates?.get(id)) { true -> on; false -> off; null -> "—" }
 
 @Composable private fun ProfileBanner(state: DeckState) {
-    if(state.profileId in setOf("beamng-default","acc")) return
+    if(state.profileId in setOf("beamng-default","acc","fs25","snowrunner")) return
     val d = LocalProfileDesign.current
     val data = state.telemetry.takeUnless { state.stale }
     val fs = state.telemetry?.fs25
