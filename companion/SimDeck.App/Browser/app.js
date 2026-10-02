@@ -23,7 +23,7 @@ async function connect(){
  try{const r=await fetch('/status',{cache:'no-store'});if(r.status===401){$('pairing').hidden=false;$('deck').hidden=true;text('connection','Нужен код с ПК');return;}if(!r.ok)throw Error('HTTP '+r.status);if(document.hidden)return;
  const socket=new WebSocket('ws://'+location.host+'/ws');ws=socket;
  socket.onmessage=e=>{if(ws!==socket)return;try{const m=JSON.parse(e.data);if(m.protocolMajor!==1)throw Error('Версия протокола');lastMessage=performance.now();
-  if(m.type==='hello'){session=m.sessionId;profileId=m.profileId;setProfileDesign(profileId);revision=m.profileRevision;actions=m.controls;frame=null;ignition=false;$('pairing').hidden=true;$('deck').hidden=false;text('profile',m.profileName);text('connection','Подключено');page=isF1()?'Control Scheme':actions[0]?.page||'';group='';loadCircuits();renderControls();}
+  if(m.type==='hello'){session=m.sessionId;profileId=m.profileId;setProfileDesign(profileId);revision=m.profileRevision;actions=m.controls;frame=null;ignition=false;$('pairing').hidden=true;$('deck').hidden=false;text('profile',m.profileName);text('connection','Подключено');page=isF1()?'Control Scheme':'Обзор';group='';loadCircuits();renderControls();}
   else if(m.sessionId!==session)throw Error('Сессия изменилась');
   else if(m.type==='telemetry.snapshot'){frame=m;frameAt=performance.now();renderLive();}
   else if(m.type==='input.state'){availability=m.availability;ignition=m.ignitionReady;renderLive();}
@@ -73,7 +73,7 @@ function renderF1Summary(){
  const details=node('div','f1SummaryValues'),w=d?.f1?.wheels?.map(x=>x.wear).filter(Number.isFinite)||[],v=d?.f1?.values||{};for(const [label,value] of [['ШИНЫ',compound(v.compound)],['ИЗНОС',w.length===4?Math.round(w.reduce((a,b)=>a+b,0)/4)+'%':'—'],['ТОПЛИВО',d?.fuelFraction!=null?Math.round(d.fuelFraction*100)+'%':'—']]){const cell=node('div');cell.append(node('small','',label),node('strong','',value));details.append(cell);}root.append(details);
 }
 function renderControls(){
- const f1=isF1(),pages=[...new Set(actions.map(a=>a.page))];if(f1&&!pages.includes('Трасса'))pages.push('Трасса');if(!pages.includes(page))page=pages[0]||'';
+ const f1=isF1(),pages=[...(!f1?['Обзор']:[]),...new Set(actions.map(a=>a.page))];if(f1&&!pages.includes('Трасса'))pages.push('Трасса');if(!pages.includes(page))page=pages[0]||'';
  clear($('pages'));for(const p of pages)tab($('pages'),p,p===page,()=>setPage(p));
  let groups=[...new Set(actions.filter(a=>a.page===page).map(a=>a.group||'Общие'))];if(f1&&page==='Control Scheme'&&!groups.includes('Инженер'))groups.push('Инженер');if(page==='Трасса')groups=['Карта и пилоты'];if(!groups.includes(group))group=groups[0]||'';
  clear($('groups'));if(page!=='Трасса')for(const g of groups)tab($('groups'),g,g===group,()=>{release();group=g;renderControls();});clear($('special'));clear($('buttons'));

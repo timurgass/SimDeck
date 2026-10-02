@@ -32,12 +32,12 @@ function mountProfileDashboard(){
  text('brandGame',' / '+(profileNames[profileId]||''));
  document.body.classList.toggle('profileDeck',!isF1());
  let root=$('profileDashboard');if(!root){root=node('section');root.id='profileDashboard';$('deck').prepend(root);}
- root.hidden=isF1();
+ root.hidden=isF1()||page!=='Обзор';
  let details=$('allControls');if(!details){details=node('details','allControls');details.id='allControls';details.append(node('summary','','Все действия и пользовательские кнопки'));$('deck').append(details);}
  let farmDetails=$('farmDetails');if(!farmDetails){farmDetails=node('details','farmDetails');farmDetails.id='farmDetails';farmDetails.open=true;farmDetails.append(node('summary','','Хозяйство · поля · советник · план'));$('deck').append(farmDetails);farmDetails.append($('fs25Overview'));}
- details.hidden=isF1();farmDetails.hidden=profileId!=='fs25';
+ details.hidden=true;farmDetails.hidden=profileId!=='fs25'||page!=='Обзор';
  if(isF1()){$('deck').append(document.querySelector('.controls'));return;}
- details.append(document.querySelector('.controls'));
+ $('deck').insertBefore(document.querySelector('.controls'),root);
  if(dashboardProfile===profileId&&dashboardRevision===revision)return;
  dashboardProfile=profileId;dashboardRevision=revision;clear(root);
  const banner=node('div','profileBanner');root.append(banner);
@@ -78,7 +78,7 @@ function updateProfileDashboard(data){
  const farm=frame?.data?.fs25,advisor=frame?.data?.fs25Advisor,tasks=advisor?.tasks||[],done=tasks.filter(t=>t.status===1).length;
  const values={speed:data?Math.round(data.speedMps*3.6):'—',gear:data?.gearDisplay??'—',rpm:data?Math.round(data.rpm)+' RPM':'— RPM',fuel:data?.fuelFraction!=null?Math.round(data.fuelFraction*100)+'%':'—',fuelBar:data?.fuelFraction??0,
   live:frame?.source==='demo'?'● ДЕМО':data?'● LIVE':'● НЕТ ДАННЫХ',mode:'МАШИНА · '+({arcade:'АРКАДА',realistic:'РЕАЛИЗМ'}[data?.gearboxMode]||'—'),ignition:toggle('ignition','Работает','Выключен'),etsCruise:toggle('etsCruise'),route:fmt(data?.ets2Navigation?.remainingKm,' км')+' · '+fmt(data?.ets2Navigation?.remainingMinutes,' мин'),limit:fmt(data?.ets2Navigation?.speedLimitKmh,' км/ч'),
-  farm:farm?[farm.header?.savegameName,farm.header?.mapTitle,farm.environment?.period?.russianMonth].filter(Boolean).join(' · '):'Сохраните ферму в игре',vehicle:data?.vehicle?.name||'Ждём технику',fs25Lower:toggle('fs25Lower','Опущено','Поднято'),fs25TurnOn:toggle('fs25TurnOn','Работает','Выключен'),fs25Motor:toggle('fs25Motor','Запущен','Остановлен'),tasks:tasks.length?done+' / '+tasks.length:'—',tasksBar:tasks.length?done/tasks.length:0,engine:data?.acc?'Двигатель '+fmt(data.acc.waterTemperature,' °C')+' · трасса '+fmt(data.acc.roadTemperature,' °C'):'Двигатель — · трасса —',input:({ready:'● ВВОД ГОТОВ',unfocused:'Открой окно игры на ПК',disabled:'Разреши ввод в Companion',demo:'Демо · ввод отключён'})[availability]||'Ожидание подключения',command:$('command').textContent};
+  farm:farm?[farm.header?.savegameName,farm.header?.mapTitle,farm.environment?.period?.russianMonth].filter(Boolean).join(' · '):'Сохраните ферму в игре',vehicle:(data?.vehicle||lastKnownVehicle)?.controlled?(data?.vehicle||lastKnownVehicle).name:'Ждём технику',fs25Lower:toggle('fs25Lower','Опущено','Поднято'),fs25TurnOn:toggle('fs25TurnOn','Работает','Выключен'),fs25Motor:toggle('fs25Motor','Запущен','Остановлен'),tasks:tasks.length?done+' / '+tasks.length:'—',tasksBar:tasks.length?done/tasks.length:0,engine:data?.acc?'Двигатель '+fmt(data.acc.waterTemperature,' °C')+' · трасса '+fmt(data.acc.roadTemperature,' °C'):'Двигатель — · трасса —',input:({ready:'● ВВОД ГОТОВ',unfocused:'Открой окно игры на ПК',disabled:'Разреши ввод в Companion',demo:'Демо · ввод отключён'})[availability]||'Ожидание подключения',command:$('command').textContent};
  for(let i=0;i<4;i++){const w=data?.acc?.wheels?.[i];values['tyre'+i]=fmt(w?.coreTemperature,' °C');values['tyreExtra'+i]=fmt(w?.pressure,' PSI',1)+' · тормоз '+fmt(w?.brakeTemperature,' °C');}
  for(const el of root.querySelectorAll('[data-metric]')){const value=values[el.dataset.metric];if(el.tagName==='PROGRESS')el.value=value||0;else el.textContent=value??'—';}
  const fraction=Math.max(0,Math.min(1,(data?.rpm||0)/(data?.maxRpm||8000)));root.querySelectorAll('.profileRpm i').forEach((el,i)=>el.classList.toggle('filled',i<fraction*10));root.style.setProperty('--speed-sweep',Math.max(0,Math.min(270,(data?.speedMps||0)*3.6/240*270))+'deg');

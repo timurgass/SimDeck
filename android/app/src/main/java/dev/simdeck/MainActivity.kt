@@ -117,7 +117,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.9.4 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.9.5 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
     }
 }
 
@@ -187,7 +187,7 @@ internal fun Fs25Overview(state: DeckState) {
     }
 }
 
-@Composable internal fun Controls(state: DeckState, model: DeckModel) {
+@Composable internal fun Controls(state: DeckState, model: DeckModel, selectedPageOverride: String? = null, showPages: Boolean = true) {
     val design = LocalProfileDesign.current
     if (state.profileId in setOf("f1-24","f1-25") && state.controls.isNotEmpty()) { F1Controls(state, model); return }
     var selectedPage by rememberSaveable(state.profileId) { mutableStateOf("Основное") }
@@ -198,10 +198,10 @@ internal fun Fs25Overview(state: DeckState) {
         DeckAction("reset", "Основное", "СБРОС", "Восстановить машину", "", "press")
     ) }
     val pages = actions.map { it.page }.distinct()
-    val page = selectedPage.takeIf { it in pages } ?: pages.first()
+    val page = selectedPageOverride?.takeIf { it in pages } ?: selectedPage.takeIf { it in pages } ?: pages.first()
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(state.profileName.uppercase() + " · ПРОФИЛЬ УПРАВЛЕНИЯ", fontSize = 11.sp, letterSpacing = 1.sp, color = design.accent, fontWeight = FontWeight.Bold)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        if(showPages) Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             pages.forEach { name -> FilterChip(selected = page == name, onClick = { model.releaseAll(); selectedPage = name }, label = { Text(name, fontSize = 11.sp) }) }
         }
         actions.filter { it.page == page }.chunked(2).forEach { row ->

@@ -7,7 +7,7 @@ function renderFs25(profileId, frame) {
   card.hidden = !active;
   if (!active) { fs25RenderKey = ''; return; }
   const details = frame?.data?.fs25, report = frame?.data?.fs25Advisor;
-  const liveFresh = Number.isFinite(frame?.ageMs) && frame.ageMs + performance.now() - frameAt < 500;
+  const liveFresh = Number.isFinite(frame?.ageMs) && frame.ageMs + performance.now() - frameAt < 1500;
   const key = String(frame?.sequence) + '|' + fs25Expanded + '|' + Boolean(details) + '|' + liveFresh;
   if (fs25RenderKey === key) return;
   fs25RenderKey = key;

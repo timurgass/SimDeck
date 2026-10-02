@@ -5,6 +5,13 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class VehicleInfoTest {
+    @Test fun cutterMountAndDetachAreDistinctFromGenericEquipment() {
+        val v=VehicleInfo.parse(JSONObject("""{"id":"combine","name":"MF8570","kind":"combine","attachments":[{"id":"cutter","parentId":"combine","kind":"header","mount":"front"}]}"""))!!
+        assertEquals("header",v.attachments.single().kind)
+        assertEquals("front",v.attachments.single().mount)
+        assertTrue(VehicleInfo.parse(JSONObject("""{"id":"combine","kind":"combine","attachments":[]}"""))!!.attachments.isEmpty())
+    }
+
     @Test fun equipmentHierarchyAndActualAxles() {
         val v=VehicleInfo.parse(JSONObject("""{"id":"root","name":"Tractor","kind":"tractor","controlled":true,"wheels":[{"x":-1,"z":-2},{"x":1,"z":-2},{"x":-1,"z":2},{"x":1,"z":2}],"attachments":[{"id":"1","parentId":"root","kind":"implement","lowered":true,"turnedOn":false,"fold":0.5},{"id":"2","parentId":"1","kind":"trailer"}]}"""))!!
         assertEquals(2,v.axleCount);assertEquals(2,v.attachments.size);assertEquals(true,v.attachments[0].lowered);assertEquals(false,v.attachments[0].turnedOn)

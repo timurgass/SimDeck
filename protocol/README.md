@@ -70,3 +70,7 @@ Profile revision 3 removes shiftUp, shiftDown, parkingBrake, handbrakeHold and a
 ## F1 preset synchronization (0.3.1)
 
 `controls` supports up to 96 actions. Each record may include `group`, an optional string defaulting to empty, used for a secondary tab within `page`. Commands and key ownership remain unchanged. F1 provides 69 actions in Control Scheme, MFD and Menu Controls. Existing clients capped at 64 actions must be updated alongside Companion. F1 profile migration is tracked independently by `F1PresetVersion`; it bumps the saved profile revision once and preserves custom actions, pairing and BeamNG. Quick adjustment headings only expand local UI; their minus/plus buttons send existing action IDs. Changing either level of navigation releases active holds.
+
+## Vehicle attachments (0.9.5)
+
+Optional attachment `mount` is `front`, `rear` or `unknown` (default for older data). FS25 also distinguishes `header`, `plow`, `cultivator`, and `seeder` from a generic `implement`. These are metadata for rendering; action IDs and input gestures do not change. An attachment is removed on a fresh snapshot where it is absent. Clients may retain the last known vehicle across missing/stale telemetry, with an explicit stale label and no live switch/gauge values. A fresh `controlled: false` or profile change invalidates retained identity.

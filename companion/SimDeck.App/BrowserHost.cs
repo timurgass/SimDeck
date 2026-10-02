@@ -56,7 +56,7 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
         app.MapGet("/dashboard.css", () => Asset("dashboard.css", "text/css; charset=utf-8"));
         app.MapGet("/vehicle.js", () => Asset("vehicle.js", "text/javascript; charset=utf-8"));
         app.MapGet("/vehicles/{name}", (string name) => {
-            if (name is not ("farm.png" or "road.png" or "equipment.png" or "gt.png")) return Results.NotFound();
+            if (name is not ("farm.png" or "road.png" or "equipment.png" or "gt.png" or "harvest.png")) return Results.NotFound();
             using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("SimDeck.Vehicle." + name)!;
             using var bytes = new MemoryStream(); stream.CopyTo(bytes);
             return Results.Bytes(bytes.ToArray(), "image/png");

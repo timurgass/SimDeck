@@ -26,6 +26,11 @@ static class VehicleTests {
             var live=Fs25LiveReader.ReadSnapshot(dir,DateTime.UtcNow);
             check(live?.Vehicle is {Kind:"tractor",AxleCount:1}&&live.Vehicle.Attachments.Count==2&&live.Vehicle.Attachments[0].ParentId==live.Vehicle.Id&&live.Vehicle.Attachments[1].ParentId=="1","FS25 carries nested equipment hierarchy without ID collisions");
             check(live?.Vehicle?.Attachments[0] is {Lowered:true,TurnedOn:false,Fold:.5},"FS25 equipment states come from the mod");
+            File.WriteAllText(path,"<simdeckStatus version='2' controlled='true'><vehicle id='0' instance='combine' name='MF8570' kind='combine'/><vehicle id='1' parentId='0' name='Header' kind='header' mount='front'/></simdeckStatus>");
+            var harvest=Fs25LiveReader.ReadSnapshot(dir,DateTime.UtcNow);
+            check(harvest?.Vehicle?.Attachments[0] is {Kind:"header",Mount:"front"},"FS25 preserves real header type and front mount");
+            File.WriteAllText(path,"<simdeckStatus version='2' controlled='true'><vehicle id='0' instance='combine' name='MF8570' kind='combine'/></simdeckStatus>");
+            check(Fs25LiveReader.ReadSnapshot(dir,DateTime.UtcNow)?.Vehicle?.Attachments.Count==0,"Uncoupled header is absent from live topology");
             var hub=new TelemetryHub();hub.Reset("fs25");hub.PublishFs25Live(live!.States,live.Vehicle);
             check(hub.Read().Data?.Vehicle?.Name=="Tractor","FS25 live identity overlays base telemetry");
             hub.ClearFs25Live();check(hub.Read().Data?.Vehicle is null,"Missing FS25 bridge clears previous identity");

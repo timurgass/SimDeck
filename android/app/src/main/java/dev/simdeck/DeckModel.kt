@@ -27,7 +27,7 @@ data class Computer(val name: String, val host: String, val port: Int, val finge
 data class DeckState(
     val status: String = "Найдите Companion в вашей сети", val connected: Boolean = false,
     val computers: List<Computer> = emptyList(), val selected: Computer? = null,
-    val telemetry: Telemetry? = null, val stale: Boolean = true, val demo: Boolean = false,
+    val telemetry: Telemetry? = null, val lastVehicle: VehicleInfo? = null, val stale: Boolean = true, val demo: Boolean = false,
     val command: String = "", val busy: Boolean = false, val inputAvailability: String = "unknown",
     val ignitionReady: Boolean = false, val controls: List<DeckAction> = emptyList(),
     val profileName: String = "SimDeck", val profileId: String = "beamng-default",
@@ -154,13 +154,14 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                                 profileId = root.getString("profileId")
                                 lastMessage = SystemClock.elapsedRealtime()
                                 val controls = Protocol.controls(root)
-                                mutable.update { it.copy(connected = true, status = "${computer.name} · подключено", controls = controls, profileId = profileId, profileName = root.getString("profileName"), telemetry = null, stale = true, ignitionReady = false, command = "") }
+                                mutable.update { it.copy(connected = true, status = "${computer.name} · подключено", controls = controls, profileId = profileId, profileName = root.getString("profileName"), telemetry = null, lastVehicle = it.lastVehicle.takeIf { _ -> it.profileId == profileId }, stale = true, ignitionReady = false, command = "") }
                             }
                             "telemetry.snapshot" -> {
                                 require(root.getString("sessionId") == session)
                                 lastFrame = SystemClock.elapsedRealtime()
                                 sourceAge = if (root.isNull("ageMs")) Long.MAX_VALUE else root.getLong("ageMs")
-                                mutable.update { it.copy(telemetry = Protocol.telemetry(root), demo = root.optString("source") == "demo") }
+                                val telemetry = Protocol.telemetry(root)
+                                mutable.update { it.copy(telemetry = telemetry, lastVehicle = telemetry?.vehicle ?: it.lastVehicle, demo = root.optString("source") == "demo") }
                             }
                             "input.state" -> {
                                 require(root.getString("sessionId") == session)

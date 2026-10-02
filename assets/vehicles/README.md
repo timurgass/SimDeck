@@ -22,3 +22,7 @@ Final GT prompt:
 > Create a production game dashboard vehicle sprite, transparent background. A single detailed top-down orthographic GT endurance racing coupe with CLOSED ROOF, windscreen, cabin roll cage visible through subtly transparent black body panels, front hood engine mechanical detail, dark graphite chassis, realistic FOUR wheels, large rear racing wing, subtle amber pinstripes. Front of car at TOP, rear at BOTTOM. Entire car fully contained, large centered subject almost fills canvas height, no perspective, no labels, no text, no HUD, no background, no green/red halos or damage indicators. A polished technical automotive illustration with realistic metal, rubber tread, motorsport mechanical parts, matching black charcoal dashboard artwork. This is a GT closed coupe, clearly NOT an open-wheel Formula car. Tall portrait sprite, straight perfectly vertical car centerline.
 
 These are class illustrations, not exact models or a claim of model-specific geometry. See [live data coverage](../../docs/AUTO-VEHICLE.md).
+
+## Harvest atlas (0.9.5)
+
+`harvest.png` — built-in imagegen, transparent RGBA 1254 × 1254. Separate bare combine, detached grain header, cultivator and mouldboard plough; no generic implement is assumed to be a plough. Runtime source rectangles are declared in both clients. Brief: detailed left-facing side elevation matching farm.png, four separate cells, combine without any header or implement, detached header only, cultivator only, plough only, no logos/text/background. Full generation prompt in docs/UI-VEHICLES-095.md.

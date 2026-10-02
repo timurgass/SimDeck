@@ -49,7 +49,7 @@ public static class Fs25LiveReader
                 var id = Str(machine, "id"); var parent = Str(machine, "parentId");
                 if (id.Length == 0 || !seen.Contains(parent) || !seen.Add(id)) return null;
                 attachments.Add(new(id, parent == Str(first,"id") ? rootId : parent, Str(machine, "name"), VehicleKinds.Resolve(Str(machine, "kind")), Wheels(machine),
-                    Bool(machine, "lowered"), Bool(machine, "turnedOn"), Number(machine, "fold", 1) is >= 0 and var fold ? fold : null));
+                    Bool(machine, "lowered"), Bool(machine, "turnedOn"), Number(machine, "fold", 1) is >= 0 and var fold ? fold : null, Str(machine,"mount") is "front" or "rear" ? Str(machine,"mount") : "unknown"));
             }
             return new(states, new(rootId, Str(first, "name"),
                 VehicleKinds.Resolve(Str(first, "kind")), Wheels(first), attachments));

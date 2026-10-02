@@ -21,13 +21,15 @@ import androidx.compose.ui.unit.*
 internal data class VehicleSprite(val atlas:String,val x:Int,val y:Int,val w:Int,val h:Int)
 private fun farmSprite(kind:String):VehicleSprite? = when(kind) {
     "tractor" -> VehicleSprite("farm",0,130,354,320)
-    "combine" -> VehicleSprite("farm",350,160,416,290)
+    "combine" -> VehicleSprite("harvest",50,135,570,410)
     "truck" -> VehicleSprite("farm",772,210,368,220)
     "loader" -> VehicleSprite("farm",1145,150,391,290)
     "telehandler" -> VehicleSprite("farm",20,565,350,320)
     "forestry" -> VehicleSprite("farm",390,555,378,340)
     "sprayer" -> VehicleSprite("farm",775,615,370,265)
-    "implement" -> VehicleSprite("farm",1145,700,379,190)
+    "header" -> VehicleSprite("harvest",650,310,565,215)
+    "cultivator" -> VehicleSprite("harvest",35,817,580,255)
+    "plow" -> VehicleSprite("harvest",655,808,580,265)
     "tracked" -> VehicleSprite("equipment",0,0,724,724)
     "trailer" -> VehicleSprite("equipment",724,0,724,724)
     else -> null
@@ -54,7 +56,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
     drawImage(bitmap,IntOffset(s.x,s.y),IntSize(s.w,s.h),IntOffset(x.toInt(),y.toInt()),IntSize(w.toInt().coerceAtLeast(1),h.toInt().coerceAtLeast(1)),alpha=alpha,filterQuality=FilterQuality.High)
 }
 @Composable internal fun VehiclePanel(state:DeckState) {
-    val d=LocalProfileDesign.current;val v=state.telemetry?.vehicle.takeUnless { state.stale };val farm=state.profileId=="fs25"
+    val d=LocalProfileDesign.current;val v=state.telemetry?.vehicle ?: state.lastVehicle;val live=!state.stale && state.telemetry?.vehicle!=null;val farm=state.profileId=="fs25"
     DesignCard {
         Text(if(farm) "ТЕХНИКА И ОРУДИЯ" else "СОСТОЯНИЕ МАШИНЫ",fontSize=18.sp,fontWeight=FontWeight.Black)
         if(v==null || !v.controlled) {
@@ -63,10 +65,11 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
         } else {
             Text(v.name.ifBlank { "Неизвестная модель" },fontSize=22.sp,color=d.accent,fontWeight=FontWeight.Bold)
             Text("АВТО · ${vehicleLabels[v.kind]} · ${v.axleCount?.let { "$it оси" } ?: "Геометрия колёс неизвестна"}",fontSize=12.sp,color=d.muted)
-            val linked=v.attachments.firstOrNull { it.parentId==v.id }
+            if(!live) Text("Последняя известная техника · данные устарели",fontSize=12.sp,color=d.muted)
+            val linked=v.attachments.firstOrNull { it.parentId==v.id && farmSprite(it.kind)!=null && (it.mount!="unknown" || it.kind=="header") }
             if(farm) key(v.id,linked?.id) { FarmDrawing(v.kind,linked) } else {
                 val trailer=v.attachments.firstOrNull { it.kind=="trailer" }.takeIf { state.profileId=="ets2" }
-                if(v.wear.isEmpty()) RoadDrawing(v.kind,v.wheels,trailer) else BoxWithConstraints {
+                if(v.wear.isEmpty() || !live) RoadDrawing(v.kind,if(live) v.wheels else v.wheels.map { it.copy(powered=null) },trailer) else BoxWithConstraints {
                     if(maxWidth>=390.dp) Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                         Column(Modifier.weight(1f)) { RoadDrawing(v.kind,v.wheels,trailer,heightOverride=300.dp) }
                         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)) { WearRows(v.wear) }
@@ -78,7 +81,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
                 HorizontalDivider(color=d.line)
                 Text("↳ ${a.name.ifBlank { vehicleLabels[a.kind] ?: "Орудие" }}",fontWeight=FontWeight.Bold,fontSize=16.sp)
                 if(a!=linked && farm) FarmDrawing(a.kind,null,small=true)
-                Text(listOfNotNull(a.lowered?.let { if(it) "ОПУЩЕНО" else "ПОДНЯТО" },a.turnedOn?.let { if(it) "РАБОТАЕТ" else "ВЫКЛЮЧЕНО" },a.fold?.let { "Складывание ${(it*100).toInt()}%" }).joinToString(" · ").ifBlank { "Состояние не передано игрой" },fontSize=13.sp,color=d.accent)
+                Text(if(!live) "Состояние орудия: данные устарели" else listOfNotNull(a.lowered?.let { if(it) "ОПУЩЕНО" else "ПОДНЯТО" },a.turnedOn?.let { if(it) "РАБОТАЕТ" else "ВЫКЛЮЧЕНО" },a.fold?.let { "Складывание ${(it*100).toInt()}%" }).joinToString(" · ").ifBlank { "Состояние не передано игрой" },fontSize=13.sp,color=d.accent)
             } }
             if(!farm && v.wear.isEmpty()) Text("Повреждения узлов: нет данных",fontSize=13.sp,color=d.muted)
         }
@@ -93,18 +96,19 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
     }
 }
 @Composable private fun FarmDrawing(kind:String,attachment:VehicleAttachment?,small:Boolean=false) {
-    val farm=vehicleAtlas("farm");val extra=vehicleAtlas("equipment");val d=LocalProfileDesign.current
+    val farm=vehicleAtlas("farm");val extra=vehicleAtlas("equipment");val harvest=vehicleAtlas("harvest");val d=LocalProfileDesign.current
     val root=farmSprite(kind);val tool=attachment?.let { farmSprite(it.kind) }
     val lift by animateFloatAsState(if(attachment?.lowered==false) 1f else 0f,tween(450),label="implement-lift")
     if(root==null) { Text("Схема для этого класса пока не определена",color=d.muted);return }
     Canvas(Modifier.fillMaxWidth().height(if(small) 135.dp else 185.dp)) {
-        val ground=size.height*.9f;val width=size.width*(if(tool!=null) .52f else .98f)
-        fun image(s:VehicleSprite)=if(s.atlas=="farm") farm else extra
+        val front=attachment?.mount=="front" || (kind=="combine" && attachment?.kind=="header")
+        val ground=size.height*.9f;val width=size.width*(if(tool!=null) .58f else .98f)
+        fun image(s:VehicleSprite)=when(s.atlas){"farm"->farm;"harvest"->harvest;else->extra}
         val h=(width*root.h/root.w).coerceAtMost(size.height*.83f);val w=h*root.w/root.h
-        val x=if(tool!=null) 0f else (size.width-w)/2
+        val x=if(tool!=null) { if(front) size.width*.37f else 0f } else (size.width-w)/2
         drawLine(d.line,Offset(0f,ground),Offset(size.width,ground),1.dp.toPx());sprite(image(root),root,x,ground-h,w,h)
         if(tool!=null) {
-            val tx=x+w*.93f;val tw=size.width-tx;val th=(tw*tool.h/tool.w).coerceAtMost(size.height*.7f);val pivot=Offset(tx,ground-th*.6f)
+            val tx=if(front) 0f else x+w*.93f;val tw=if(front) x+w*.12f else size.width-tx;val th=(tw*tool.h/tool.w).coerceAtMost(size.height*.7f);val pivot=Offset(tx,ground-th*.6f)
             withTransform({rotate(-lift*12f,pivot)}) { sprite(image(tool),tool,tx,ground-th-lift*size.height*.09f,tw,th) }
             drawCircle(if(attachment.lowered==null) d.muted else d.accent,3.dp.toPx(),pivot)
         }

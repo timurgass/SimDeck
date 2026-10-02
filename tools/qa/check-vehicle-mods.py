@@ -36,9 +36,14 @@ assert s[b'simdeckStatus.vehicle(3)#id'] is None
 lua.execute(b"current={typeName='combine',spec_combine={},getName=function() return 'Combine' end};bridge:update(400)")
 assert lua.globals().snapshots[2][b'simdeckStatus.vehicle(0)#kind']==b'combine'
 assert lua.globals().snapshots[2][b'simdeckStatus.vehicle(1)#id'] is None
+lua.execute(b"header={typeName='cutter',spec_cutter={},getName=function() return 'Header' end};current.getAttachedImplements=function() return {{object=header}} end;bridge:update(400)")
+assert lua.globals().snapshots[3][b'simdeckStatus.vehicle(1)#kind']==b'header'
+assert lua.globals().snapshots[3][b'simdeckStatus.vehicle(1)#mount']==b'front'
+lua.execute(b"current.getAttachedImplements=function() return {} end;bridge:update(400)")
+assert lua.globals().snapshots[4][b'simdeckStatus.vehicle(1)#id'] is None
 lua.execute(b'current=nil;bridge:update(400)')
-assert lua.globals().snapshots[3][b'simdeckStatus#controlled'] is False
-assert lua.globals().snapshots[3][b'simdeckStatus.vehicle(0)#id'] is None
+assert lua.globals().snapshots[5][b'simdeckStatus#controlled'] is False
+assert lua.globals().snapshots[5][b'simdeckStatus.vehicle(0)#id'] is None
 print('PASS FS25: nested equipment, cycle bound, wheel axes, class switch, dismount clears state')
 
 lua=LuaRuntime(unpack_returned_tuples=True,encoding=None)

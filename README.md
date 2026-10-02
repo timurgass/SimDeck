@@ -3,14 +3,14 @@
 <p align="center"><strong>Your rig. One touch.</strong></p>
 
 <p align="center">
-  <img alt="Release 0.9.4" src="https://img.shields.io/badge/release-0.9.4-7dd3c0?style=flat-square">
+  <img alt="Release 0.9.5" src="https://img.shields.io/badge/release-0.9.5-7dd3c0?style=flat-square">
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-4f8cc9?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Android" src="https://img.shields.io/badge/Android-10%2B-3ddc84?style=flat-square&logo=android&logoColor=white">
   <img alt="Safari" src="https://img.shields.io/badge/iPhone-Safari-4f8cc9?style=flat-square&logo=safari&logoColor=white">
 </p>
 
 <p align="center">
-  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.9.4"><strong>Скачать SimDeck 0.9.4</strong></a>
+  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.9.5"><strong>Скачать SimDeck 0.9.5</strong></a>
   · <a href="#быстрый-запуск">Быстрый запуск</a>
   · <a href="TROUBLESHOOTING.md">Решение проблем</a>
 </p>
@@ -22,17 +22,17 @@ SimDeck превращает Android-планшет, телефон или Safar
 
 ## Скачать
 
-Для любой игры сначала скачайте [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.9.4/SimDeck-0.9.4-Windows.zip) и полностью распакуйте архив. Для Android дополнительно установите [APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.4/SimDeck-0.9.4-Android.apk). На iPhone отдельный файл не нужен: откройте локальный Safari-пульт из Companion. [Контрольные суммы файлов версии 0.9.4](https://github.com/timurgass/SimDeck/releases/download/v0.9.4/SimDeck-0.9.4-SHA256SUMS.txt).
+Для любой игры сначала скачайте [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.9.5/SimDeck-0.9.5-Windows.zip) и полностью распакуйте архив. Для Android дополнительно установите [APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.5/SimDeck-0.9.5-Android.apk). На iPhone отдельный файл не нужен: откройте локальный Safari-пульт из Companion. [Контрольные суммы файлов версии 0.9.5](https://github.com/timurgass/SimDeck/releases/download/v0.9.5/SimDeck-0.9.5-SHA256SUMS.txt).
 
 ### Дополнительные файлы по играм
 
 Скачивайте только строку для своей игры. **Мод/плагин** передаёт данные из игры; **пресет** назначает игровые клавиши для кнопок SimDeck. Пресеты не нужны, если вы вручную назначили те же клавиши в игре и Companion.
 
 - **F1 24 / F1 25 — [скачать пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-F1-Preset-0.7.1.zip).** Он настраивает 69 действий: распакуйте архив, закройте игру, запустите `Install-F1-24.cmd` или `Install-F1-25.cmd` и выберите Keyboard Preset 2. Телеметрия работает через UDP игры, отдельный мод не нужен. [Настройка F1](#3-настройте-игру).
-- **BeamNG.drive — [скачать мод телеметрии](https://github.com/timurgass/SimDeck/releases/download/v0.9.4/SimDeck-0.3.0-BeamNG.zip).** Он передаёт передачу, режим коробки и состояния переключателей. Положите ZIP **без распаковки** в пользовательскую папку `mods`, включите мод и перезагрузите машину. Без него остаётся ограниченный резервный OutGauge. [Подробности](beamng/README.md).
+- **BeamNG.drive — [скачать мод телеметрии](https://github.com/timurgass/SimDeck/releases/download/v0.9.5/SimDeck-0.3.0-BeamNG.zip).** Он передаёт передачу, режим коробки и состояния переключателей. Положите ZIP **без распаковки** в пользовательскую папку `mods`, включите мод и перезагрузите машину. Без него остаётся ограниченный резервный OutGauge. [Подробности](beamng/README.md).
 - **Assetto Corsa Competizione — [скачать пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-ACC-Preset-0.8.3.zip).** Он настраивает 33 команды: закройте игру, распакуйте архив и запустите `Install-ACC.cmd`. Телеметрия читается из Shared Memory игры, отдельный мод не нужен. [Подробности](ACC-PROFILE.md).
 - **Euro Truck Simulator 2 — [скачать плагин телеметрии](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Telemetry-0.8.5.zip) и [пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Preset-0.8.7.zip).** Плагин нужен для приборов и маршрута: распакуйте его и запустите `Install-ETS2.cmd` при закрытой игре. Для готовых 29 кнопок отдельно распакуйте пресет и запустите `Install-ETS2-Preset.cmd`. [Подробности](ETS2-PROFILE.md).
-- **Farming Simulator 25 — [скачать мод состояния техники](https://github.com/timurgass/SimDeck/releases/download/v0.9.4/FS25_SimDeckStatus.zip).** Он **необязателен для кнопок и данных сохранения**, но нужен для живого статуса орудия, агрегата и двигателя. Положите ZIP **без распаковки** в `Documents/My Games/FarmingSimulator2025/mods` и включите мод для сохранения. [Подробности](mods/FS25_SimDeckStatus/README.md).
+- **Farming Simulator 25 — [скачать мод состояния техники](https://github.com/timurgass/SimDeck/releases/download/v0.9.5/FS25_SimDeckStatus.zip).** Он **необязателен для кнопок и данных сохранения**, но нужен для живого статуса орудия, агрегата и двигателя. Положите ZIP **без распаковки** в `Documents/My Games/FarmingSimulator2025/mods` и включите мод для сохранения. [Подробности](mods/FS25_SimDeckStatus/README.md).
 - **Automobilista 2 / SnowRunner — дополнительные файлы не нужны.** Кнопки настраиваются вручную в игре и Companion; адаптеры живой телеметрии пока не готовы.
 
 Исходники наших модов есть в репозитории: [BeamNG.drive](beamng/mod/lua/vehicle/protocols/simdeckTelemetry.lua) и [FS25](mods/FS25_SimDeckStatus/SimDeckStatus.lua). Установщики пресетов лежат в `tools/`. DLL телеметрии ETS2 — сторонний компонент с лицензией и исходным проектом, указанными в [описании плагина](tools/ets2-telemetry/README.md); готовая DLL включена в архив для скачивания.
@@ -98,7 +98,7 @@ Android-приложение и Safari-пульт выбирают оформл�
 |---|---|
 | ![ETS2: тягач и прицеп](docs/images/vehicles-094/vehicle-ets2-1340.png) | ![ACC: обновлённая панель](docs/images/vehicles-094/dashboard-acc-1340.png) |
 
-Полный набор клавиш и пользовательские страницы сохранён в **«Все действия»**. Состояния приходят из игры; устаревшие значения очищаются. Для AMS2 и SnowRunner живая телеметрия пока недоступна. ETS2 передаёт числовые показатели маршрута, а карта дорог ещё не реализована. BeamNG передаёт класс и колёса, но карта повреждений отдельных узлов пока не поступает из мода.
+В 0.9.5 все настроенные страницы действий и пользовательские кнопки доступны в постоянных верхних вкладках рядом с **«Обзор»**. Состояния приходят из игры; устаревшие значения очищаются. Для AMS2 и SnowRunner живая телеметрия пока недоступна. ETS2 передаёт числовые показатели маршрута, а карта дорог ещё не реализована. BeamNG передаёт класс и колёса, но карта повреждений отдельных узлов пока не поступает из мода.
 
 ### Windows Companion
 
@@ -116,7 +116,7 @@ Companion показывает состояние подключения, вхо
 
 ### 1. Запустите Companion
 
-1. Скачайте и полностью распакуйте `SimDeck-0.9.4-Windows.zip`.
+1. Скачайте и полностью распакуйте `SimDeck-0.9.5-Windows.zip`.
 2. Запустите `SimDeck.exe`. Переносить один EXE из папки нельзя.
 3. Выберите профиль игры и оставьте Companion запущенным.
 
@@ -295,4 +295,4 @@ Android SDK задаётся через `ANDROID_HOME` или локальный
 
 ## Текущий статус
 
-Версия **0.9.4** заменяет упрощённые прямоугольные схемы подробными общими изображениями техники в Android и Safari: FS25, BeamNG, ETS2, F1 24/25, ACC, AMS2 и SnowRunner. FS25 плавно показывает поднятие присоединённого орудия; ETS2 рисует полупрозрачный подключённый прицеп; F1 показывает четыре шины и окрашивает переднее крыло по реальному урону. Назначения кнопок сохранены. [Изменения](RELEASE-NOTES.md) · [Снимки и границы проверки](docs/UI-VEHICLES-094.md).
+Версия **0.9.5** возвращает постоянные вкладки действий во всех профилях Android и Safari. Комбайн рисуется без встроенной жатки; новый мод FS25 1.2.0.0 отдельно определяет подключённую жатку и место крепления орудий. При пропадании данных последняя известная схема остаётся видна с отметкой устаревания; текущие показания и состояния кнопок очищаются. Назначения сохранены. [Изменения](RELEASE-NOTES.md) · [Проверка и ограничения](docs/UI-VEHICLES-095.md).

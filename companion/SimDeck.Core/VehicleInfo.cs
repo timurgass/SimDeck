@@ -6,7 +6,7 @@ namespace SimDeck.Core;
 // Missing fields remain unknown; a pressed control never supplies a vehicle state.
 public sealed record VehicleWheel(double X, double Z, bool? Powered = null);
 public sealed record VehicleAttachment(string Id, string ParentId, string Name, string Kind,
-    IReadOnlyList<VehicleWheel> Wheels, bool? Lowered = null, bool? TurnedOn = null, double? Fold = null);
+    IReadOnlyList<VehicleWheel> Wheels, bool? Lowered = null, bool? TurnedOn = null, double? Fold = null, string Mount = "unknown");
 public sealed record VehicleInfo(string Id, string Name, string Kind, IReadOnlyList<VehicleWheel> Wheels,
     IReadOnlyList<VehicleAttachment> Attachments, bool Controlled = true,
     IReadOnlyDictionary<string, double>? Wear = null)
@@ -24,7 +24,7 @@ public sealed record VehicleInfo(string Id, string Name, string Kind, IReadOnlyL
 public static class VehicleKinds
 {
     public static readonly string[] All = ["unknown", "car", "suv", "pickup", "van", "bus", "truck", "trailer",
-        "tractor", "combine", "loader", "telehandler", "forestry", "sprayer", "tracked", "implement"];
+        "tractor", "combine", "loader", "telehandler", "forestry", "sprayer", "tracked", "implement", "header", "cultivator", "plow", "seeder"];
     public static string Resolve(string? category)
     {
         var value = (category ?? "").Replace("_", "").Replace(" ", "").Replace("-", "").ToLowerInvariant();
@@ -49,7 +49,7 @@ public static class VehicleKinds
         "car" => "Легковая", "suv" => "Внедорожник", "pickup" => "Пикап", "van" => "Фургон", "bus" => "Автобус",
         "truck" => "Грузовик / тягач", "trailer" => "Прицеп", "tractor" => "Трактор", "combine" => "Комбайн",
         "loader" => "Погрузчик", "telehandler" => "Телескопический погрузчик", "forestry" => "Лесная техника",
-        "sprayer" => "Опрыскиватель", "tracked" => "Гусеничная техника", "implement" => "Орудие", _ => "Общая схема" };
+        "sprayer" => "Опрыскиватель", "tracked" => "Гусеничная техника", "implement" => "Орудие", "header" => "Жатка", "cultivator" => "Культиватор", "plow" => "Плуг", "seeder" => "Сеялка", _ => "Общая схема" };
     public static string Text(ReadOnlySpan<byte> bytes)
     {
         var end = bytes.IndexOf((byte)0); if (end >= 0) bytes = bytes[..end];

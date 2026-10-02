@@ -13,7 +13,7 @@ class Handler(SimpleHTTPRequestHandler):
     def translate_path(self, path):
         if path.startswith('/vehicles/'):
             name = path.split('?', 1)[0].removeprefix('/vehicles/')
-            if name in {'farm.png', 'road.png', 'equipment.png', 'gt.png'}:
+            if name in {'farm.png', 'road.png', 'equipment.png', 'gt.png', 'harvest.png'}:
                 return str(REPO / 'assets/vehicles' / name)
             return str(REPO / 'assets/vehicles/__not_found__')
         return super().translate_path(path)

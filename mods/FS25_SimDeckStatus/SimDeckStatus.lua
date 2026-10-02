@@ -1,7 +1,7 @@
 -- Optional local bridge. Reads only the player's currently controlled machine.
 -- Missing capabilities are omitted, never guessed from the last button press.
 local SimDeckStatus = { elapsed = 0, sequence = 0, reportedWrite = false }
-print("SimDeckStatus 1.1.0: script loaded")
+print("SimDeckStatus 1.2.0: script loaded")
 
 local function status(object, method)
     if object ~= nil and type(object[method]) == "function" then
@@ -39,10 +39,14 @@ local function kind(vehicle)
     if t:find("car", 1, true) then return "car" end
     if vehicle.spec_motorized ~= nil and vehicle.spec_sprayer ~= nil then return "sprayer" end
     if vehicle.spec_trailer ~= nil then return "trailer" end
+    if vehicle.spec_cutter ~= nil then return "header" end
+    if vehicle.spec_sowingMachine ~= nil then return "seeder" end
+    if vehicle.spec_plow ~= nil then return "plow" end
+    if vehicle.spec_cultivator ~= nil then return "cultivator" end
     if vehicle.spec_attachable ~= nil then return "implement" end
     return "unknown"
 end
-local function writeVehicle(xml, key, vehicle, id, parentId, depth, visited, counter)
+local function writeVehicle(xml, key, vehicle, id, parentId, depth, visited, counter, parentVehicle)
     if vehicle == nil or visited[vehicle] or depth > 8 or counter.count >= 32 then return end
     visited[vehicle] = true
     counter.count = counter.count + 1
@@ -62,6 +66,16 @@ local function writeVehicle(xml, key, vehicle, id, parentId, depth, visited, cou
     local fold = value(vehicle, "getFoldAnimTime")
     if type(fold) == "number" and fold == fold and fold >= 0 and fold <= 1 then setXMLFloat(xml, key .. "#fold", fold) end
     local root = vehicle.rootNode or (vehicle.components and vehicle.components[1] and vehicle.components[1].node)
+    local parentRoot = parentVehicle and (parentVehicle.rootNode or (parentVehicle.components and parentVehicle.components[1] and parentVehicle.components[1].node))
+    local mount = "unknown"
+    if root ~= nil and root ~= 0 and parentRoot ~= nil and parentRoot ~= 0 and type(localToLocal) == "function" then
+        local ok, _, _, z = pcall(localToLocal, root, parentRoot, 0, 0, 0)
+        if ok and type(z) == "number" then
+            if z > 0.35 then mount = "front" elseif z < -0.35 then mount = "rear" end
+        end
+    end
+    if mount == "unknown" and kind(vehicle) == "header" and parentVehicle and parentVehicle.spec_combine then mount = "front" end
+    setXMLString(xml, key .. "#mount", mount)
     local wheelIndex = 0
     for _, wheel in pairs(vehicle.spec_wheels and vehicle.spec_wheels.wheels or {}) do
         local node = wheel.repr or wheel.driveNode
@@ -80,7 +94,7 @@ local function writeVehicle(xml, key, vehicle, id, parentId, depth, visited, cou
     for _, entry in ipairs(attached) do
         if entry.object ~= nil and not visited[entry.object] and counter.count < 32 then
             local nextId = tostring(counter.count)
-            writeVehicle(xml, "simdeckStatus.vehicle(" .. counter.count .. ")", entry.object, nextId, id, depth + 1, visited, counter)
+            writeVehicle(xml, "simdeckStatus.vehicle(" .. counter.count .. ")", entry.object, nextId, id, depth + 1, visited, counter, vehicle)
         end
     end
 end
@@ -145,7 +159,7 @@ function SimDeckStatus:update(dt)
         local first = attachmentSpec.attachedImplements[1]
         local joint = first ~= nil and attachmentSpec.attacherJoints ~= nil
             and attachmentSpec.attacherJoints[first.jointDescIndex] or nil
-        print(string.format("SimDeckStatus 1.1.0: lowering unavailable; attached=%s joint=%s moveDown=%s",
+        print(string.format("SimDeckStatus 1.2.0: lowering unavailable; attached=%s joint=%s moveDown=%s",
             tostring(#attachmentSpec.attachedImplements),
             tostring(first ~= nil and first.jointDescIndex or nil),
             tostring(joint ~= nil and joint.moveDown or nil)))
@@ -172,7 +186,7 @@ function SimDeckStatus:update(dt)
     delete(xml)
     if not self.reportedWrite then
         self.reportedWrite = true
-        print("SimDeckStatus 1.1.0: live state file active")
+        print("SimDeckStatus 1.2.0: live state file active")
     end
 end
 

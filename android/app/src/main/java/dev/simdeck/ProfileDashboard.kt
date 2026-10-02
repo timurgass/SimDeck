@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,8 +32,14 @@ internal fun profileShortName(id: String) = when(id) {
 /** Real controls and real telemetry in the compositions of the approved concepts. */
 @Composable internal fun ProfileDashboard(state: DeckState, model: DeckModel) {
     val design = LocalProfileDesign.current
-    var more by rememberSaveable(state.profileId) { mutableStateOf(false) }
+    var section by rememberSaveable(state.profileId) { mutableStateOf("Обзор") }
+    val sections = listOf("Обзор") + state.controls.map { it.page }.distinct()
+    val selected = section.takeIf { it in sections } ?: "Обзор"
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+            sections.forEach { name -> FilterChip(selected=selected==name,onClick={model.releaseAll(); section=name},label={Text(name,fontSize=14.sp)}) }
+        }
+        if(selected!="Обзор") { DesignCard { Controls(state,model,selected,showPages=false) }; return@Column }
         ProfileBanner(state)
         BoxWithConstraints {
             val wide = maxWidth >= 650.dp
@@ -50,10 +57,10 @@ internal fun profileShortName(id: String) = when(id) {
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(when(state.inputAvailability) { "ready" -> "● ВВОД ГОТОВ"; "unfocused" -> "Открой окно игры на ПК"; "disabled" -> "Разреши ввод в Companion"; else -> state.status }, color = design.muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
-            TextButton(onClick = { model.releaseAll(); more = !more }) { Text(if(more) "СВЕРНУТЬ" else "ВСЕ ДЕЙСТВИЯ") }
+
         }
         if(state.command.isNotBlank()) Text(state.command, color = design.accent, fontSize = 12.sp)
-        if(more) DesignCard { Controls(state, model) }
+
         if(state.profileId == "fs25") Fs25Overview(state)
     }
 }
@@ -143,7 +150,7 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
             "ams2" -> { Caption("ПРИБОРЫ"); StateRow("Скорость","$speed КМ/Ч"); StateRow("Передача",gear); StateRow("Обороты","$rpm RPM"); RpmBlocks(data,data?.maxRpm ?: 8000.0) }
             "snowrunner" -> { Caption("ТРАНСМИССИЯ"); Caption("ТЕКУЩАЯ ПЕРЕДАЧА"); Value(gear,63,true); StateRow("Топливо",fuel); LinearProgressIndicator(progress={data?.fuelFraction?.toFloat() ?: 0f},modifier=Modifier.fillMaxWidth(),color=d.accent,trackColor=d.panelAlt); Text("Профиль кнопок. Живая телеметрия SnowRunner пока недоступна.",color=d.muted,fontSize=11.sp) }
             "fs25" -> {
-                Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) { Fs25Icon("fs25Motor",d.accent); Column { Caption("ВЫБРАННАЯ ТЕХНИКА"); Text(data?.vehicle?.name?.ifBlank { "Неизвестная модель" } ?: "Ждём технику",fontSize=19.sp,fontWeight=FontWeight.Bold); Text("Состояние из игрового мода",fontSize=11.sp,color=d.muted) } }
+                Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) { Fs25Icon("fs25Motor",d.accent); Column { Caption("ВЫБРАННАЯ ТЕХНИКА"); Text((data?.vehicle ?: state.lastVehicle)?.takeIf { it.controlled }?.name?.ifBlank { "Неизвестная модель" } ?: "Ждём технику",fontSize=19.sp,fontWeight=FontWeight.Bold); Text("Состояние из игрового мода",fontSize=11.sp,color=d.muted) } }
                 StateRow("Положение орудия",switchValue(state,"fs25Lower","Опущено","Поднято")); StateRow("Рабочий режим",switchValue(state,"fs25TurnOn","Работает","Выключен")); StateRow("Двигатель",switchValue(state,"fs25Motor","Запущен","Остановлен"))
                 val tasks=state.telemetry?.fs25?.tasks.orEmpty(); val done=tasks.count { it.status==1 }
                 Caption("ЗАДАЧИ ПЛАНА · ${if(tasks.isEmpty()) "—" else "$done / ${tasks.size}"}")

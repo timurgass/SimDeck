@@ -225,7 +225,7 @@ public sealed class CompanionHost : IAsyncDisposable
         Telemetry.Reset(GameId);
         try
         {
-            if (localOnly) { loops = [ReceiveTelemetry(), ReceiveF1(), RunTick(), MonitorFs25()]; return; }
+            if (localOnly) { loops = [Task.Run(ReceiveTelemetry), Task.Run(ReceiveF1), Task.Run(RunTick), Task.Run(MonitorFs25)]; return; }
             discovery = new ServiceDiscovery();
             var service = new ServiceProfile("SimDeck-" + Environment.MachineName, "_simdeck._tcp", (ushort)Store.Value.Port);
             service.AddProperty("fingerprint", Fingerprint);
@@ -233,7 +233,7 @@ public sealed class CompanionHost : IAsyncDisposable
             discovery.Advertise(service);
         }
         catch (Exception ex) { Status += " · автопоиск: " + ex.GetType().Name; }
-        loops = [ReceiveTelemetry(), ReceiveF1(), RunTick(), MonitorFs25()];
+        loops = [Task.Run(ReceiveTelemetry), Task.Run(ReceiveF1), Task.Run(RunTick), Task.Run(MonitorFs25)];
     }
     async Task MonitorFs25()
     {
