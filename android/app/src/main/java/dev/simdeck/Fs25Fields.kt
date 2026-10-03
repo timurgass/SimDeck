@@ -94,10 +94,14 @@ internal fun filteredFs25Fields(fields: List<Fs25Field>, query: String, crop: St
     }
 }
 
+internal fun fs25FieldPercent(value:Int?,maximum:Int):Int? =
+    value?.takeIf { maximum>0 && it in 0..maximum }?.let { kotlin.math.round(it*100.0/maximum).toInt() }
+
 @Composable private fun Fs25FieldLevel(label: String, value: Int?, maximum: Int) {
     val d=LocalProfileDesign.current
+    val percent=fs25FieldPercent(value,maximum)
     Column(Modifier.fillMaxWidth().background(d.panelAlt).padding(10.dp)) {
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) { Text(label,fontSize=14.sp,lineHeight=18.sp);Text(value?.let { "$it/$maximum" } ?: "—",fontWeight=FontWeight.Bold) }
-        value?.let { LinearProgressIndicator(progress={ (it.toFloat()/maximum).coerceIn(0f,1f) },color=d.accent,trackColor=d.line,modifier=Modifier.fillMaxWidth().padding(top=7.dp)) }
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) { Text(label,fontSize=14.sp,lineHeight=18.sp);Text(percent?.let { "$it%" } ?: "—",fontWeight=FontWeight.Bold) }
+        percent?.let { LinearProgressIndicator(progress={ it/100f },color=d.accent,trackColor=d.line,modifier=Modifier.fillMaxWidth().padding(top=7.dp)) }
     }
 }

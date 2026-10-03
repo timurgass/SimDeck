@@ -103,6 +103,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
 @Composable internal fun RoadDrawing(kind:String,wheels:List<VehicleWheel> = emptyList(),trailer:VehicleAttachment?=null,values:Map<String,Double> = emptyMap(),drive:Boolean?=null,heightOverride:Dp?=null,wear:Map<String,Double> = emptyMap()) {
     val atlas=vehicleAtlas(if(kind=="gt") "gt" else "road");val d=LocalProfileDesign.current;val s=roadSprite(kind)
     if(s==null) { Text("Нет схемы этого класса · без предположений о кузове",color=d.muted);return }
+    val formulaZones=if(kind=="formula") rememberF1DamageZones() else emptyList()
     Canvas(Modifier.fillMaxWidth().height(heightOverride ?: if(trailer!=null) 410.dp else 290.dp)) {
         val cx=size.width/2;val h=if(trailer!=null) size.height*.61f else size.height;val width=h
         val bodyWidth=h*s.w/s.h
@@ -135,17 +136,17 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
                 }
             }
         }
-        if(kind=="formula") listOf("frontLeftWingDamage" to -.15f,"frontRightWingDamage" to .15f).forEach { (key,side) -> values[key]?.let { damage ->
-            val c=if(damage>=30) Color(0xFFFF575D) else if(damage>5) Color(0xFFFFC449) else Color(0xFF7DDA71)
-            drawLine(c,Offset(cx+side*width-width*.07f,h*.055f),Offset(cx+side*width+width*.07f,h*.1f),9.dp.toPx(),StrokeCap.Round)
-        } }
         if(kind=="formula") {
-            values["sidepodDamage"]?.let { damage ->
-                val color=damageColor(damage)
-                for(side in listOf(-1,1)) drawLine(color.copy(alpha=.8f),Offset(cx+side*bodyWidth*.19f,h*.43f),Offset(cx+side*bodyWidth*.25f,h*.65f),6.dp.toPx(),StrokeCap.Round)
+            withTransform({translate(cx-bodyWidth/2,0f);scale(bodyWidth/235f,h/404f,pivot=Offset.Zero)}) {
+                formulaZones.forEach { zone->
+                    val value=f1ZoneDamage(zone.key,values);val level=f1DamageLevel(value)
+                    if(level!=null) {
+                        val color=damageColor(value)
+                        drawPath(zone.path,color.copy(alpha=if(level==0) .18f else .52f))
+                        drawPath(zone.path,color.copy(alpha=.72f),style=Stroke(.65f))
+                    }
+                }
             }
-            values["rearWingDamage"]?.let { drawLine(damageColor(it),Offset(cx-bodyWidth*.35f,h*.94f),Offset(cx+bodyWidth*.35f,h*.94f),6.dp.toPx(),StrokeCap.Round) }
-            if(values["drsFault"]==1.0) drawLine(Color(0xFFFF575D),Offset(cx-bodyWidth*.25f,h*.90f),Offset(cx+bodyWidth*.25f,h*.90f),5.dp.toPx(),StrokeCap.Round)
         }
     }
 }

@@ -1,7 +1,7 @@
 -- Optional local bridge. Reads only the player's currently controlled machine.
 -- Missing capabilities are omitted, never guessed from the last button press.
 local SimDeckStatus = { elapsed = 0, sequence = 0, reportedWrite = false }
-print("SimDeckStatus 1.3.1: script loaded")
+print("SimDeckStatus 1.4.0: script loaded")
 
 local function status(object, method)
     if object ~= nil and type(object[method]) == "function" then
@@ -150,6 +150,13 @@ local function writeVehicle(xml, key, vehicle, id, parentId, depth, visited, cou
 end
 
 function SimDeckStatus:update(dt)
+    if SimDeckMarketPrices ~= nil then
+        local ok = pcall(SimDeckMarketPrices.update, SimDeckMarketPrices, dt)
+        if not ok and not self.reportedMarketError then
+            self.reportedMarketError = true
+            print("SimDeckStatus: market prices unavailable; equipment updates continue")
+        end
+    end
     self.elapsed = self.elapsed + dt
     if self.elapsed < 200 then return end
     self.elapsed = 0
@@ -209,7 +216,7 @@ function SimDeckStatus:update(dt)
         local first = attachmentSpec.attachedImplements[1]
         local joint = first ~= nil and attachmentSpec.attacherJoints ~= nil
             and attachmentSpec.attacherJoints[first.jointDescIndex] or nil
-        print(string.format("SimDeckStatus 1.3.1: lowering unavailable; attached=%s joint=%s moveDown=%s",
+        print(string.format("SimDeckStatus 1.4.0: lowering unavailable; attached=%s joint=%s moveDown=%s",
             tostring(#attachmentSpec.attachedImplements),
             tostring(first ~= nil and first.jointDescIndex or nil),
             tostring(joint ~= nil and joint.moveDown or nil)))
@@ -236,7 +243,7 @@ function SimDeckStatus:update(dt)
     delete(xml)
     if not self.reportedWrite then
         self.reportedWrite = true
-        print("SimDeckStatus 1.3.1: live state file active")
+        print("SimDeckStatus 1.4.0: live state file active")
     end
 end
 

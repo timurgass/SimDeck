@@ -243,6 +243,8 @@ public sealed class CompanionHost : IAsyncDisposable
     {
         string? userDataDir=null;
         DateTime? lastWritten=null;
+        DateTime? lastPricesWritten=null;
+        long nextPricesPoll=0;
         try {
             while(!stop.IsCancellationRequested) {
                 bool active;lock(profileGate) active=IsFs25 && !Demo;
@@ -252,8 +254,15 @@ public sealed class CompanionHost : IAsyncDisposable
                     if(live is not null) lock(profileGate) {
                         if(IsFs25 && !Demo) { Telemetry.PublishFs25Live(live.States,live.Vehicle,live.AgeMs);lastWritten=live.WrittenAtUtc; }
                     }
+                    if(userDataDir is not null && Environment.TickCount64>=nextPricesPoll) {
+                        nextPricesPoll=Environment.TickCount64+1000;
+                        var prices=Fs25PricesReader.Read(userDataDir,DateTime.UtcNow,lastPricesWritten);
+                        if(prices is not null) lock(profileGate) {
+                            if(IsFs25 && !Demo) { Telemetry.PublishFs25Prices(prices.Data);lastPricesWritten=prices.WrittenAtUtc; }
+                        }
+                    }
                 } catch(Exception ex) { fs25Diagnostic="FS25: ошибка чтения живого состояния ("+ex.GetType().Name+")."; }
-                if(!active) lastWritten=null;
+                if(!active) { lastWritten=null;lastPricesWritten=null;nextPricesPoll=0; }
                 await Task.Delay(active?50:250,stop.Token);
             }
         } catch(OperationCanceledException) { }

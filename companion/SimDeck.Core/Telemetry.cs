@@ -9,7 +9,7 @@ public sealed record Telemetry(double SpeedMps, double Rpm, int Gear, double? Fu
     string? GearboxMode = null, int? MaxGear = null, int? Headlights = null,
     IReadOnlyDictionary<string, bool>? ActionStates = null, F1Details? F1 = null, AccDetails? Acc = null,
     Ets2Navigation? Ets2Navigation = null, Fs25Details? Fs25 = null,
-    Fs25AdvisorReport? Fs25Advisor = null, VehicleInfo? Vehicle = null)
+    Fs25AdvisorReport? Fs25Advisor = null, VehicleInfo? Vehicle = null, Fs25Prices? Fs25Prices = null)
 {
     public string GearDisplay => Gear < 0 ? "R" : Gear == 0 ? "N" : GearboxMode == "arcade" ? "D" : Gear.ToString();
 }
@@ -108,10 +108,12 @@ public sealed class TelemetryHub
     IReadOnlyDictionary<string, bool>? fs25LiveStates;
     VehicleInfo? fs25Vehicle;
     long fs25LiveAt;
+    Fs25Prices? fs25Prices;
+    long fs25PricesAt;
     public (string Stream, long Sequence) Revision { get { lock(gate) return (streamId,sequence); } }
     public void Reset(string newSource)
     {
-        lock (gate) { source = newSource; latest = null; receivedAt = 0; fs25LiveStates = null; fs25Vehicle = null; fs25LiveAt = 0; sequence = 0; streamId = Guid.NewGuid().ToString("N"); }
+        lock (gate) { source = newSource; latest = null; receivedAt = 0; fs25LiveStates = null; fs25Vehicle = null; fs25LiveAt = 0; fs25Prices = null; fs25PricesAt = 0; sequence = 0; streamId = Guid.NewGuid().ToString("N"); }
     }
     public void Publish(Telemetry data)
     {
@@ -132,6 +134,15 @@ public sealed class TelemetryHub
     {
         lock (gate) { if (fs25LiveStates is not null) { fs25LiveStates = null; fs25Vehicle = null; fs25LiveAt = 0; sequence++; } }
     }
+    public void PublishFs25Prices(Fs25Prices prices)
+    {
+        lock(gate) {
+            if(source != "fs25") return;
+            fs25Prices = prices with { Offers = prices.Offers.ToArray() };
+            fs25PricesAt = Environment.TickCount64 - Math.Clamp(prices.AgeMs,0,int.MaxValue);
+            sequence++;
+        }
+    }
     public bool HasFs25Live
     {
         get { lock (gate) return source == "fs25" && fs25LiveStates is not null && Environment.TickCount64 - fs25LiveAt < 1500; }
@@ -141,8 +152,10 @@ public sealed class TelemetryHub
         var now = Environment.TickCount64;
         // Save metadata can refresh independently. It must neither erase the last live
         // equipment nor make a stopped game stream look fresh again.
+        var prices = source == "fs25" && fs25Prices is not null ? fs25Prices with { AgeMs = Math.Max(0,now-fs25PricesAt) } : null;
         if (source == "fs25" && fs25LiveStates is not null)
-            return ((latest ?? new Telemetry(0, 0, 0, null, 0, 0, 0)) with { ActionStates = fs25LiveStates, Vehicle = fs25Vehicle }, now - fs25LiveAt);
+            return ((latest ?? new Telemetry(0, 0, 0, null, 0, 0, 0)) with { ActionStates = fs25LiveStates, Vehicle = fs25Vehicle, Fs25Prices = prices }, now - fs25LiveAt);
+        if(prices is not null) return ((latest ?? new Telemetry(0,0,0,null,0,0,0)) with { Fs25Prices = prices }, latest is null ? long.MaxValue : Math.Max(0, now-receivedAt));
         return (latest, latest is null ? long.MaxValue : Math.Max(0, now - receivedAt));
     }
     public object Snapshot(string sessionId)

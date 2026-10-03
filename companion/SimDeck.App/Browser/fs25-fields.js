@@ -4,6 +4,7 @@ fetch('/fs25-field-ui.json').then(r=>{if(!r.ok)throw Error('Field labels');retur
 function fs25CropName(id){return fs25FieldLabels.crops[id]?.[0] || id || 'Культура не указана';}
 function fs25CropColor(id){const color=fs25FieldLabels.crops[id]?.[1];return /^#[0-9a-f]{6}$/i.test(color||'')?color:'#A7B2A0';}
 function fs25FieldNumber(f,key){const v=f[key];return Number.isInteger(v)&&v>=0?v:null;}
+function fs25FieldPercent(v,max){return Number.isInteger(v)&&v>=0&&v<=max&&max>0?Math.round(v*100/max):null;}
 function fs25FieldRows(details){return [...new Map((details?.fields||[]).filter(f=>Number.isInteger(f.id)&&f.id>0).map(f=>[f.id,f])).values()].sort((a,b)=>a.id-b.id);}
 function renderFs25Fields(){
  let root=$('fs25Fields');if(!root){root=node('section','fs25Fields');root.id='fs25Fields';$('deck').append(root);}
@@ -34,7 +35,7 @@ function renderFs25Fields(){
  const detail=$('fs25FieldDetail');clear(detail);detail.hidden=!selected;if(!selected)return;
  const f=selected;detail.append(node('h2','','ПОЛЕ №'+f.id+' · '+fs25CropName(f.fruitType)),node('p','',fs25FieldLabels.ground[f.groundType]||f.groundType||'Состояние не указано'),node('p','hint',`Рост: стадия ${fs25FieldNumber(f,'growthState')??'—'} · предыдущая стадия ${fs25FieldNumber(f,'lastGrowthState')??'—'}`),node('p','hint','Планируемая культура: '+(f.plannedFruit?fs25CropName(f.plannedFruit):'—')));
  for(const [key,label,max] of [['weedState','Сорняки',9],['limeLevel','Известь',3],['sprayLevel','Удобрение',3],['plowLevel','Вспашка',1],['rollerLevel','Прикатывание',1],['stubbleShredLevel','Мульчирование',1]]){
-  const v=fs25FieldNumber(f,key),row=node('div','fs25FieldLevel');row.dataset.fieldMetric=key;row.append(node('span','',label),node('strong','',v===null?'—':`${v}/${max}`));if(v!==null){const bar=node('progress');bar.max=max;bar.value=Math.min(v,max);bar.setAttribute('aria-label',label);row.append(bar);}detail.append(row);
+  const v=fs25FieldPercent(fs25FieldNumber(f,key),max),row=node('div','fs25FieldLevel');row.dataset.fieldMetric=key;row.append(node('span','',label),node('strong','',v===null?'—':`${v}%`));if(v!==null){const bar=node('progress');bar.max=100;bar.value=v;bar.setAttribute('aria-label',label);row.append(bar);}detail.append(row);
  }
  detail.append(node('p','hint',`Камни: ${fs25FieldNumber(f,'stoneLevel')??'—'} · вода: ${fs25FieldNumber(f,'waterLevel')??'—'} · тип удобрения: ${f.sprayType||'—'}`),node('h3','','СОВЕТНИК'));
  const alerts=(report?.alerts||[]).filter(a=>a.field===f.id);if(!alerts.length)detail.append(node('p','hint','Советник не передал предупреждений для этого поля.'));

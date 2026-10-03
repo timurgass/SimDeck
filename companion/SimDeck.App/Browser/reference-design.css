@@ -100,3 +100,5 @@ body.f1Deck[data-f1-page="condition"] #f1VehicleOverview{padding-top:0}
 .truckWearScene .wearRow{display:flex;flex-direction:column;font-size:13px;margin:30px 0;gap:6px}.truckWearScene .wearRow strong{font-size:25px}.truckWearScene .wearRow progress{margin:0!important;height:5px!important}
 .truckWearScene .vehicleWearLeft:empty{display:none}
 @media(max-width:650px){.referenceDashboard .truckWearScene.hasWear{grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr) minmax(0,.8fr);gap:7px}.truckWearScene .wearRow{font-size:11px}.truckWearScene .wearRow strong{font-size:21px}}
+
+.fs25Prices{margin:12px 24px}.fs25PriceRow{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}.fs25PriceRow small{display:block;margin-top:5px}.fs25PriceRow>div:last-child{text-align:right;color:var(--accent)}

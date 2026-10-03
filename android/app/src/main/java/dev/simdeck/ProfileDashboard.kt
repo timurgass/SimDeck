@@ -34,13 +34,14 @@ internal fun profileShortName(id: String) = when(id) {
 @Composable internal fun ProfileDashboard(state: DeckState, model: DeckModel,connection:()->Unit) {
     val design = LocalProfileDesign.current
     var section by rememberSaveable(state.profileId) { mutableStateOf("Обзор") }
-    val sections = (listOf("Обзор") + (if(state.profileId=="fs25") listOf("Поля") else emptyList()) + state.controls.map { it.page }).distinct()
+    val sections = (listOf("Обзор") + (if(state.profileId=="fs25") listOf("Поля", "Цены") else emptyList()) + state.controls.map { it.page }).distinct()
     val selected = section.takeIf { it in sections } ?: "Обзор"
     val compact = LocalConfiguration.current.screenWidthDp >= 650 && LocalConfiguration.current.screenHeightDp < 750
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(if(compact) 8.dp else 14.dp)) {
         val tabs=sections.map { name->name to if(name=="Обзор") when(state.profileId){"fs25"->"Техника";"beamng-default"->"Машина";"ets2"->"Техника и маршрут";"snowrunner"->"Трансмиссия";else->name} else name }
         DeckHeader(state,tabs,selected,{ model.releaseAll();section=it },connection)
         TelemetryStatus(state)
+        if(selected=="Цены" && state.profileId=="fs25") { Fs25PricesPanel(state); return@Column }
         if(selected=="Поля" && state.profileId=="fs25") { Fs25Fields(state); return@Column }
         if(selected!="Обзор") { if(state.profileId=="fs25" && selected=="Хозяйство") Fs25Overview(state);DesignCard { Controls(state,model,selected,showPages=false) }; return@Column }
         if(state.profileId in setOf("fs25","ets2","beamng-default","snowrunner")) { ReferenceDashboard(state,model);return@Column }

@@ -25,6 +25,7 @@ tank.getAttachedImplements=function() return {{object=tool}} end -- cycle must n
 current={typeName='tractor',configFileName='/private/tractor.xml',uniqueId='fixture',rootNode=1,spec_motorized={},getName=function() return 'Tractor' end,getIsMotorStarted=function() return true end,spec_wheels={wheels={{repr={x=-1,z=2}},{repr={x=1,z=2}},{repr={x=-1,z=-2}},{repr={x=1,z=-2}}}},getAttachedImplements=function() return {{object=tool}} end,getSelectedVehicle=function() return tool end}
 ''')
 lua.execute((root / 'mods/FS25_SimDeckStatus/EquipmentCategories.lua').read_bytes())
+lua.execute((root / 'mods/FS25_SimDeckStatus/MarketPrices.lua').read_bytes())
 lua.execute((root / 'mods/FS25_SimDeckStatus/SimDeckStatus.lua').read_bytes())
 lua.execute(b'bridge:update(199)'); assert len(lua.globals().snapshots)==0
 lua.execute(b'bridge:update(1)')
@@ -95,3 +96,34 @@ raw=lua.eval(b'ffi.string(packet,ffi.sizeof(packet))')
 assert raw[60:124].split(b'\0')[0]==b'custom'
 assert struct.unpack_from('<I',raw,252)[0]==0
 print('PASS BeamNG: actual FFI 448-byte packet, truck wheel geometry, drive flags, identity refresh')
+
+# Market prices use the game's selling-station API and do not require a vehicle.
+market=LuaRuntime(unpack_returned_tuples=True,encoding=None)
+market.execute(b"""
+snapshots={}
+function getUserProfileAppPath() return '/fixture/' end
+function createXMLFile(...) return {} end
+function setXMLString(xml,key,value) xml[key]=value end
+setXMLInt=setXMLString;setXMLFloat=setXMLString
+function saveXMLFile(xml) table.insert(snapshots,xml) end
+function delete(...) end
+g_fillTypeManager={getFillTypeByIndex=function(self,i) return {name='WHEAT',title='Wheat'} end}
+g_i18n={formatMoney=function(self,p) return tostring(p)..' $' end}
+station={isSellingPoint=true,acceptedFillTypes={[1]=true},getName=function()return 'Mill'end,getEffectiveFillTypePrice=function()return 1.25 end}
+hidden={isSellingPoint=true,acceptedFillTypes={[1]=true},getName=function()return 'Train'end,getAppearsOnStats=function()return false end,getEffectiveFillTypePrice=function()return 9 end}
+g_currentMission={storageSystem={getUnloadingStations=function()return {station,hidden}end}}
+""")
+market.execute((root/'mods/FS25_SimDeckStatus/MarketPrices.lua').read_bytes())
+market.execute(b'SimDeckMarketPrices:update(0)')
+s=market.globals().snapshots[1]
+assert s[b'simdeckPrices.offer(0)#pricePer1000']==1250
+assert s[b'simdeckPrices.offer(0)#station']==b'Mill'
+assert s[b'simdeckPrices.offer(1)#station']==b'Train'
+assert s[b'simdeckPrices.offer(1)#pricePer1000']==9000
+assert s[b'simdeckPrices.offer(2)#crop'] is None
+market.execute(b'SimDeckMarketPrices:update(4999)');assert len(market.globals().snapshots)==1
+market.execute(b'SimDeckMarketPrices:update(1)');assert len(market.globals().snapshots)==2
+market.execute(b'station.getEffectiveFillTypePrice=function()return 0/0 end;SimDeckMarketPrices:update(5000)')
+assert market.globals().snapshots[3][b'simdeckPrices.offer(0)#station']==b'Train'
+assert market.globals().snapshots[3][b'simdeckPrices.offer(1)#crop'] is None
+print('PASS FS25 market: actual API price per 1000 L, train/production buyers without stats flag, five-second cadence, malformed price excluded, no controlled vehicle required')

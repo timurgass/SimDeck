@@ -1,0 +1,12 @@
+{
+  "width": 235,
+  "height": 404,
+  "zones": [
+    {"key":"frontLeftWingDamage","path":"M40 11 C60 2 78 2 106 9 L104 39 C82 30 63 28 40 38 Z"},
+    {"key":"frontRightWingDamage","path":"M195 11 C175 2 157 2 129 9 L131 39 C153 30 172 28 195 38 Z"},
+    {"key":"sidepodDamage","path":"M77 140 C65 148 54 165 49 190 L46 256 L66 245 L83 205 L98 175 L97 153 Z"},
+    {"key":"sidepodDamage","path":"M158 140 C170 148 181 165 186 190 L189 256 L169 245 L152 205 L137 175 L138 153 Z"},
+    {"key":"rearWingDamage","path":"M59 342 L107 345 L112 337 L123 337 L128 345 L177 342 L181 378 L55 378 Z"},
+    {"key":"drsFault","path":"M63 350 L106 352 L112 347 L123 347 L129 352 L173 350 L175 365 L60 365 Z"}
+  ]
+}

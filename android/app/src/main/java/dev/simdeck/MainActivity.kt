@@ -107,6 +107,13 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
             TextButton(onClick = { model.connect(); showDash() }) { Text("Подключиться к сохранённому ПК") }
         }
         TextButton(onClick = { advanced = !advanced }) { Text("Резервное подключение", color = Muted) }
+        if(state.selected!=null) {
+            Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick={model.savedTransport(true);showDash()}) { Text("USB · сохранённый ПК") }
+                OutlinedButton(onClick={model.savedTransport(false);showDash()}) { Text("Wi-Fi · сохранённый ПК") }
+            }
+            Text("USB требует кабель с передачей данных и запущенный на ПК adb reverse. Используется прежнее доверенное подключение.",color=Muted,fontSize=12.sp)
+        }
         if (advanced) {
             Text("Для проверки через USB: adb reverse tcp:9443 tcp:9443, адрес 127.0.0.1:9443. Вставьте отпечаток из окна Companion.", color = Muted, fontSize = 12.sp)
             OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Адрес:порт") }, modifier = Modifier.fillMaxWidth())
@@ -117,7 +124,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.9.5 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.9.10 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
     }
 }
 

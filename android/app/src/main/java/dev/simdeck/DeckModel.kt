@@ -106,6 +106,24 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
         disconnect()
         mutable.update { it.copy(selected = computer, status = "Сравните отпечаток с Companion", command = "") }
     }
+    fun savedTransport(usb: Boolean) {
+        val pin=prefs.getString("fingerprint",null)
+        if(pin.isNullOrBlank() || vault.read()==null) {
+            mutable.update { it.copy(status="Сначала свяжите планшет с этим ПК по коду") }
+            return
+        }
+        val old=prefs.getString("host","").orEmpty()
+        val host=if(usb) "127.0.0.1" else prefs.getString("wifiHost",null)?.takeIf { it.isNotBlank() }
+            ?: old.takeIf { it!="127.0.0.1" && it.isNotBlank() }
+        if(host==null) { mutable.update { it.copy(status="Найдите Companion в сети для подключения по Wi-Fi") };return }
+        val editor=prefs.edit().putString("host",host)
+        if(usb && old.isNotBlank() && old!="127.0.0.1")editor.putString("wifiHost",old)
+        editor.apply()
+        val pc=Computer(if(usb) "Companion · USB" else "Companion · Wi-Fi",host,prefs.getInt("port",9443),pin)
+        disconnect()
+        mutable.update { it.copy(selected=pc,command="") }
+        connect()
+    }
     fun pair(code: String) {
         val computer = state.value.selected ?: return
         mutable.update { it.copy(busy = true, status = "Подключение…") }
