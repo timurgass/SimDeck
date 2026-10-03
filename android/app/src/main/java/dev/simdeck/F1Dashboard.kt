@@ -22,22 +22,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** Shared F1 24/25 layout: the approved race dashboard, backed by live data. */
-@Composable internal fun F1Dashboard(state: DeckState, model: DeckModel) {
+@Composable internal fun F1Dashboard(state: DeckState, model: DeckModel,connection:()->Unit) {
     val design = LocalProfileDesign.current
-    var destination by rememberSaveable { mutableStateOf("race") }
-    val tabs = listOf("race" to "ГОНКА", "mfd" to "MFD", "pit" to "ПИТ-СТОП", "track" to "КАРТА", "menu" to "MENU CONTROLS") + state.controls.map { it.page }.distinct().filterNot { it in setOf("Control Scheme","MFD","Menu Controls","Трасса") }.map { "custom:$it" to it }
+    var destination by rememberSaveable(state.profileId) { mutableStateOf("condition") }
+    val tabs = listOf("race" to "ГОНКА", "mfd" to "MFD", "condition" to "СОСТОЯНИЕ БОЛИДА", "pit" to "ПИТ-СТОП", "track" to "КАРТА", "menu" to "MENU CONTROLS") + state.controls.map { it.page }.distinct().filterNot { it in setOf("Control Scheme","MFD","Menu Controls","Трасса") }.map { "custom:$it" to it }
     fun navigate(next: String) { model.releaseAll(); destination = next }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(Modifier.fillMaxWidth().border(1.dp, design.line).background(design.panel).horizontalScroll(rememberScrollState())) {
-            tabs.forEach { (id, label) ->
-                Column(Modifier.width(IntrinsicSize.Max)) {
-                    TextButton(onClick = { navigate(id) }, shape = RoundedCornerShape(0.dp)) {
-                        Text(label, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (destination == id) design.accent else design.muted)
-                    }
-                    Box(Modifier.fillMaxWidth().height(3.dp).background(if (destination == id) design.accent else design.panel))
-                }
-            }
-        }
+        DeckHeader(state,tabs,destination,::navigate,connection)
         if (destination == "race") {
             BoxWithConstraints {
                 if (maxWidth >= 650.dp) Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -48,7 +39,7 @@ import androidx.compose.ui.unit.sp
                     F1RaceSummary(state)
                 }
             }
-        } else {
+        } else if(destination!="condition") {
             val data = state.telemetry
             Row(Modifier.fillMaxWidth().background(design.panel).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("${data?.let { Protocol.gear(it.gear, it.gearboxMode) } ?: "—"}  ·  ${data?.let { "%.0f".format(it.speedMps * 3.6) } ?: "—"} КМ/Ч", fontWeight = FontWeight.Bold)
@@ -56,11 +47,11 @@ import androidx.compose.ui.unit.sp
             }
         }
         TelemetryStatus(state)
-        if(destination=="race") DesignCard {
+        if(destination=="condition") DesignCard {
             Text("БОЛИД · ШИНЫ И ПОВРЕЖДЕНИЯ",fontSize=18.sp,fontWeight=FontWeight.Bold)
             F1Schematic(state.telemetry?.f1)
         }
-        DesignCard {
+        if(destination!="condition") DesignCard {
             key(destination) {
                 F1Controls(state, model,
                     initialSection = when (destination) { "mfd", "pit" -> "MFD"; "track" -> "Трасса"; "menu" -> "Menu Controls"; else -> if(destination.startsWith("custom:")) destination.removePrefix("custom:") else "Control Scheme" },

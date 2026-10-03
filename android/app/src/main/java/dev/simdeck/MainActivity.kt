@@ -53,19 +53,19 @@ class MainActivity : ComponentActivity() {
                 var connectionTab by rememberSaveable { mutableStateOf(false) }
                 Surface(Modifier.fillMaxSize(), color = design.background) {
                     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(horizontal = 15.dp, vertical = 10.dp)) {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        if(connectionTab || !(state.connected || state.controls.isNotEmpty())) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                             Column(Modifier.weight(1f)) {
-                                Row { Text("SIMDECK", fontSize = 22.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-                                    Text(" / ${profileShortName(state.profileId)}", fontSize = 18.sp, fontWeight = FontWeight.Black, color = design.accent)
+                                Row { Text("SIM", fontSize = 24.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp); Text("DECK", fontSize = 24.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp,color=design.accent)
+                                    Text("  ПРОФИЛЬ: ${profileShortName(state.profileId)}", fontSize = 14.sp, fontWeight = FontWeight.Black, color = design.accent)
                                 }
                                 Text(design.tag, color = design.muted, fontSize = 10.sp, letterSpacing = 1.sp)
                             }
                             TextButton(onClick = { model.releaseAll(); connectionTab = !connectionTab }) { Text(if (connectionTab) "ПАНЕЛЬ" else if (state.profileId in setOf("f1-24", "f1-25")) "СВЯЗЬ" else "ПОДКЛЮЧЕНИЕ", fontSize = 11.sp) }
                         }
-                        if (state.profileId in setOf("f1-24", "f1-25", "acc")) Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(3.dp).background(design.accent))
+                        if (connectionTab && state.profileId in setOf("f1-24", "f1-25", "acc")) Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(3.dp).background(design.accent))
                         Spacer(Modifier.height(12.dp))
                         // Keep the dashboard composed during reconnects so pages and scroll survive.
-                        if ((state.connected || state.controls.isNotEmpty()) && !connectionTab) Dashboard(state, model)
+                        if ((state.connected || state.controls.isNotEmpty()) && !connectionTab) Dashboard(state, model) { model.releaseAll();connectionTab=true }
                         else Connection(state, model) { connectionTab = false }
                     }
                 }
@@ -122,9 +122,9 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
 }
 
 @Composable
-private fun Dashboard(state: DeckState, model: DeckModel) {
-    if (state.profileId in setOf("f1-24", "f1-25")) { F1Dashboard(state, model); return }
-    ProfileDashboard(state, model)
+private fun Dashboard(state: DeckState, model: DeckModel,connection:()->Unit) {
+    if (state.profileId in setOf("f1-24", "f1-25")) { F1Dashboard(state, model,connection); return }
+    ProfileDashboard(state, model,connection)
 }
 
 @Composable
@@ -163,7 +163,7 @@ internal fun Fs25Overview(state: DeckState) {
             HorizontalDivider(color = design.line)
             Text("ПОЛЯ · ${data.fields.size}", fontWeight = FontWeight.Bold)
             (if (allFields) data.fields else data.fields.take(6)).forEach { field ->
-                Text("№${field.id} · ${field.crop.ifBlank { "пусто" }} · ${field.ground.ifBlank { "состояние неизвестно" }} · сорняки ${field.weeds}/9 · известь ${field.lime}/3", fontSize = 12.sp)
+                Text("№${field.id} · ${field.crop.ifBlank { "пусто" }} · ${field.ground.ifBlank { "состояние неизвестно" }} · сорняки ${field.weeds ?: "—"}/9 · известь ${field.lime ?: "—"}/3", fontSize = 12.sp)
             }
             if (data.fields.size > 6) TextButton(onClick = { allFields = !allFields }) {
                 Text(if (allFields) "Свернуть поля" else "Показать все поля")
@@ -280,7 +280,10 @@ internal fun Fs25Overview(state: DeckState) {
                 } finally { model.release(id); down = false; startingIgnition = false }
             })
         }, contentAlignment = Alignment.Center) {
-        Column(Modifier.fillMaxWidth().padding(10.dp), horizontalAlignment = if (tile) Alignment.Start else Alignment.CenterHorizontally) {
+        if(tile && heightDp in 48..80) Row(Modifier.fillMaxWidth().padding(8.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            if(ets2) Ets2Icon(action,if(enabled) accent else Muted) else if(fs25) Fs25Icon(action,if(enabled) accent else Muted) else ProfileActionIcon(action,if(enabled) accent else Muted)
+            Column(Modifier.weight(1f)) { Text(label,fontSize=13.sp,lineHeight=16.sp,maxLines=2,fontWeight=FontWeight.Bold,color=if(enabled) accent else Muted);Text(displaySubtitle,fontSize=10.sp,lineHeight=12.sp,maxLines=1,color=design.muted) }
+        } else Column(Modifier.fillMaxWidth().padding(10.dp), horizontalAlignment = if (tile) Alignment.Start else Alignment.CenterHorizontally) {
             if (heightDp >= 85) {
                 if (ets2) Ets2Icon(action, if (enabled) accent else Muted)
                 if (fs25) Fs25Icon(action, if (enabled) accent else Muted)

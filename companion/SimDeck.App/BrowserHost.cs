@@ -49,6 +49,8 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
         app.MapGet("/", () => Asset("index.html", "text/html; charset=utf-8"));
         app.MapGet("/app.js", () => Asset("app.js", "text/javascript; charset=utf-8"));
         app.MapGet("/fs25.js", () => Asset("fs25.js", "text/javascript; charset=utf-8"));
+        app.MapGet("/fs25-fields.js", () => Asset("fs25-fields.js", "text/javascript; charset=utf-8"));
+        app.MapGet("/fs25-field-ui.json", () => Asset("fs25-field-ui.json", "application/json; charset=utf-8"));
         app.MapGet("/ets2-icons.js", () => Asset("ets2-icons.js", "text/javascript; charset=utf-8"));
         app.MapGet("/fs25-icons.js", () => Asset("fs25-icons.js", "text/javascript; charset=utf-8"));
         app.MapGet("/style.css", () => Asset("style.css", "text/css; charset=utf-8"));
@@ -63,6 +65,8 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
             return Results.Bytes(bytes.ToArray(), "image/png");
         });
         app.MapGet("/dashboard.js", () => Asset("dashboard.js", "text/javascript; charset=utf-8"));
+        app.MapGet("/reference-dashboard.js", () => Asset("reference-dashboard.js", "text/javascript; charset=utf-8"));
+        app.MapGet("/reference-design.css", () => Asset("reference-design.css", "text/css; charset=utf-8"));
         app.MapGet("/f1-circuits.json", () => Asset("f1-circuits.json", "application/json; charset=utf-8"));
         app.MapPost("/pair", async (HttpContext c) => {
             if (!SameOrigin(c)) return Results.StatusCode(403);

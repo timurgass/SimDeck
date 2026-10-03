@@ -108,6 +108,7 @@ public sealed class TelemetryHub
     IReadOnlyDictionary<string, bool>? fs25LiveStates;
     VehicleInfo? fs25Vehicle;
     long fs25LiveAt;
+    public (string Stream, long Sequence) Revision { get { lock(gate) return (streamId,sequence); } }
     public void Reset(string newSource)
     {
         lock (gate) { source = newSource; latest = null; receivedAt = 0; fs25LiveStates = null; fs25Vehicle = null; fs25LiveAt = 0; sequence = 0; streamId = Guid.NewGuid().ToString("N"); }

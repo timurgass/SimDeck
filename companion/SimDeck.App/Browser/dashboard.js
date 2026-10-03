@@ -32,14 +32,15 @@ function mountProfileDashboard(){
  text('brandGame',' / '+(profileNames[profileId]||''));
  document.body.classList.toggle('profileDeck',!isF1());
  let root=$('profileDashboard');if(!root){root=node('section');root.id='profileDashboard';$('deck').prepend(root);}
- root.hidden=isF1()||page!=='Обзор';
+ root.hidden=isF1()||page!=='Обзор';document.querySelector('header').append(isF1()?$('f1Nav'):$('pages'));$('pages').hidden=isF1();$('f1Nav').hidden=!isF1();
  let details=$('allControls');if(!details){details=node('details','allControls');details.id='allControls';details.append(node('summary','','Все действия и пользовательские кнопки'));$('deck').append(details);}
  let farmDetails=$('farmDetails');if(!farmDetails){farmDetails=node('details','farmDetails');farmDetails.id='farmDetails';farmDetails.open=true;farmDetails.append(node('summary','','Хозяйство · поля · советник · план'));$('deck').append(farmDetails);farmDetails.append($('fs25Overview'));}
- details.hidden=true;farmDetails.hidden=profileId!=='fs25'||page!=='Обзор';
+ details.hidden=true;farmDetails.hidden=profileId!=='fs25'||page!=='Хозяйство';
  if(isF1()){$('deck').append(document.querySelector('.controls'));return;}
  $('deck').insertBefore(document.querySelector('.controls'),root);
  if(dashboardProfile===profileId&&dashboardRevision===revision)return;
- dashboardProfile=profileId;dashboardRevision=revision;clear(root);
+ dashboardProfile=profileId;dashboardRevision=revision;clear(root);root.classList.remove('referenceDashboard');
+ if(mountReferenceDashboard(root))return;
  const banner=node('div','profileBanner');root.append(banner);
  document.querySelector('.controls').classList.toggle('overviewControls',page==='Обзор');
  banner.hidden=['beamng-default','acc','fs25','snowrunner'].includes(profileId);

@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -30,17 +31,19 @@ internal fun profileShortName(id: String) = when(id) {
 }
 
 /** Real controls and real telemetry in the compositions of the approved concepts. */
-@Composable internal fun ProfileDashboard(state: DeckState, model: DeckModel) {
+@Composable internal fun ProfileDashboard(state: DeckState, model: DeckModel,connection:()->Unit) {
     val design = LocalProfileDesign.current
     var section by rememberSaveable(state.profileId) { mutableStateOf("Обзор") }
-    val sections = listOf("Обзор") + state.controls.map { it.page }.distinct()
+    val sections = (listOf("Обзор") + (if(state.profileId=="fs25") listOf("Поля") else emptyList()) + state.controls.map { it.page }).distinct()
     val selected = section.takeIf { it in sections } ?: "Обзор"
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-            sections.forEach { name -> FilterChip(selected=selected==name,onClick={model.releaseAll(); section=name},label={Text(name,fontSize=14.sp)}) }
-        }
+    val compact = LocalConfiguration.current.screenWidthDp >= 650 && LocalConfiguration.current.screenHeightDp < 750
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(if(compact) 8.dp else 14.dp)) {
+        val tabs=sections.map { name->name to if(name=="Обзор") when(state.profileId){"fs25"->"Техника";"beamng-default"->"Машина";"ets2"->"Техника и маршрут";"snowrunner"->"Трансмиссия";else->name} else name }
+        DeckHeader(state,tabs,selected,{ model.releaseAll();section=it },connection)
         TelemetryStatus(state)
-        if(selected!="Обзор") { DesignCard { Controls(state,model,selected,showPages=false) }; return@Column }
+        if(selected=="Поля" && state.profileId=="fs25") { Fs25Fields(state); return@Column }
+        if(selected!="Обзор") { if(state.profileId=="fs25" && selected=="Хозяйство") Fs25Overview(state);DesignCard { Controls(state,model,selected,showPages=false) }; return@Column }
+        if(state.profileId in setOf("fs25","ets2","beamng-default","snowrunner")) { ReferenceDashboard(state,model);return@Column }
         ProfileBanner(state)
         BoxWithConstraints {
             val wide = maxWidth >= 650.dp
@@ -204,7 +207,8 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
         else -> "● ЖИВЫЕ ДАННЫЕ · управление подключено отдельно"
     }
     Text(text,fontSize=12.sp,lineHeight=16.sp,color=if(state.stale && state.profileId !in setOf("ams2","snowrunner")) Color(0xFFFFC449) else d.muted,
-        minLines=2,maxLines=2,modifier=Modifier.fillMaxWidth())
+        minLines=if(LocalConfiguration.current.screenWidthDp>=650) 1 else 2,
+        maxLines=if(LocalConfiguration.current.screenWidthDp>=650) 1 else 2,modifier=Modifier.fillMaxWidth())
 }
 
 @Composable private fun RacingClassPanel() {

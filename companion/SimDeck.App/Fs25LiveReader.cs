@@ -6,7 +6,7 @@ using SimDeck.Core;
 
 namespace SimDeck.App;
 
-public sealed record Fs25LiveSnapshot(IReadOnlyDictionary<string, bool> States, VehicleInfo? Vehicle, long AgeMs = 0);
+public sealed record Fs25LiveSnapshot(IReadOnlyDictionary<string, bool> States, VehicleInfo? Vehicle, long AgeMs = 0, DateTime WrittenAtUtc = default);
 
 /// <summary>Read-only bridge for the optional FS25_SimDeckStatus in-game mod.</summary>
 public static class Fs25LiveReader
@@ -20,13 +20,14 @@ public static class Fs25LiveReader
     ];
 
     public static IReadOnlyDictionary<string, bool>? Read(string userDataDir, DateTime nowUtc) => ReadSnapshot(userDataDir, nowUtc)?.States;
-    public static Fs25LiveSnapshot? ReadSnapshot(string userDataDir, DateTime nowUtc)
+    public static Fs25LiveSnapshot? ReadSnapshot(string userDataDir, DateTime nowUtc, DateTime? unchangedSince = null)
     {
         var path = Path.Combine(userDataDir, FileName);
         try
         {
             if (!File.Exists(path)) return null;
             var writtenAt = File.GetLastWriteTimeUtc(path);
+            if (writtenAt == unchangedSince) return null;
             var age = (long)Math.Max(0, (nowUtc - writtenAt).TotalMilliseconds);
             if (age > 1200) return null;
             using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -40,8 +41,8 @@ public static class Fs25LiveReader
             var states = new Dictionary<string, bool>(StringComparer.Ordinal);
             foreach (var (attribute, action) in Mappings)
                 if (bool.TryParse((string?)root.Attribute(attribute), out var value)) states[action] = value;
-            if (version == "1") return states.Count == 0 ? null : new(states, null, age);
-            if (Bool(root, "controlled") == false) return new(new Dictionary<string, bool>(), new("", "", "unknown", [], [], false), age);
+            if (version == "1") return states.Count == 0 ? null : new(states, null, age, writtenAt);
+            if (Bool(root, "controlled") == false) return new(new Dictionary<string, bool>(), new("", "", "unknown", [], [], false), age, writtenAt);
             var machines = root.Elements("vehicle").Take(33).ToArray();
             if (machines.Length is < 1 or > 32 || Bool(root, "controlled") != true) return null;
             var first = machines[0];
@@ -57,7 +58,7 @@ public static class Fs25LiveReader
                     Bool(machine, "lowered"), Bool(machine, "turnedOn"), Number(machine, "fold", 1) is >= 0 and var fold ? fold : null, Str(machine,"mount") is "front" or "rear" ? Str(machine,"mount") : "unknown"));
             }
             return new(states, new(rootId, Str(first, "name"),
-                VehicleKinds.Resolve(Str(first, "kind")), Wheels(first), attachments), age);
+                VehicleKinds.Resolve(Str(first, "kind")), Wheels(first), attachments), age, writtenAt);
         }
         catch (Exception ex) when (ex is IOException or XmlException or UnauthorizedAccessException or InvalidDataException) { return null; }
     }

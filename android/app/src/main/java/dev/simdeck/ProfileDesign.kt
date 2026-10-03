@@ -44,11 +44,11 @@ internal fun profileDesign(id: String): ProfileDesign = when (id) {
 internal val LocalProfileDesign = compositionLocalOf { profileDesign("") }
 
 @Composable
-internal fun DesignCard(spacingDp: Int = 12, content: @Composable ColumnScope.() -> Unit) {
+internal fun DesignCard(spacingDp: Int = 12, paddingDp: Int = 17, content: @Composable ColumnScope.() -> Unit) {
     val design = LocalProfileDesign.current
     Card(
         colors = CardDefaults.cardColors(containerColor = design.panel),
         shape = RoundedCornerShape(design.radius.dp),
         modifier = Modifier.fillMaxWidth().border(1.dp, design.line, RoundedCornerShape(design.radius.dp))
-    ) { Column(Modifier.fillMaxWidth().padding(17.dp), verticalArrangement = Arrangement.spacedBy(spacingDp.dp), content = content) }
+    ) { Column(Modifier.fillMaxWidth().padding(paddingDp.dp), verticalArrangement = Arrangement.spacedBy(spacingDp.dp), content = content) }
 }

@@ -37,6 +37,13 @@ static class Fs25LiveTests
             var aged = Fs25LiveReader.ReadSnapshot(dir, DateTime.UtcNow);
             check(aged?.AgeMs is >= 650 and < 1200,
                 "FS25 reader carries the file production age instead of resetting it on every poll");
+            check(Fs25LiveReader.ReadSnapshot(dir,DateTime.UtcNow,aged!.WrittenAtUtc) is null,
+                "Fast FS25 polling skips the same file without manufacturing fresh game frames");
+            File.WriteAllText(path,"<simdeckStatus version=\"1\" lowered=\"false\" motor=\"true\"/>");
+            File.SetLastWriteTimeUtc(path,aged.WrittenAtUtc.AddMilliseconds(200));
+            var changed=Fs25LiveReader.ReadSnapshot(dir,DateTime.UtcNow,aged.WrittenAtUtc);
+            check(changed?.States["fs25Lower"]==false && changed.WrittenAtUtc!=aged.WrittenAtUtc,
+                "A newly produced FS25 frame is immediately read after an unchanged poll");
             File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(-5));
             check(Fs25LiveReader.Read(dir, DateTime.UtcNow) is null, "FS25 never displays an old implement state as current");
             File.WriteAllText(path, "<!DOCTYPE x [<!ENTITY e SYSTEM \"file:///secret\">]><simdeckStatus version=\"1\" lowered=\"true\"/>");

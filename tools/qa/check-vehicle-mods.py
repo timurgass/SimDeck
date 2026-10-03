@@ -26,7 +26,8 @@ current={typeName='tractor',configFileName='/private/tractor.xml',uniqueId='fixt
 ''')
 lua.execute((root / 'mods/FS25_SimDeckStatus/EquipmentCategories.lua').read_bytes())
 lua.execute((root / 'mods/FS25_SimDeckStatus/SimDeckStatus.lua').read_bytes())
-lua.execute(b'bridge:update(400)')
+lua.execute(b'bridge:update(199)'); assert len(lua.globals().snapshots)==0
+lua.execute(b'bridge:update(1)')
 s=lua.globals().snapshots[1]
 assert s[b'simdeckStatus#version']==2 and s[b'simdeckStatus#controlled'] is True
 assert s[b'simdeckStatus.vehicle(0)#model']==b'tractor'
@@ -46,7 +47,7 @@ assert lua.globals().snapshots[4][b'simdeckStatus.vehicle(1)#id'] is None
 lua.execute(b'current=nil;bridge:update(400)')
 assert lua.globals().snapshots[5][b'simdeckStatus#controlled'] is False
 assert lua.globals().snapshots[5][b'simdeckStatus.vehicle(0)#id'] is None
-print('PASS FS25: nested equipment, cycle bound, wheel axes, class switch, dismount clears state')
+print('PASS FS25: 200 ms cadence, nested equipment, cycle bound, wheel axes, class switch, dismount clears state')
 
 manifest=json.loads((root/'assets/fs25-equipment.json').read_text(encoding='utf-8'))
 lua.execute(b"shopCategory=nil; g_storeManager={getItemByXMLFilename=function() return {categoryNames={shopCategory}} end}")

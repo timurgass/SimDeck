@@ -242,17 +242,19 @@ public sealed class CompanionHost : IAsyncDisposable
     async Task MonitorFs25Live()
     {
         string? userDataDir=null;
+        DateTime? lastWritten=null;
         try {
             while(!stop.IsCancellationRequested) {
                 bool active;lock(profileGate) active=IsFs25 && !Demo;
                 if(active) try {
                     userDataDir ??= Fs25GamePaths.FindUserDataDir();
-                    var live=userDataDir is null?null:Fs25LiveReader.ReadSnapshot(userDataDir,DateTime.UtcNow);
+                    var live=userDataDir is null?null:Fs25LiveReader.ReadSnapshot(userDataDir,DateTime.UtcNow,lastWritten);
                     if(live is not null) lock(profileGate) {
-                        if(IsFs25 && !Demo) Telemetry.PublishFs25Live(live.States,live.Vehicle,live.AgeMs);
+                        if(IsFs25 && !Demo) { Telemetry.PublishFs25Live(live.States,live.Vehicle,live.AgeMs);lastWritten=live.WrittenAtUtc; }
                     }
                 } catch(Exception ex) { fs25Diagnostic="FS25: ошибка чтения живого состояния ("+ex.GetType().Name+")."; }
-                await Task.Delay(250,stop.Token);
+                if(!active) lastWritten=null;
+                await Task.Delay(active?50:250,stop.Token);
             }
         } catch(OperationCanceledException) { }
     }
@@ -270,7 +272,7 @@ public sealed class CompanionHost : IAsyncDisposable
                         {
                             if (Environment.TickCount64 >= nextSavePoll)
                             {
-                                nextSavePoll = Environment.TickCount64 + 5000;
+                                nextSavePoll = Environment.TickCount64 + 1000;
                                 var save = Fs25GamePaths.FindSavegames().FirstOrDefault();
                                 if (save is null) fs25Diagnostic = "Сохранение FS25 не найдено. Сохраните игру и проверьте папку My Games/FarmingSimulator2025.";
                                 else
@@ -492,6 +494,7 @@ public sealed class CompanionHost : IAsyncDisposable
     {
         long lastInputRevision = -1;
         long lastFs25Snapshot = 0;
+        (string Stream,long Sequence) lastTelemetryRevision=default;
         string? lastAvailability = null;
         // Full race snapshots include all cars. Bound traffic to 10 Hz on tablet Wi-Fi.
         using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
@@ -507,10 +510,12 @@ public sealed class CompanionHost : IAsyncDisposable
                 lastAvailability = availability;
             }
             var now = Environment.TickCount64;
-            if (!IsFs25 || now - lastFs25Snapshot >= (Telemetry.HasFs25Live ? 250 : 1000))
+            var telemetryRevision=Telemetry.Revision;
+            if (!IsFs25 || telemetryRevision!=lastTelemetryRevision || now-lastFs25Snapshot>=1000)
             {
                 await Send(socket, Telemetry.Snapshot(session), ct);
                 lastFs25Snapshot = now;
+                lastTelemetryRevision=telemetryRevision;
             }
         }
     }

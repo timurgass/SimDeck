@@ -81,13 +81,13 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
         LinearProgressIndicator(progress={value.toFloat()},modifier=Modifier.fillMaxWidth().height(5.dp),color=color,trackColor=LocalProfileDesign.current.line)
     }
 }
-@Composable private fun FarmDrawing(kind:String,attachment:VehicleAttachment?,small:Boolean=false) {
+@Composable internal fun FarmDrawing(kind:String,attachment:VehicleAttachment?,small:Boolean=false,heightOverride:Dp?=null) {
     val d=LocalProfileDesign.current
     val root=farmSprite(kind);val tool=attachment?.let { farmSprite(it.kind) }
     val rootImage=root?.let { vehicleAtlas(it.atlas) };val toolImage=tool?.let { vehicleAtlas(it.atlas) }
-    val lift by animateFloatAsState(if(attachment?.lowered==false) 1f else 0f,tween(450),label="implement-lift")
+    val lift by animateFloatAsState(if(attachment?.lowered==false) 1f else 0f,tween(200),label="implement-lift")
     if(root==null) { Text("Схема для этого класса пока не определена",color=d.muted);return }
-    Canvas(Modifier.fillMaxWidth().height(if(small) 135.dp else 185.dp)) {
+    Canvas(Modifier.fillMaxWidth().height(heightOverride ?: if(small) 135.dp else 185.dp)) {
         val front=attachment?.mount=="front" || (kind=="combine" && attachment?.kind=="header")
         val ground=size.height*.9f
         val geometry=farmGeometry(size.width,size.height,root.w.toFloat()/root.h,tool?.let { it.w.toFloat()/it.h },front)
@@ -100,8 +100,8 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
         }
     }
 }
-@Composable internal fun RoadDrawing(kind:String,wheels:List<VehicleWheel> = emptyList(),trailer:VehicleAttachment?=null,values:Map<String,Double> = emptyMap(),drive:Boolean?=null,heightOverride:Dp?=null) {
-    val atlas=vehicleAtlas(if(kind=="gt") "gt" else "road");val tyre=vehicleAtlas("equipment");val d=LocalProfileDesign.current;val s=roadSprite(kind)
+@Composable internal fun RoadDrawing(kind:String,wheels:List<VehicleWheel> = emptyList(),trailer:VehicleAttachment?=null,values:Map<String,Double> = emptyMap(),drive:Boolean?=null,heightOverride:Dp?=null,wear:Map<String,Double> = emptyMap()) {
+    val atlas=vehicleAtlas(if(kind=="gt") "gt" else "road");val d=LocalProfileDesign.current;val s=roadSprite(kind)
     if(s==null) { Text("Нет схемы этого класса · без предположений о кузове",color=d.muted);return }
     Canvas(Modifier.fillMaxWidth().height(heightOverride ?: if(trailer!=null) 410.dp else 290.dp)) {
         val cx=size.width/2;val h=if(trailer!=null) size.height*.61f else size.height;val width=h
@@ -112,7 +112,9 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
             val min=list.minOf { it.z };val span=(list.maxOf { it.z }-min).coerceAtLeast(1.0);val half=list.maxOf { kotlin.math.abs(it.x) }.coerceAtLeast(.5)
             list.forEach { w ->
                 val wx=cx+(w.x/half*bodyWidth*.41).toFloat();val wy=from+((w.z-min)/span*(to-from)).toFloat();val tw=bodyWidth*.18f;val th=tw*1.7f
-                sprite(tyre,VehicleSprite("equipment",1670,80,330,560),wx-tw/2,wy-th/2,tw,th)
+                drawRoundRect(Color(0xFF11181C),Offset(wx-tw/2,wy-th/2),Size(tw,th),androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+                drawRoundRect(Color(0xFF72818A),Offset(wx-tw/2,wy-th/2),Size(tw,th),androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()),style=Stroke(1.dp.toPx()))
+                for(j in 1..4) drawLine(Color(0xFF35424B),Offset(wx-tw*.35f,wy-th/2+th*j/5),Offset(wx+tw*.35f,wy-th/2+th*j/5),1.dp.toPx())
                 if(w.powered==true || drive==true) drawRoundRect(d.accent.copy(alpha=.8f),Offset(wx-tw*.33f,wy-th*.33f),Size(tw*.66f,th*.66f),androidx.compose.ui.geometry.CornerRadius(4f),style=Stroke(1.5.dp.toPx()))
             }
         }
@@ -122,10 +124,29 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
             wheelSet(trailer.wheels,ty+th*.72f,ty+th*.84f,th*.55f)
             sprite(atlas,roadSprite("trailer")!!,cx-th*.18f,ty,th*.36f,th,alpha=.5f)
         }
+        // Wear zones remain absent when the telemetry source does not supply a value.
+        if(kind!="formula") {
+            listOf(Triple("engine",.12f,.2f),Triple("cabin",.03f,.15f),Triple("transmission",.4f,.17f),Triple("chassis",.64f,.22f)).forEach { (key,y,hh)->
+                wear[key]?.takeIf { it in 0.0..1.0 }?.let { value->
+                    val color=damageColor(value*100)
+                    val offset=Offset(cx-bodyWidth*.33f,h*y);val bounds=Size(bodyWidth*.66f,h*hh)
+                    drawRoundRect(color.copy(alpha=.23f),offset,bounds,androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
+                    drawRoundRect(color,offset,bounds,androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()),style=Stroke(1.dp.toPx()))
+                }
+            }
+        }
         if(kind=="formula") listOf("frontLeftWingDamage" to -.15f,"frontRightWingDamage" to .15f).forEach { (key,side) -> values[key]?.let { damage ->
             val c=if(damage>=30) Color(0xFFFF575D) else if(damage>5) Color(0xFFFFC449) else Color(0xFF7DDA71)
             drawLine(c,Offset(cx+side*width-width*.07f,h*.055f),Offset(cx+side*width+width*.07f,h*.1f),9.dp.toPx(),StrokeCap.Round)
         } }
+        if(kind=="formula") {
+            values["sidepodDamage"]?.let { damage ->
+                val color=damageColor(damage)
+                for(side in listOf(-1,1)) drawLine(color.copy(alpha=.8f),Offset(cx+side*bodyWidth*.19f,h*.43f),Offset(cx+side*bodyWidth*.25f,h*.65f),6.dp.toPx(),StrokeCap.Round)
+            }
+            values["rearWingDamage"]?.let { drawLine(damageColor(it),Offset(cx-bodyWidth*.35f,h*.94f),Offset(cx+bodyWidth*.35f,h*.94f),6.dp.toPx(),StrokeCap.Round) }
+            if(values["drsFault"]==1.0) drawLine(Color(0xFFFF575D),Offset(cx-bodyWidth*.25f,h*.90f),Offset(cx+bodyWidth*.25f,h*.90f),5.dp.toPx(),StrokeCap.Round)
+        }
     }
 }
 @Composable internal fun SnowVehiclePanel(state:DeckState,model:DeckModel) {

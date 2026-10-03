@@ -21,7 +21,7 @@ static class F1DetailTests
         var motion = Packet(0,1349); F(motion,29+3*60,100); F(motion,29+3*60+8,200);
         var damage = Packet(10,953); var d = 29+3*42;
         for (var i=0;i<4;i++) { F(damage,d+i*4,10+i); damage[d+16+i]=(byte)(20+i); }
-        damage[d+24]=7; damage[d+37]=33;
+        damage[d+24]=7; damage[d+29]=18;damage[d+30]=1; damage[d+37]=33;
         var setup = Packet(5,1133); setup[29+3*50]=24; setup[29+3*50+1]=28; F(setup,1129,26);
         var session = Packet(1,753); session[29+6]=15; session[29+7]=3;
         check(p.TryParse(motion,out var t) && t is null && p.TryParse(damage,out t) && t is null && p.TryParse(setup,out t) && t is null && p.TryParse(session,out t) && t is null, "F1 auxiliary packets never publish a fresh driving frame");
@@ -34,10 +34,13 @@ static class F1DetailTests
         check(t!.FuelFraction is > 0.078 and < 0.079 && t.F1!.Values["compound"]==17, "Career gear count cannot discard fuel and tyre compound");
         check(t!.F1!.Wheels[2].Surface==82 && t.F1.Wheels[2].Inner==92 && t.F1.Wheels[2].Pressure==24 && t.F1.Wheels[2].Wear==12 && t.F1.Wheels[2].Damage==22, "Front-left wheel uses RL/RR/FL/FR wire order across independent packets");
         check(t.F1.EngineTemperature==105 && t.F1.Values["iceWear"]==33 && t.F1.Values["frontLeftWingDamage"]==7, "Engine and wing damage offsets match F1 24 specification");
+        check(t.F1.Values["sidepodDamage"]==18 && t.F1.Values["drsFault"]==1,"F1 24 sidepod damage and DRS failure stay distinct from DRS activation");
         var p25=new F1TelemetryParser(()=>now);var damage25=Packet(10,1041);BinaryPrimitives.WriteUInt16LittleEndian(damage25,2025);damage25[2]=25;var d25=29+3*46;
-        for(var i=0;i<4;i++){F(damage25,d25+i*4,15+i);damage25[d25+16+i]=(byte)(25+i);damage25[d25+24+i]=(byte)(5+i);}damage25[d25+28]=9;damage25[d25+41]=31;
+        for(var i=0;i<4;i++){F(damage25,d25+i*4,15+i);damage25[d25+16+i]=(byte)(25+i);damage25[d25+24+i]=(byte)(5+i);}damage25[d25+28]=9;damage25[d25+33]=22;damage25[d25+34]=1;damage25[d25+41]=31;
         var telemetry25=(byte[])telemetry.Clone();BinaryPrimitives.WriteUInt16LittleEndian(telemetry25,2025);telemetry25[2]=25;
-        check(p25.TryParse(damage25,out _)&&p25.TryParse(telemetry25,out var t25)&&t25!.F1!.Values["tyreBlister2"]==7&&t25.F1.Values["frontLeftWingDamage"]==9&&t25.F1.Values["iceWear"]==31,"F1 25 blister insertion preserves damage and engine offsets");
+        p25.TryParse(damage25,out _);var accepted25=p25.TryParse(telemetry25,out var t25);
+        check(accepted25&&t25!.F1!.Values["tyreBlister2"]==7&&t25.F1.Values["frontLeftWingDamage"]==9&&t25.F1.Values["iceWear"]==31,"F1 25 blister insertion preserves damage and engine offsets");
+        check(t25!.F1!.Values["sidepodDamage"]==22 && t25.F1.Values["drsFault"]==1,"F1 25 sidepods and DRS fault use the shifted damage offsets");
         check(t.F1.Values["frontWing"]==24 && t.F1.Values["nextFrontWing"]==26 && t.F1.Values["sessionType"]==15, "Setup next-pit wing is read after all 22 car records");
         check(t.F1.Position == new TrackPoint(100,200) && t.F1.Trail.Length==1, "Motion coordinates become real trail and player position");
         var json=JsonSerializer.Serialize(t,new JsonSerializerOptions(JsonSerializerDefaults.Web));

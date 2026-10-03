@@ -1,0 +1,102 @@
+/* Approved references: large diagrams, quiet charcoal panels and persistent top navigation. */
+body[data-profile]{--p-bg:#0b1519;--p-panel:#101e23;--p-alt:#1b2c33;--p-line:#324b56;--p-muted:#abbdc7;--p-radius:6px;background:radial-gradient(ellipse at 45% 30%,#17282e,var(--p-bg) 70%)}
+body[data-profile] header{background:transparent;padding:18px 26px;border-bottom:1px solid var(--p-line)}
+body[data-profile] header strong{font-size:25px;letter-spacing:.04em}
+body[data-profile] header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center}
+body[data-profile] header>div{grid-column:1;grid-row:1}body[data-profile] header #connection{grid-column:3;grid-row:1;font-size:11px}
+body[data-profile] header>nav{grid-column:2;grid-row:1;min-width:0;margin:0;overflow:auto;display:flex}
+body[data-profile] header #f1Nav,body[data-profile] header #pages{grid-column:2;grid-row:1;min-width:0;max-width:100%;position:static;margin:0;overflow:auto;display:flex}
+body[data-profile] #brandGame{color:var(--p-accent);font-size:17px;margin-left:15px;letter-spacing:0}
+body[data-profile] #brandTag{font-size:10px;letter-spacing:.12em}
+body[data-profile] main{max-width:1600px;margin:auto;padding:20px 26px}
+body[data-profile] #pages,body[data-profile] #f1Nav{gap:6px;border:0;border-bottom:1px solid var(--p-line);background:transparent;padding:0}
+body[data-profile] #pages button,body[data-profile] #f1Nav button{background:transparent;border:0;border-radius:0;min-height:49px;font-size:14px;padding:12px 17px;color:var(--p-muted);white-space:nowrap}
+body[data-profile] #pages button.selected,body[data-profile] #f1Nav button.selected{background:transparent;color:var(--p-accent);box-shadow:inset 0 -3px var(--p-accent)}
+body[data-profile] .overviewControls{border:0;background:transparent;padding:0!important}
+body.profileDeck .overviewControls{display:none}
+body.f1Deck header{border-top:0}
+body[data-profile="beamng-default"] header{border-left:0}
+.referenceLayout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:start}
+body[data-profile="fs25"] .referenceLayout{grid-template-columns:minmax(0,1.8fr) minmax(0,1fr)}
+.referenceDashboard .referenceScene{min-width:0}
+.referenceDashboard .vehiclePanel,.referenceDashboard .profileCard{margin:0;padding:20px}
+.referenceDashboard .vehiclePanel h2{font-size:22px!important;letter-spacing:.025em;color:#edf4f5}
+.referenceDashboard .vehiclePanel h3{font-size:22px}
+.referenceDashboard .vehicleDrawing{height:440px;max-height:none}
+body[data-profile="fs25"] .referenceDashboard .vehicleDrawing{height:320px}
+.referenceDashboard .vehicleScene.hasWear{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+.referenceDashboard .vehicleScene.hasWear .vehicleDrawing{max-height:none}
+.referenceDashboard .vehicleAttachment .vehicleDrawing{height:130px}
+.referenceDashboard .vehicleFreshness{min-height:1.3em;font-size:11px}
+.referenceVehicle .reading{font-size:24px;margin-bottom:16px}
+.referenceStatusRow{display:flex;gap:16px;align-items:center;border-bottom:1px solid var(--p-line);padding:19px 0}
+.referenceStatusRow .actionIcon{width:34px;height:34px;flex-shrink:0;margin:0}
+.referenceStatusRow>div{display:flex;flex-direction:column;gap:7px;min-width:0}
+.referenceStatusRow span{font-size:16px}.referenceStatusRow strong{font-size:20px;line-height:1.25;color:var(--p-accent)}
+.damageList .referenceStatusRow strong{font-size:14px;color:var(--p-muted)}
+.damageList .referenceStatusRow span{font-size:23px;font-weight:700}
+.referenceWorkButtons{display:grid;gap:10px;margin-top:20px}
+body[data-profile] .referenceWorkButtons .action{min-height:70px;display:grid;grid-template-columns:32px 1fr;gap:5px 12px;align-items:center;justify-content:center;font-size:15px}
+.referenceWorkButtons .actionIcon{grid-row:1/3;margin:0}.referenceWorkButtons small{grid-column:2}
+.referenceQuickBar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:20px}
+body[data-profile] .referenceQuickBar .action{min-height:95px;font-size:15px}.referenceQuickBar .actionIcon{width:28px;height:28px}
+.referenceReadouts{display:flex;gap:22px;padding:18px 0;border-top:1px solid var(--p-line);margin-top:18px;flex-wrap:wrap}
+.referenceReadouts .reading{font-size:20px}
+.navigatorCard h2{font-size:24px;margin:0 0 15px}.referenceRoute .reading{font-size:25px}
+.navigationUnavailable{height:240px;border:1px solid var(--p-line);border-radius:5px;margin:22px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;background:var(--p-bg);color:var(--p-muted)}
+.navigationUnavailable .actionIcon{width:44px;height:44px}.navigatorSpeed{display:flex;justify-content:space-between;gap:20px}.navigatorSpeed .reading{font-size:30px}
+.transmissionStates{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:0!important;border:0!important;background:transparent!important}
+.transmissionStates .profileCard{display:flex;flex-direction:column;gap:20px;min-height:350px;justify-content:space-between}
+.transmissionStates .profileCard>.actionIcon{width:55px;height:55px;color:var(--p-muted)}
+.transmissionStates h2{font-size:19px;line-height:1.3}.transmissionStates .hint{grid-column:1/-1}.unknownState{font-size:16px;color:var(--p-muted)}
+.referenceScene>h2{font-size:23px}.referenceScene>.snowWheelChoices{margin:18px 0}
+body.f1Deck[data-f1-page="condition"] #deck{display:flex;flex-direction:column}
+body.f1Deck[data-f1-page="condition"] .gauges,body.f1Deck[data-f1-page="condition"] #f1Summary,body.f1Deck[data-f1-page="condition"] .controls{display:none}
+body.f1Deck #f1VehicleOverview{padding:22px;background:transparent;border:0;margin:0}
+#f1VehicleOverview>h2{font-size:22px;margin:0 0 18px}
+.f1Schematic{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:25px;margin:20px 0}
+.formulaPicture .vehicleDrawing{height:510px;max-height:none}
+.tyreColumn{gap:18px}.tyreCard{padding:14px;background:var(--p-panel);border-radius:7px}
+.tyreCard h3{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;line-height:1.3}
+.tyreCard .wearRow{font-size:14px;margin:9px 0;gap:4px}.tyreCard .wearRow strong{font-size:22px}.tyreCard .wearRow progress{height:5px}
+.compoundMark{display:inline-flex;border:3px solid var(--tyre);border-radius:50%;height:30px;width:30px;align-items:center;justify-content:center;flex-shrink:0;color:var(--tyre);font-size:18px}
+.wingBadges{display:grid;grid-template-columns:1fr 1fr;gap:18px}.wingBadge{margin:0;background:var(--p-panel);border:1px solid var(--p-line);padding:13px 18px;font-size:15px;font-weight:700}
+.damageFooter{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.damageFooter>div{background:var(--p-panel);border:1px solid var(--p-line);border-radius:5px;padding:14px}.damageFooter strong{display:block;font-size:19px;margin-top:7px}
+.fs25Fields{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px}.fs25FieldGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-top:17px}
+body[data-profile] .fs25FieldGrid button{min-height:85px;border:1px solid var(--crop-color);background:var(--p-panel);color:var(--crop-color);padding:10px 6px}.fs25FieldGrid strong{font-size:22px;display:block;margin-bottom:7px}.fs25FieldGrid button[aria-pressed="true"]{background:var(--p-alt);box-shadow:inset 0 0 0 2px var(--crop-color)}
+.fs25FieldFilters{display:flex;gap:7px;overflow:auto;margin:12px 0}#fs25FieldDetail h2{font-size:23px}.fs25FieldLevel{margin:12px 0;background:var(--p-alt);padding:10px}.fs25FieldLevel progress{display:block;width:100%;margin-top:8px}.fs25FieldLevel strong{float:right}
+@media(max-width:850px){.referenceLayout,body[data-profile="fs25"] .referenceLayout,.fs25Fields{grid-template-columns:1fr}.referenceDashboard .vehicleDrawing{height:360px}.formulaPicture .vehicleDrawing{height:400px}.f1Schematic{gap:12px}.tyreCard{padding:12px}.tyreCard .wearRow strong{font-size:20px}.fs25FieldGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:650px){body[data-profile] main{padding:13px}body[data-profile] header{padding:14px}.f1Schematic{grid-template-columns:1fr 1fr}.formulaPicture{grid-column:1/-1;grid-row:1;max-width:380px}.tyreColumn{grid-row:2;gap:12px}.tyreCard .wearRow{grid-template-columns:1fr auto;font-size:12px}.tyreCard .wearRow strong{font-size:19px}.tyreCard h3{font-size:11px}.damageFooter{grid-template-columns:1fr 1fr}.wingBadge{font-size:12px;padding:10px}.referenceQuickBar{grid-template-columns:repeat(2,minmax(0,1fr))}.referenceDashboard .vehicleScene.hasWear{grid-template-columns:1.1fr 1fr}.transmissionStates{grid-template-columns:1fr}.transmissionStates .profileCard{min-height:240px}.fs25FieldGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+@media(max-width:950px){body[data-profile] header{grid-template-columns:1fr auto}body[data-profile] header #connection{grid-column:2}body[data-profile] header #f1Nav,body[data-profile] header #pages{grid-column:1/-1;grid-row:2}}
+
+body.profileDeck .fieldsControls{display:none}
+#fs25FieldSearch{width:100%;font-size:16px;letter-spacing:0;margin-top:8px}
+
+/* The reference uses inline measurements and bars on wide tyre cards. */
+@media(min-width:1000px){
+ .tyreCard .wearRow{grid-template-columns:1.1fr 1fr .9fr;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--p-line);margin:0;min-height:47px}
+ .tyreCard .wearRow progress{grid-column:3;margin:0;height:10px;border-radius:5px}
+ .tyreCard h3{font-size:17px;padding-bottom:12px;border-bottom:1px solid var(--p-line)}
+ .tyreCard .hint{display:block;margin-top:8px}
+}
+body.f1Deck #f1VehicleOverview>h2{display:none}
+body.f1Deck[data-f1-page="condition"] #f1VehicleOverview{padding-top:0}
+.vehicleImplement{transition:transform .2s ease}
+@media(min-width:1000px) and (max-height:850px){
+ body[data-profile] .telemetryStatus{min-height:1.3em}
+ .referenceStatusRow{padding:12px 0}
+ .referenceDashboard .vehicleDrawing{height:350px}
+ body[data-profile="fs25"] .referenceDashboard .vehicleDrawing{height:280px}
+ body[data-profile] .referenceWorkButtons .action{min-height:60px}
+ .formulaPicture .vehicleDrawing{height:430px}
+ .f1Schematic{margin:12px 0}
+ .tyreCard .wearRow{min-height:39px;padding:6px 0}
+ .tyreColumn{gap:12px}
+}
+
+.tyreMetricBar{accent-color:var(--bar-color)}.tyreMetricBar::-webkit-progress-value{background:var(--bar-color)!important}
+.referenceDashboard .truckWearScene.hasWear{grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr) minmax(0,.8fr);gap:12px}
+.truckWearScene .wearRow{display:flex;flex-direction:column;font-size:13px;margin:30px 0;gap:6px}.truckWearScene .wearRow strong{font-size:25px}.truckWearScene .wearRow progress{margin:0!important;height:5px!important}
+.truckWearScene .vehicleWearLeft:empty{display:none}
+@media(max-width:650px){.referenceDashboard .truckWearScene.hasWear{grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr) minmax(0,.8fr);gap:7px}.truckWearScene .wearRow{font-size:11px}.truckWearScene .wearRow strong{font-size:21px}}

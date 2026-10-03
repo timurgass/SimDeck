@@ -11,6 +11,8 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(REPO / 'companion/SimDeck.App/Browser'), **kwargs)
 
     def translate_path(self, path):
+        if path.split('?', 1)[0] == '/fs25-field-ui.json':
+            return str(REPO / 'assets/fs25-field-ui.json')
         if path.startswith('/vehicles/'):
             name = path.split('?', 1)[0].removeprefix('/vehicles/')
             if name in {'farm.png', 'road.png', 'equipment.png', 'gt.png', 'harvest.png', 'fs25-flat-1.png', 'fs25-flat-2.png', 'fs25-flat-3.png', 'fs25-flat-4.png', 'fs25-flat-5.png', 'fs25-flat-6.png'}:
