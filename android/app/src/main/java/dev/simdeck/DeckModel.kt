@@ -33,7 +33,8 @@ data class DeckState(
     val profileName: String = "SimDeck", val profileId: String = "beamng-default",
     val pitCursor: Int? = null, val menuBusy: Boolean = false,
     val pitTyre: Int? = null, val pitRepair: Int? = null, val pitSent: Boolean = false,
-    val reconnectCount: Int = 0, val lastDisconnect: String = ""
+    val reconnectCount: Int = 0, val lastDisconnect: String = "",
+    val etsMap:EtsMap?=null,val etsMapStatus:String="Подготовка карты ETS2…"
 )
 
 // Receiving game telemetry and sending keyboard commands are independent capabilities.
@@ -62,6 +63,34 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
     private val presses = ConcurrentHashMap<String, String>()
     private val acknowledgements = ConcurrentHashMap<String, CompletableDeferred<Boolean>>()
     private var menuSequence: Job? = null
+    private var mapRequest:Job?=null
+    private var mapAttempt=0L
+    private var mapLoadedAt=0L
+    private fun updateEtsMap(n:Ets2Navigation?,current:Int) {
+        if(profileId!="ets2" || n?.worldX==null || n.worldZ==null || mapRequest?.isActive==true) return
+        val now=SystemClock.elapsedRealtime();if(now-mapAttempt<2500) return
+        val old=state.value.etsMap
+        if(old!=null && now-mapLoadedAt<60000 && kotlin.math.abs(old.x-n.worldX)<old.span/4 && kotlin.math.abs(old.z-n.worldZ)<old.span/4) return
+        val pc=state.value.selected ?: return;val http=client ?: return;val token=vault.read() ?: return
+        mapAttempt=now
+        mapRequest=viewModelScope.launch {
+            try {
+                val map=withContext(Dispatchers.IO) {
+                    val url="https://${pc.host}:${pc.port}/ets2-map?x=${n.worldX}&z=${n.worldZ}&span=6400"
+                    val call=http.newCall(Request.Builder().url(url).header("Authorization","Bearer $token").build())
+                    call.timeout().timeout(10,TimeUnit.SECONDS)
+                    call.execute().use { response->
+                        if(!response.isSuccessful) error(if(response.code==503) "Карта готовится на ПК…" else "Карта пока недоступна")
+                        require((response.body?.contentLength() ?: 0)<=5000000)
+                        val text=response.body!!.string();require(text.length<=5000000)
+                        EtsMap.parse(JSONObject(text))
+                    }
+                }
+                if(current==generation && profileId=="ets2") { mapLoadedAt=SystemClock.elapsedRealtime();mutable.update { it.copy(etsMap=map,etsMapStatus="Карта готова") } }
+            } catch(e:CancellationException) { throw e }
+            catch(e:Exception) { if(current==generation)mutable.update { it.copy(etsMapStatus=e.message?.take(100) ?: "Карта пока недоступна") } }
+        }
+    }
     init {
         if (prefs.contains("host")) mutable.update { it.copy(selected = Computer(prefs.getString("name", "Companion")!!, prefs.getString("host", "")!!, prefs.getInt("port", 9443), prefs.getString("fingerprint", "")!!)) }
         viewModelScope.launch {
@@ -185,6 +214,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                                 val telemetry = Protocol.telemetry(root)
                                 mutable.update { it.copy(telemetry = telemetry ?: it.telemetry, lastVehicle = telemetry?.vehicle ?: it.lastVehicle,
                                     stale = !Protocol.telemetryFresh(profileId,sourceAge,0), demo = root.optString("source") == "demo") }
+                                updateEtsMap(telemetry?.ets2Navigation,current)
                             }
                             "input.state" -> {
                                 require(root.getString("sessionId") == session)
@@ -234,6 +264,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
         }
     }
     fun disconnect() {
+        mapRequest?.cancel();mapRequest=null;mapAttempt=0;mapLoadedAt=0
         releaseAll(); generation++; session = null; lastFrame = 0; sourceAge = Long.MAX_VALUE
         socket?.cancel(); socket = null
         client?.connectionPool?.evictAll(); client?.dispatcher?.executorService?.shutdown(); client = null

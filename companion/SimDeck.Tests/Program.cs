@@ -17,6 +17,36 @@ if (args.Length == 2 && args[0] == "--export-profiles") {
     File.WriteAllText(args[1], JsonSerializer.Serialize(profiles, new JsonSerializerOptions(JsonSerializerDefaults.Web))); return;
 }
 if (args.Length == 2 && args[0] == "--dashboard-server") { await DashboardQa.Run(args[1]); return; }
+if(args.Length==3 && args[0]=="--ets2-map-preview")
+{
+    await using var preview=new CompanionHost(args[1],new RecordingInput(Path.Combine(args[1],"input-events.json")));
+    preview.Store.Value.Port=29443;preview.Store.Value.UdpPort=24444;preview.SelectProfile("ets2");
+    await preview.StartAsync(localOnly:true);await preview.StartBrowserAsync(28787,true);
+    File.WriteAllText(Path.Combine(args[1],"browser-pin.txt"),preview.Browser!.Pairing.Open());
+    var sample=JsonSerializer.Deserialize<Telemetry>(File.ReadAllText(args[2]),new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+    for(var i=0;i<3000 && !File.Exists(Path.Combine(args[1],"stop"));i++) { preview.Telemetry.Publish(sample);await Task.Delay(100); }
+    return;
+}
+if(args.Length==3 && args[0]=="--ets2-live")
+{
+    using var memory=System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting("Local\\SCSTelemetry",System.IO.MemoryMappedFiles.MemoryMappedFileRights.Read);
+    using var view=memory.CreateViewAccessor(0,ScsTelemetryParser.SnapshotSize,System.IO.MemoryMappedFiles.MemoryMappedFileAccess.Read);
+    var diagnosticBytes=new byte[ScsTelemetryParser.SnapshotSize];view.ReadArray(0,diagnosticBytes,0,diagnosticBytes.Length);
+    var paused=diagnosticBytes[4]!=0;diagnosticBytes[4]=0; // Diagnostic only: never publish paused samples as live.
+    if(!ScsTelemetryParser.TryParse(diagnosticBytes,out _,out var frame)) throw new Exception("No truck data");
+    File.WriteAllText(args[2],JsonSerializer.Serialize(frame,new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    var n=frame!.Ets2Navigation!;
+    var map=JsonSerializer.Deserialize<Ets2RoadMap>(File.ReadAllText(args[1]),new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+    var near=new Ets2MapIndex(map).Slice("live-check",n.WorldX!.Value,n.WorldZ!.Value,1600);
+    var distance=double.MaxValue;
+    foreach(var r in near.Roads)for(var i=2;i<r.P.Length;i+=2)
+    {
+        var ax=r.P[i-2];var az=r.P[i-1];var dx=r.P[i]-ax;var dz=r.P[i+1]-az;
+        var projection=Math.Clamp(((n.WorldX.Value-ax)*dx+(n.WorldZ.Value-az)*dz)/Math.Max(1,dx*dx+dz*dz),0,1);
+        distance=Math.Min(distance,Math.Sqrt(Math.Pow(n.WorldX.Value-ax-projection*dx,2)+Math.Pow(n.WorldZ.Value-az-projection*dz,2)));
+    }
+    Console.WriteLine(JsonSerializer.Serialize(new { paused,n.WorldX,n.WorldZ,n.Heading,nearbyRoads=near.Roads.Length,nearestRoadMetres=distance }));return;
+}
 if (args.Length >= 3 && args[0] == "--smoke-startup-failure") { await AppSmoke.RunStartupFailure(args[1], args[2]); return; }
 if (args.Length >= 3 && args[0] == "--smoke-app") { await AppSmoke.Run(args[1], args[2]); return; }
 if (args.Length >= 2 && args[0] == "--acc-live")
@@ -111,6 +141,7 @@ F1DetailTests.Run(Check);
 F1RaceTests.Run(Check);
 AccTelemetryTests.Run(Check);
 ScsTelemetryTests.Run(Check);
+Ets2MapTests.Run(Check);
 Fs25CatalogTests.Run(Check);
 Fs25SaveTests.Run(Check);
 Fs25LiveTests.Run(Check);

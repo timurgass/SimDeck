@@ -87,7 +87,7 @@ public partial class MainWindow : Window
             ? "Старый поток без состояния кнопок. Перезапустите BeamNG после обновления мода."
             : host.Profile.Id == "beamng-default" ? "Состояния кнопок поступают · " + (t.Data!.Headlights == 2 ? "дальний свет" : t.Data.Headlights == 1 ? "ближний свет" : "фары выключены")
             : host.Profile.Id == "acc" ? $"ACC Shared Memory · принято {host.ReceivedPackets} кадров · шины и тормоза доступны на пульте"
-            : host.Profile.Id == "ets2" ? $"SCS Telemetry · принято {host.ReceivedPackets} кадров · состояния кнопок поступают на пульт"
+            : host.Profile.Id == "ets2" ? $"SCS Telemetry · принято {host.ReceivedPackets} кадров · {host.Ets2Map.Status}"
             : "Демонстрационные данные" : host.TelemetryDiagnostic;
         var foreground = host.Backend.ForegroundProcessName;
         GameStatus.Text = string.Equals(foreground, host.Profile.TargetProcess, StringComparison.OrdinalIgnoreCase) ? "●  Игра активна" : "○  Ожидание игры";

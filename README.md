@@ -3,14 +3,14 @@
 <p align="center"><strong>Your rig. One touch.</strong></p>
 
 <p align="center">
-  <img alt="Release 0.9.11" src="https://img.shields.io/badge/release-0.9.11-7dd3c0?style=flat-square">
+  <img alt="Release 0.9.12" src="https://img.shields.io/badge/release-0.9.12-7dd3c0?style=flat-square">
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-4f8cc9?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Android" src="https://img.shields.io/badge/Android-10%2B-3ddc84?style=flat-square&logo=android&logoColor=white">
   <img alt="Safari" src="https://img.shields.io/badge/iPhone-Safari-4f8cc9?style=flat-square&logo=safari&logoColor=white">
 </p>
 
 <p align="center">
-  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.9.11"><strong>Скачать SimDeck 0.9.11</strong></a>
+  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.9.12"><strong>Скачать SimDeck 0.9.12</strong></a>
   · <a href="#быстрый-запуск">Быстрый запуск</a>
   · <a href="TROUBLESHOOTING.md">Решение проблем</a>
 </p>
@@ -24,7 +24,7 @@ SimDeck превращает Android-планшет, телефон или Safar
 
 ## Скачать
 
-Для любой игры сначала скачайте [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.9.11/SimDeck-0.9.11-Windows.zip) и полностью распакуйте архив. Для Android дополнительно установите [APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.10/SimDeck-0.9.10-Android.apk). На iPhone отдельный файл не нужен: откройте локальный Safari-пульт из Companion. Companion **0.9.11** совместим с APK **0.9.10** и модом FS25 **1.4.0.0**; обновлять их для нового дизайна ПК не требуется. [Изменения и USB](docs/UPDATE-0911.md) · [Контрольная сумма Windows](https://github.com/timurgass/SimDeck/releases/download/v0.9.11/SimDeck-0.9.11-SHA256SUMS.txt).
+Для любой игры сначала скачайте [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.9.12/SimDeck-0.9.12-Windows.zip) и полностью распакуйте архив. Для Android дополнительно установите [APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.12/SimDeck-0.9.12-Android.apk). На iPhone отдельный файл не нужен: откройте локальный Safari-пульт из Companion. Companion **0.9.12** совместим с APK **0.9.10** и модом FS25 **1.4.0.0**; обновлять их для нового дизайна ПК не требуется. [Изменения и USB](docs/UPDATE-0911.md) · [Контрольная сумма Windows](https://github.com/timurgass/SimDeck/releases/download/v0.9.12/SimDeck-0.9.12-SHA256SUMS.txt).
 
 ### Дополнительные файлы по играм
 
@@ -33,7 +33,7 @@ SimDeck превращает Android-планшет, телефон или Safar
 - **F1 24 / F1 25 — [скачать пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-F1-Preset-0.7.1.zip).** Он настраивает 69 действий: распакуйте архив, закройте игру, запустите `Install-F1-24.cmd` или `Install-F1-25.cmd` и выберите Keyboard Preset 2. Телеметрия работает через UDP игры, отдельный мод не нужен. [Настройка F1](#3-настройте-игру).
 - **BeamNG.drive — [скачать мод телеметрии](https://github.com/timurgass/SimDeck/releases/download/v0.9.10/SimDeck-0.3.0-BeamNG.zip).** Он передаёт передачу, режим коробки и состояния переключателей. Положите ZIP **без распаковки** в пользовательскую папку `mods`, включите мод и перезагрузите машину. Без него остаётся ограниченный резервный OutGauge. [Подробности](beamng/README.md).
 - **Assetto Corsa Competizione — [скачать пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.4/SimDeck-ACC-Preset-0.8.3.zip).** Он настраивает 33 команды: закройте игру, распакуйте архив и запустите `Install-ACC.cmd`. Телеметрия читается из Shared Memory игры, отдельный мод не нужен. [Подробности](ACC-PROFILE.md).
-- **Euro Truck Simulator 2 — [скачать плагин телеметрии](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Telemetry-0.8.5.zip) и [пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Preset-0.8.7.zip).** Плагин нужен для приборов и маршрута: распакуйте его и запустите `Install-ETS2.cmd` при закрытой игре. Для готовых 29 кнопок отдельно распакуйте пресет и запустите `Install-ETS2-Preset.cmd`. [Подробности](ETS2-PROFILE.md).
+- **Euro Truck Simulator 2 — [скачать плагин телеметрии](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Telemetry-0.8.5.zip) и [пресет клавиш](https://github.com/timurgass/SimDeck/releases/download/v0.8.7/SimDeck-ETS2-Preset-0.8.7.zip).** Плагин нужен для приборов и маршрута: распакуйте его и запустите `Install-ETS2.cmd` при закрытой игре. Карта дорог в 0.9.12 готовится из файлов установленной игры автоматически; отдельный мод карты не нужен. [Настройка карты](docs/ETS2-MAP.md). Для готовых 29 кнопок отдельно распакуйте пресет и запустите `Install-ETS2-Preset.cmd`. [Подробности](ETS2-PROFILE.md).
 - **Farming Simulator 25 — [скачать мод состояния техники](https://github.com/timurgass/SimDeck/releases/download/v0.9.10/FS25_SimDeckStatus.zip).** Он **необязателен для кнопок и данных сохранения**, но нужен для живого статуса орудия, агрегата, двигателя и текущих цен продажи. Положите ZIP **без распаковки** в `Documents/My Games/FarmingSimulator2025/mods` и включите мод для сохранения. [Подробности](mods/FS25_SimDeckStatus/README.md).
 - **Automobilista 2 / SnowRunner — дополнительные файлы не нужны.** Кнопки настраиваются вручную в игре и Companion; адаптеры живой телеметрии пока не готовы.
 
@@ -76,7 +76,7 @@ Android-приложение и Safari-пульт выбирают оформл�
 | **BeamNG.drive** | Мод SimDeck, резервный OutGauge | 22 действия | Реальная передача, режим коробки, свет, привод и возврат машины |
 | **Assetto Corsa Competizione** | Shared Memory | 33 действия + готовый пресет | Приборы, четыре колеса, тормоза, двигатель и подтверждённые переключатели |
 | **Automobilista 2** | Запланирована Shared Memory | 31 действие | Гонка, электроника, ICM и HUD |
-| **Euro Truck Simulator 2** | SCS Telemetry SDK через плагин | 29 действий | Приборы, маршрутные метрики, векторные значки и состояния переключателей |
+| **Euro Truck Simulator 2** | SCS Telemetry SDK через плагин | 29 действий | Приборы, карта дорог и грузовик, маршрутные метрики, значки и состояния переключателей |
 | **SnowRunner** | Нет подтверждённого штатного потока | 26 действий | Трансмиссия, лебёдка, оборудование и навигация |
 | **Farming Simulator 25** | Последнее сохранение XML; живое состояние через дополнительный мод | 54 действия | Значки действий, одна кнопка сцепки, состояние выбранного орудия/молотилки/двигателя при включённом моде |
 
@@ -124,7 +124,7 @@ Companion показывает состояние подключения, вхо
 
 ### 1. Запустите Companion
 
-1. Скачайте и полностью распакуйте `SimDeck-0.9.11-Windows.zip`.
+1. Скачайте и полностью распакуйте `SimDeck-0.9.12-Windows.zip`.
 2. Запустите `SimDeck.exe`. Переносить один EXE из папки нельзя.
 3. Выберите профиль игры и оставьте Companion запущенным.
 
@@ -303,4 +303,4 @@ Android SDK задаётся через `ANDROID_HOME` или локальный
 
 ## Текущий статус
 
-Companion **0.9.11** использует согласованный графитовый дизайн, навигацию слева, поиск действий и подготовку USB кнопкой на ПК. [Подробнее](docs/UPDATE-0911.md). Версия **0.9.10** добавляет проценты шкал в «Полях», отдельную вкладку текущих цен по культурам и пунктам продажи, заливку повреждённых крыльев/боковин/DRS F1 и переключение сохранённого ПК на USB/ADB. [Подробнее](docs/UPDATE-0910.md). Версия 0.9.9 перенесла крупные схемы и панели согласованного дизайна, добавляет «Поля» FS25 и ускоряет живые состояния. Предыдущие исправления пропорций и отдельная разгрузка на землю (Ctrl+I) сохранены. Сохраняются 92 класса техники и орудий, автоматическое сопоставление 103 категорий магазина и отдельные самоходные/прицепные варианты. Жатка показана с узкого торца и появляется только при подключении. Рисунки и координаты общие для Android и Safari. Все прежние вкладки и пользовательские кнопки сохранены. Для частоты живого состояния 5 Гц нужен мод FS25 **1.4.0.0**; в 0.9.10 появилась отдельная вкладка «Поля». [Изменения](RELEASE-NOTES.md) · [Схемы, установка и ограничения](docs/FS25-EQUIPMENT-096.md) · [Две команды разгрузки FS25](docs/FS25-UNLOADING.md).
+Companion **0.9.12** использует согласованный графитовый дизайн, навигацию слева, поиск действий и подготовку USB кнопкой на ПК. [Подробнее](docs/UPDATE-0911.md). Версия **0.9.10** добавляет проценты шкал в «Полях», отдельную вкладку текущих цен по культурам и пунктам продажи, заливку повреждённых крыльев/боковин/DRS F1 и переключение сохранённого ПК на USB/ADB. [Подробнее](docs/UPDATE-0910.md). Версия 0.9.9 перенесла крупные схемы и панели согласованного дизайна, добавляет «Поля» FS25 и ускоряет живые состояния. Предыдущие исправления пропорций и отдельная разгрузка на землю (Ctrl+I) сохранены. Сохраняются 92 класса техники и орудий, автоматическое сопоставление 103 категорий магазина и отдельные самоходные/прицепные варианты. Жатка показана с узкого торца и появляется только при подключении. Рисунки и координаты общие для Android и Safari. Все прежние вкладки и пользовательские кнопки сохранены. Для частоты живого состояния 5 Гц нужен мод FS25 **1.4.0.0**; в 0.9.10 появилась отдельная вкладка «Поля». [Изменения](RELEASE-NOTES.md) · [Схемы, установка и ограничения](docs/FS25-EQUIPMENT-096.md) · [Две команды разгрузки FS25](docs/FS25-UNLOADING.md).

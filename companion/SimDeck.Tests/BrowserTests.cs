@@ -33,6 +33,7 @@ static class BrowserTests
         check(fs25Icons.Contains("fs25Attach") && fs25Icons.Contains("fs25Lower") && fs25Icons.Contains("fs25TurnOn"), "Browser serves FS25 action icons to Safari");
         check((await http.GetStringAsync(origin + "/fs25.js")).Contains("ДАННЫЕ СОХРАНЕНИЯ"), "Browser serves the FS25 save dashboard to Safari");
         check((await http.GetAsync(origin+"/status")).StatusCode==HttpStatusCode.Unauthorized, "Browser starts without authorisation");
+        check((await http.GetAsync(origin+"/ets2-map?x=0&z=0&span=1600")).StatusCode==HttpStatusCode.Unauthorized,"ETS2 map geometry requires a paired browser");
         async Task<HttpResponseMessage> Pair(string code, string? from) {
             using var request=new HttpRequestMessage(HttpMethod.Post,origin+"/pair") { Content=JsonContent.Create(new {code}) };
             if(from is not null) request.Headers.Add("Origin",from);

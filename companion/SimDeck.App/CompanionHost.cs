@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using SimDeck.Core;
 
 namespace SimDeck.App;
@@ -20,6 +21,7 @@ public sealed class CompanionHost : IAsyncDisposable
 {
     public SettingsStore Store { get; }
     public TelemetryHub Telemetry { get; } = new();
+    public Ets2MapService Ets2Map { get; }
     public PairingGate Pairing { get; } = new();
     public WindowsInput Backend { get; } = new();
     public InputEngine Input { get; }
@@ -94,6 +96,7 @@ public sealed class CompanionHost : IAsyncDisposable
         Func<Fs25SavegameDir, DateTime, Fs25Details>? readFs25Save = null)
     {
         Store = new(dataDirectory);
+        Ets2Map = new(dataDirectory);
         this.inputBackend = inputBackend ?? Backend;
         this.readFs25Save = readFs25Save;
         Input = new(this.inputBackend);
@@ -193,13 +196,21 @@ public sealed class CompanionHost : IAsyncDisposable
         certificate = serverCertificate ?? Store.Certificate();
         Fingerprint = Convert.ToHexString(SHA256.HashData(certificate.RawData)).ToLowerInvariant();
         var builder = WebApplication.CreateSlimBuilder();
+        builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
         builder.Logging.ClearProviders();
         builder.WebHost.ConfigureKestrel(o => { o.Limits.MaxRequestBodySize = 4096;
             if (localOnly) o.Listen(IPAddress.Loopback, Store.Value.Port, l => l.UseHttps(certificate));
             else o.ListenAnyIP(Store.Value.Port, l => l.UseHttps(certificate)); });
         app = builder.Build();
+        app.UseResponseCompression();
         app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(10) });
         app.MapGet("/health", () => Results.Json(new { name = "SimDeck", protocolMajor = 1 }));
+        app.MapGet("/ets2-map", (HttpContext context) =>
+        {
+            var auth=context.Request.Headers.Authorization.ToString();
+            if(!auth.StartsWith("Bearer ",StringComparison.Ordinal) || !Store.IsTrusted(auth[7..])) return Results.StatusCode(401);
+            return Ets2Map.Response(context);
+        });
         app.MapPost("/pair", async (HttpContext context) =>
         {
             try
@@ -425,6 +436,7 @@ public sealed class CompanionHost : IAsyncDisposable
                         }
                         else if (IsEts2)
                         {
+                            Ets2Map.Ensure();
                             if (scsReader.TryRead(out var timestamp, out var frame, out var error))
                             {
                                 if (timestamp != lastScsTimestamp)
@@ -580,6 +592,7 @@ public sealed class CompanionHost : IAsyncDisposable
         Backend.Enabled = false;
         Input.ReleaseAll();
         stop.Cancel();
+        Ets2Map.Dispose();
         if (Browser is not null) await Browser.DisposeAsync();
         udp?.Dispose();
         f1Udp?.Dispose();

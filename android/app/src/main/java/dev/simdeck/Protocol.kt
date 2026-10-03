@@ -2,7 +2,8 @@ package dev.simdeck
 
 import org.json.JSONObject
 
-data class Ets2Navigation(val remainingKm: Double?, val remainingMinutes: Double?, val speedLimitKmh: Double?)
+data class Ets2Navigation(val remainingKm: Double?, val remainingMinutes: Double?, val speedLimitKmh: Double?,
+    val worldX:Double?=null,val worldZ:Double?=null,val heading:Double?=null)
 data class Telemetry(val speedMps: Double, val rpm: Double, val gear: Int, val fuelFraction: Double?, val maxRpm: Double?, val gearboxMode: String? = null, val maxGear: Int? = null,
     val headlights: Int? = null, val actionStates: Map<String, Boolean> = emptyMap(), val f1: F1Data? = null, val acc: AccData? = null,
     val ets2Navigation: Ets2Navigation? = null, val fs25: Fs25Data? = null, val vehicle: VehicleInfo? = null, val fs25Prices: Fs25Prices? = null)
@@ -40,7 +41,9 @@ object Protocol {
         d.optJSONObject("actionStates")?.let { s -> s.keys().forEach { key -> (s.opt(key) as? Boolean)?.let { states[key] = it } } }
         val nav = d.optJSONObject("ets2Navigation")?.let { n ->
             fun metric(name: String, max: Double) = n.optDouble(name, Double.NaN).takeIf { it.isFinite() && it > 0 && it < max }
-            Ets2Navigation(metric("remainingKm", 10000.0), metric("remainingMinutes", 200000.0), metric("speedLimitKmh", 360.0))
+            fun position(name:String)=n.optDouble(name,Double.NaN).takeIf { it.isFinite() && kotlin.math.abs(it)<=1000000 }
+            val heading=n.optDouble("heading",Double.NaN).takeIf { it.isFinite() && it in 0.0..1.0 }
+            Ets2Navigation(metric("remainingKm", 10000.0), metric("remainingMinutes", 200000.0), metric("speedLimitKmh", 360.0),position("worldX"),position("worldZ"),heading)
         }
         return Telemetry(speed, rpm, d.getInt("gear"), fuel, maximum, mode, maxGear, lights, states,
             F1Data.parse(d.optJSONObject("f1")), AccData.parse(d.optJSONObject("acc")), nav,

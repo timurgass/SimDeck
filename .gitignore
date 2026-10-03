@@ -11,3 +11,4 @@ local.properties
 .vs/
 artifacts/
 **/node_modules/
+**/ets2-map-cache/

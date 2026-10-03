@@ -12,7 +12,7 @@ function mountReferenceDashboard(root){
   right.append(dashboardButtons([['fs25Lower','Поднять / опустить'],['fs25TurnOn','Включить / выключить'],['fs25Fold','Сложить / разложить']],'referenceWorkButtons'));
  }else if(profileId==='ets2'){
   right.classList.add('navigatorCard');right.append(node('h2','','НАВИГАТОР'),node('small','caption','МАРШРУТ ИЗ ИГРЫ'),dashboardMetric('ОСТАЛОСЬ','route','referenceRoute'));
-  const map=node('div','navigationUnavailable'),icon=actionIcon('etsMap');if(icon)map.append(icon);map.append(node('strong','','Для карты дорог нужен отдельный источник'),node('p','hint','Кнопка «Карта» открывает навигатор в ETS2. Геометрия дорог пока не передаётся.'));right.append(map);
+  mountEtsMap(right);
   const speed=node('div','navigatorSpeed');speed.append(dashboardMetric('СКОРОСТЬ · КМ/Ч','speed'),dashboardMetric('ОГРАНИЧЕНИЕ','limit'));right.append(speed,dashboardButtons([['etsCruiseDown','Круиз −'],['etsCruise','Круиз'],['etsCruiseUp','Круиз +'],['etsLights','Свет']],'referenceQuickBar'));
  }else if(profileId==='beamng-default'){
   right.classList.add('damageList');for(const[name,key,id]of [['Кузов','cabin','lights'],['Радиатор','radiator','ignition'],['Передняя подвеска','suspension','fourWheelDrive'],['Двигатель','engine','ignition'],['Трансмиссия','transmission','fourWheelDrive']])right.append(referenceStatusRow(name,'damage:'+key,id));
@@ -31,6 +31,7 @@ function mountReferenceDashboard(root){
 function referenceStatusRow(label,key,id){const row=node('div','referenceStatusRow'),icon=actionIcon(id);if(icon)row.append(icon);const text=node('div');text.append(node('span','',label));const state=node('strong','','НЕТ ДАННЫХ');state.dataset.metric=key;text.append(state);row.append(text);return row;}
 function updateReferenceDashboard(data){
  const root=$('profileDashboard');if(!root?.classList.contains('referenceDashboard'))return;
+ updateEtsMap(data);
  const v=data?.vehicle||lastKnownVehicle;
  for(const el of root.querySelectorAll('[data-metric="frontAttachment"],[data-metric="rearAttachment"],[data-metric="fold"],[data-metric^="damage:"]')){
   let value='НЕТ ДАННЫХ';if(el.dataset.metric.endsWith('Attachment')){const mount=el.dataset.metric==='frontAttachment'?'front':'rear';value=v?.controlled===true?((v.attachments||[]).filter(a=>a.mount===mount).map(a=>a.name).join(', ')||'Свободна'):'—';}

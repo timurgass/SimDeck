@@ -2,7 +2,8 @@ using System.Buffers.Binary;
 
 namespace SimDeck.Core;
 
-public sealed record Ets2Navigation(double? RemainingKm, double? RemainingMinutes, double? SpeedLimitKmh);
+public sealed record Ets2Navigation(double? RemainingKm, double? RemainingMinutes, double? SpeedLimitKmh,
+    double? WorldX = null, double? WorldZ = null, double? Heading = null);
 
 public sealed record Telemetry(double SpeedMps, double Rpm, int Gear, double? FuelFraction,
     double Throttle, double Brake, double Clutch, double? MaxRpm = null, double? FuelLiters = null,

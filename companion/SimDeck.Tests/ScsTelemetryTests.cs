@@ -23,6 +23,9 @@ internal static class ScsTelemetryTests
         F32(1060, 309630);
         F32(1064, 18420);
         F32(1068, 13.8889f);
+        BinaryPrimitives.WriteDoubleLittleEndian(bytes.AsSpan(2200),-12500.25);
+        BinaryPrimitives.WriteDoubleLittleEndian(bytes.AsSpan(2216),2400.5);
+        BinaryPrimitives.WriteDoubleLittleEndian(bytes.AsSpan(2224),.75);
         bytes[1576] = 1; // engine
         bytes[1583] = 1; // low beam
         bytes[1588] = 1; // hazard
@@ -34,6 +37,10 @@ internal static class ScsTelemetryTests
               Math.Abs(frame.Ets2Navigation.SpeedLimitKmh!.Value - 50) < .01,
             "SCS revision 12 memory exposes ETS2 speed, RPM, gear, fuel and switch states");
         bytes[1584] = 1;
+        check(ScsTelemetryParser.TryParse(bytes,out _,out frame) && frame!.Ets2Navigation is { WorldX:-12500.25,WorldZ:2400.5,Heading:.75 },"ETS2 world position retains signed doubles and heading at SDK dplacement offsets");
+        BinaryPrimitives.WriteDoubleLittleEndian(bytes.AsSpan(2200),double.NaN);
+        check(ScsTelemetryParser.TryParse(bytes,out _,out frame) && frame!.Ets2Navigation!.WorldX is null && frame.Ets2Navigation.RemainingKm is not null,"ETS2 invalid position does not discard other telemetry");
+        check(ScsTelemetryParser.TryParse(bytes.AsSpan(0,ScsTelemetryParser.MinimumSnapshotSize),out _,out frame) && frame!.Ets2Navigation!.WorldX is null,"ETS2 short legacy snapshots remain usable without map coordinates");
         check(ScsTelemetryParser.TryParse(bytes, out _, out frame) && frame!.Headlights == 2,
             "ETS2 high beam has distinct blue state");
         bytes[4] = 1;

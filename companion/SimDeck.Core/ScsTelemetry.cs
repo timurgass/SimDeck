@@ -58,6 +58,16 @@ public static class ScsTelemetryParser
             Finite(remainingMetres, 0, 10_000_000) && remainingMetres > 0 ? remainingMetres / 1000.0 : null,
             Finite(remainingSeconds, 0, 10_000_000) && remainingSeconds > 0 ? remainingSeconds / 60.0 : null,
             Finite(speedLimitMps, 0, 100) && speedLimitMps > 0 ? speedLimitMps * 3.6 : null);
+        // SDK revision 12: eighth zone is dplacement at byte 2200; heading is turns, anticlockwise.
+        if(data.Length>=2232)
+        {
+            var x=BinaryPrimitives.ReadDoubleLittleEndian(data[2200..]);
+            var z=BinaryPrimitives.ReadDoubleLittleEndian(data[2216..]);
+            var heading=BinaryPrimitives.ReadDoubleLittleEndian(data[2224..]);
+            if(double.IsFinite(x) && double.IsFinite(z) && Math.Abs(x)<=1_000_000 && Math.Abs(z)<=1_000_000 &&
+                double.IsFinite(heading) && heading is >=0 and <=1)
+                navigation=navigation with { WorldX=x,WorldZ=z,Heading=heading==1?0:heading };
+        }
         telemetry = new(Math.Abs(speed), rpm, gear, Math.Clamp(fuelLiters / fuelCapacity, 0, 1),
             throttle, brake, clutch, maxRpm, fuelLiters, "realistic", (int)forwardGears,
             highBeam ? 2 : lowBeam ? 1 : 0, states, Ets2Navigation: navigation, Vehicle: Vehicle(data));

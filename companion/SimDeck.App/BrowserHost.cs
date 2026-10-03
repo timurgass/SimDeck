@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using SimDeck.Core;
 
 namespace SimDeck.App;
@@ -30,12 +31,14 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
         foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
             foreach (var ip in nic.GetIPProperties().UnicastAddresses) addresses.Add(ip.Address.ToString());
         var builder = WebApplication.CreateSlimBuilder();
+        builder.Services.AddResponseCompression();
         builder.Logging.ClearProviders();
         builder.WebHost.ConfigureKestrel(o => {
             o.Limits.MaxRequestBodySize = 1024;
             o.Listen(localOnly ? IPAddress.Loopback : IPAddress.Any, port);
         });
         app = builder.Build();
+        app.UseResponseCompression();
         app.Use(async (c, next) => {
             // Reject DNS rebinding and non-LAN peers. No forwarded headers are trusted.
             if (!addresses.Contains(c.Request.Host.Host) || c.Request.Host.Port != Port || !Local(c.Connection.RemoteIpAddress))
@@ -54,6 +57,7 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
         app.MapGet("/fs25-field-ui.json", () => Asset("fs25-field-ui.json", "application/json; charset=utf-8"));
         app.MapGet("/f1-damage-zones.json", () => Asset("f1-damage-zones.json", "application/json; charset=utf-8"));
         app.MapGet("/ets2-icons.js", () => Asset("ets2-icons.js", "text/javascript; charset=utf-8"));
+        app.MapGet("/ets2-map.js", () => Asset("ets2-map.js", "text/javascript; charset=utf-8"));
         app.MapGet("/fs25-icons.js", () => Asset("fs25-icons.js", "text/javascript; charset=utf-8"));
         app.MapGet("/style.css", () => Asset("style.css", "text/css; charset=utf-8"));
         app.MapGet("/profile-design.css", () => Asset("profile-design.css", "text/css; charset=utf-8"));
@@ -85,6 +89,7 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
             } catch (Exception e) when(e is JsonException or KeyNotFoundException or InvalidOperationException) { return Results.BadRequest(); }
         });
         app.MapGet("/status", (HttpContext c) => Trusted(c) ? Results.Json(new { paired = true }) : Results.StatusCode(401));
+        app.MapGet("/ets2-map", (HttpContext c) => Trusted(c) ? host.Ets2Map.Response(c) : Results.StatusCode(401));
         app.Map("/ws", async c => {
             CancellationTokenSource lifetime;
             lock(gate) {

@@ -69,9 +69,7 @@ import androidx.compose.ui.unit.sp
                 Text("Маршрут из игры",fontSize=16.sp,lineHeight=20.sp,color=d.muted)
                 val n=state.telemetry?.ets2Navigation
                 Text("${n?.remainingKm?.let { "%.0f км".format(it) } ?: "— км"} · ${n?.remainingMinutes?.let { "%.0f мин".format(it) } ?: "— мин"}",fontSize=25.sp,lineHeight=29.sp,fontWeight=FontWeight.Bold)
-                Box(Modifier.fillMaxWidth().height(235.dp).background(d.background).border(1.dp,d.line).padding(24.dp),contentAlignment=Alignment.Center) {
-                    Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(12.dp)) { Ets2Icon("etsMap",d.muted);Text("Для карты дорог нужен отдельный источник.",color=d.muted);Text("Кнопка «Карта» открывает навигатор в ETS2.",fontSize=13.sp,lineHeight=17.sp,color=d.muted) }
-                }
+                Ets2RoadMap(state)
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) { Column {Text("СКОРОСТЬ",fontSize=11.sp,lineHeight=15.sp,color=d.muted);Text(state.telemetry?.let { "%.0f км/ч".format(it.speedMps*3.6) } ?: "—",fontSize=26.sp,lineHeight=30.sp,fontWeight=FontWeight.Bold)};Column {Text("ОГРАНИЧЕНИЕ",fontSize=11.sp,lineHeight=15.sp,color=d.muted);Text(n?.speedLimitKmh?.let { "%.0f км/ч".format(it) } ?: "—",fontSize=26.sp,lineHeight=30.sp,fontWeight=FontWeight.Bold)} }
                 ReferenceButtons(state,model,listOf("etsCruiseDown" to "Круиз −","etsCruise" to "Круиз","etsCruiseUp" to "Круиз +","etsLights" to "Свет"),2)
             }
