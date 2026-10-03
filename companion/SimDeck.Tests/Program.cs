@@ -30,7 +30,7 @@ if (args.Length >= 2 && args[0] == "--acc-live")
     if (live.Data?.Acc is null || live.Age >= 500) Environment.ExitCode = 2;
     return;
 }
-if (args.Length == 2 && args[0] == "--render-editor") { RenderTest.Save(args[1]); return; }
+if (args.Length >= 2 && args[0] == "--render-editor") { RenderTest.Save(args[1], args.Length > 2 ? int.Parse(args[2]) : 1440, args.Length > 3 ? int.Parse(args[3]) : 940, args.Length > 4 ? args[4] : "overview"); Console.WriteLine("Desktop navigation, eight profile searches and safe preview passed"); return; }
 if (args.Length >= 2 && args[0] == "--browser-server")
 {
     await using var previewHost = new CompanionHost(args[1], new RecordingInput(Path.Combine(args[1], "input-events.json")));
@@ -101,6 +101,11 @@ if (args.Length >= 2 && args[0] == "--tablet-server")
 }
 var passed = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception("FAIL: " + name); passed++; Console.WriteLine("PASS " + name); }
+Check(UsbBridge.ParseDevices("List of devices attached\nusb-tablet\tdevice product:test\nnet:5555\tdevice\n").SequenceEqual(new[] { new UsbDevice("usb-tablet", "device") }), "USB discovery excludes network debugging endpoints");
+Check(UsbBridge.ParseDevices("first\tunauthorized\nsecond\toffline\n* daemon started successfully *\n").Select(d => d.State).SequenceEqual(new[] { "unauthorized", "offline" }), "USB discovery preserves authorization and offline status without daemon chatter");
+Check(UsbBridge.ParseDevices("List of devices attached\r\n").Count == 0 && UsbBridge.ParseDevices("one\tdevice\ntwo\tdevice\n").Count == 2, "USB discovery distinguishes absent and multiple devices");
+var searchRow = new ButtonRow(new("custom", "Раздел", "Радио", "Запрос инженеру", "Ctrl+T", Group: "Гонка"));
+Check(MainWindow.MatchesSearch(searchRow, "РАДИО") && MainWindow.MatchesSearch(searchRow, " ctrl+t ") && MainWindow.MatchesSearch(searchRow, "инженеру") && !MainWindow.MatchesSearch(searchRow, "Шины"), "Desktop action search includes labels, keys and descriptions without case sensitivity");
 await ProfileTests.Run(Check, args.Length > 0 ? args[0] : Path.Combine(Path.GetTempPath(), "simdeck-profile-tests-" + Guid.NewGuid().ToString("N")));
 F1DetailTests.Run(Check);
 F1RaceTests.Run(Check);

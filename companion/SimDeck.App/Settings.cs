@@ -14,6 +14,7 @@ public sealed class Settings
     public int UdpPort { get; set; } = 4444;
     public string CertificateThumbprint { get; set; } = "";
     public bool UseVirtualKeyInput { get; set; }
+    public string ConnectionMode { get; set; } = "wifi";
     public Dictionary<string, string> Keys { get; set; } = BeamNgProfile.Actions.ToDictionary(x => x.Id, x => x.Key);
     public List<TrustedDevice> Devices { get; set; } = [];
     public string ActiveProfileId { get; set; } = "beamng-default";
@@ -35,6 +36,7 @@ public sealed class SettingsStore
         Directory.CreateDirectory(directory);
         path = Path.Combine(directory, "settings.json");
         Value = File.Exists(path) ? JsonSerializer.Deserialize<Settings>(File.ReadAllText(path)) ?? new() : new();
+        if (Value.ConnectionMode is not ("wifi" or "usb")) Value.ConnectionMode = "wifi";
         if (Value.Port is < 1024 or > 65535 || Value.UdpPort is < 1024 or > 65535) throw new InvalidDataException("Недопустимый порт в settings.json");
         if (Value.Profiles.Count == 0)
         {

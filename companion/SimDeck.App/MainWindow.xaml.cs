@@ -5,6 +5,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using SimDeck.Core;
@@ -17,10 +19,19 @@ public partial class MainWindow : Window
     bool closing;
     bool closeRequested;
     readonly ObservableCollection<ButtonRow> rows = [];
+    ICollectionView? actionsView;
+    string selectedTransport = "wifi";
+    bool usbBusy;
+    string currentSection = "overview";
     public MainWindow()
     {
         InitializeComponent();
-        ButtonGrid.ItemsSource = rows;
+        actionsView = CollectionViewSource.GetDefaultView(rows);
+        actionsView.Filter = value => value is ButtonRow row && MatchesSearch(row, ActionSearch.Text);
+        ButtonGrid.ItemsSource = actionsView;
+        rows.CollectionChanged += (_, _) => UpdateActionCount();
+        VersionText.Text = "Версия " + typeof(MainWindow).Assembly.GetName().Version?.ToString(3);
+        OverviewNav.IsChecked = true;
         GestureColumn.ItemsSource = new[] { "Нажатие", "Удержание", "Нажать → держать" };
         Loaded += async (_, _) =>
         {
@@ -30,6 +41,8 @@ public partial class MainWindow : Window
                 var option = Array.IndexOf(args, "--data-dir");
                 var directory = option >= 0 && args.Length > option + 1 ? args[option + 1] : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SimDeck");
                 host = new(directory);
+                selectedTransport = host.Store.Value.ConnectionMode;
+                UpdateTransport();
                 ProfilePicker.ItemsSource = host.Store.Value.Profiles;
                 ProfilePicker.SelectedValue = host.Profile.Id;
                 CompatibleInput.IsChecked = host.Store.Value.UseVirtualKeyInput;
@@ -63,8 +76,13 @@ public partial class MainWindow : Window
         var fs25 = host.Profile.Id == "fs25" ? t.Data?.Fs25 : null;
         SourceLabel.Text = t.Source == "demo" ? "ДЕМОНСТРАЦИЯ · не данные игры" : fs25 is not null
             ? "FS25 · данные последнего сохранения" : host.Profile.Name + (fresh ? " · данные поступают" : " · нет свежих данных");
-        SpeedLabel.Text = host.Profile.Id == "fs25" ? "—" : fresh ? (t.Data!.SpeedMps * 3.6).ToString("0") : "—";
-        RpmLabel.Text = host.Profile.Id == "fs25" ? "СЕЙВ FS25" : fresh ? $"{t.Data!.Rpm:0} RPM   /   {t.Data.GearDisplay}" : "— RPM   /   —";
+        // Preserve the last received readings during brief source gaps; freshness is
+        // explicit and never controls permission to send keyboard commands.
+        SpeedLabel.Text = host.Profile.Id == "fs25" ? "—" : t.Data is not null ? (t.Data.SpeedMps * 3.6).ToString("0") : "—";
+        RpmLabel.Text = host.Profile.Id == "fs25" ? "—" : t.Data?.Rpm.ToString("0") ?? "—";
+        GearLabel.Text = host.Profile.Id == "fs25" ? "—" : t.Data?.GearDisplay ?? "—";
+        TelemetryAge.Text = t.Data is null ? "Пакетов пока нет" : $"Возраст кадра: {t.Age:0} мс" + (fresh ? "" : " · данные задерживаются");
+        UpdateTransport();
         TelemetryHelp.Text = host.Profile.Id == "fs25" ? host.TelemetryDiagnostic : fresh ? host.Profile.Id is "f1-24" or "f1-25" ? $"UDP F1 · принято {host.ReceivedPackets}, отклонено {host.InvalidPackets}" : host.Profile.Id == "beamng-default" && t.Data!.Headlights is null
             ? "Старый поток без состояния кнопок. Перезапустите BeamNG после обновления мода."
             : host.Profile.Id == "beamng-default" ? "Состояния кнопок поступают · " + (t.Data!.Headlights == 2 ? "дальний свет" : t.Data.Headlights == 1 ? "ближний свет" : "фары выключены")
@@ -72,13 +90,77 @@ public partial class MainWindow : Window
             : host.Profile.Id == "ets2" ? $"SCS Telemetry · принято {host.ReceivedPackets} кадров · состояния кнопок поступают на пульт"
             : "Демонстрационные данные" : host.TelemetryDiagnostic;
         var foreground = host.Backend.ForegroundProcessName;
+        GameStatus.Text = string.Equals(foreground, host.Profile.TargetProcess, StringComparison.OrdinalIgnoreCase) ? "●  Игра активна" : "○  Ожидание игры";
         InputStatus.Text = host.Backend.Demo ? "Демонстрация · ввод отключён" : !host.Backend.Enabled ? "Выключен · установите галочку ниже" : host.Backend.CanInject
             ? $"Готов · {host.Profile.TargetProcess} · {host.Backend.InputModeName}"
             : $"Ожидается {host.Profile.TargetProcess} · сейчас активно: {foreground}";
         LastCommand.Text = host.LastCommand + (host.LastCommand.Contains("injected", StringComparison.Ordinal) ? " · " + host.Backend.LastSendStatus : "");
+        DiagnosticSummary.Text = $"Профиль: {host.Profile.Name}\nПринято: {host.ReceivedPackets} · отклонено: {host.InvalidPackets}\nИсточник: {t.Source}\n{TelemetryAge.Text}\n{InputStatus.Text}\nПоследняя команда: {LastCommand.Text}";
         if (host.Input.LastFault.Length > 0) ErrorLabel.Text = host.Input.LastFault;
     }
     static string Gear(int gear) => gear == -1 ? "R" : gear == 0 ? "N" : gear.ToString();
+    void Navigate(object sender, RoutedEventArgs e)
+    {
+        if (sender is not RadioButton { Tag: string section } || OverviewGrid is null) return;
+        currentSection = section;
+        SectionTitle.Text = section switch { "devices" => "Устройства", "profiles" => "Профили", "diagnostics" => "Диагностика", "settings" => "Настройки", _ => "Обзор" };
+        OverviewGrid.Visibility = section is "overview" or "devices" ? Visibility.Visible : Visibility.Collapsed;
+        MetricsCards.Visibility = section == "overview" ? Visibility.Visible : Visibility.Collapsed;
+        MetricsColumn.Width = section == "devices" ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        GapColumn.Width = new GridLength(section == "devices" ? 0 : 16);
+        EditorCard.Visibility = section is "overview" or "profiles" ? Visibility.Visible : Visibility.Collapsed;
+        ButtonGrid.Height = section == "profiles" ? 420 : 200;
+        ProfileDetails.Visibility = section == "profiles" ? Visibility.Visible : Visibility.Collapsed;
+        DiagnosticCard.Visibility = section == "diagnostics" ? Visibility.Visible : Visibility.Collapsed;
+        SettingsCard.Visibility = section == "settings" ? Visibility.Visible : Visibility.Collapsed;
+        MainScroll.ScrollToTop();
+        AdaptLayout();
+    }
+    void LayoutChanged(object sender, SizeChangedEventArgs e) => AdaptLayout();
+    void AdaptLayout()
+    {
+        if (MetricsCards is null || MainScroll is null) return;
+        var stacked = currentSection == "overview" && MainScroll.ActualWidth is > 0 and < 950;
+        Grid.SetColumn(MetricsCards, stacked ? 0 : 2);
+        Grid.SetRow(MetricsCards, stacked ? 1 : 0);
+        MetricsCards.Margin = new Thickness(0, stacked ? 16 : 0, 0, 0);
+        MetricsColumn.Width = stacked || currentSection == "devices" ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        GapColumn.Width = new GridLength(stacked || currentSection == "devices" ? 0 : 16);
+    }
+    public static bool MatchesSearch(ButtonRow row, string search) => string.Join(" ", row.Label, row.Page, row.Group, row.Key, row.Description, row.GestureLabel).Contains(search.Trim(), StringComparison.OrdinalIgnoreCase);
+    void SearchChanged(object sender, TextChangedEventArgs e)
+    {
+        if (actionsView is null) return;
+        ButtonGrid.CommitEdit(DataGridEditingUnit.Cell, true);
+        ButtonGrid.CommitEdit(DataGridEditingUnit.Row, true);
+        if (actionsView is IEditableCollectionView { IsEditingItem: true }) return;
+        actionsView.Refresh(); UpdateActionCount();
+    }
+    void UpdateActionCount() { if (ActionCount is not null) ActionCount.Text = $"{actionsView?.Cast<object>().Count() ?? rows.Count} / {rows.Count} действий"; }
+    void UpdateTransport()
+    {
+        WifiButton.Background = new SolidColorBrush(selectedTransport == "wifi" ? Color.FromRgb(70,224,196) : Color.FromRgb(34,45,52));
+        WifiButton.Foreground = new SolidColorBrush(selectedTransport == "wifi" ? Color.FromRgb(6,46,41) : Colors.White);
+        UsbButton.Background = new SolidColorBrush(selectedTransport == "usb" ? Color.FromRgb(70,224,196) : Color.FromRgb(34,45,52));
+        UsbButton.Foreground = new SolidColorBrush(selectedTransport == "usb" ? Color.FromRgb(6,46,41) : Colors.White);
+        TransportLabel.Text = host?.ActiveTransport switch { "usb" => "Подключено по USB", "wifi" => "Подключено по локальной сети", "browser" => "Подключено через Safari / браузер", _ => selectedTransport == "usb" ? "Выбран USB · ожидание планшета" : "Выбран Wi-Fi · ожидание устройства" };
+    }
+    void ChooseWifi(object sender, RoutedEventArgs e)
+    {
+        if (usbBusy) return;
+        selectedTransport = "wifi"; if (host is not null) { host.Store.Value.ConnectionMode = selectedTransport; host.Store.Save(); }
+        UpdateTransport(); TransportHelp.Text = "На планшете выберите сохранённый ПК → Wi-Fi. ПК и устройство должны быть в одной локальной сети.";
+    }
+    async void ChooseUsb(object sender, RoutedEventArgs e)
+    {
+        if (host is null || usbBusy) return;
+        selectedTransport = "usb"; host.Store.Value.ConnectionMode = selectedTransport; host.Store.Save(); UpdateTransport();
+        usbBusy = true; UsbButton.IsEnabled = WifiButton.IsEnabled = false;
+        TransportHelp.Text = "Подготовка USB…";
+        try { TransportHelp.Text = await UsbBridge.PrepareAsync(host.Store.Value.Port); }
+        catch (Exception ex) { TransportHelp.Text = "USB: " + ex.Message; }
+        finally { usbBusy = false; if (!closeRequested) UsbButton.IsEnabled = WifiButton.IsEnabled = true; }
+    }
     void OpenPairing(object sender, RoutedEventArgs e) { if (host is not null) PairCode.Text = host.Pairing.Open(); }
     async void OpenBrowser(object sender, RoutedEventArgs e) => await StartBrowserAsync();
     async Task StartBrowserAsync(string? infoFile = null)
@@ -181,13 +263,14 @@ public partial class MainWindow : Window
     void AddButton(object sender, RoutedEventArgs e)
     {
         if (rows.Count >= GameProfiles.MaxActions) { ErrorLabel.Text = "Не более 96 кнопок в профиле."; return; }
+        ActionSearch.Clear();
         var row = new ButtonRow(new("custom-" + Guid.NewGuid().ToString("N"), "Мои кнопки", "НОВАЯ КНОПКА", "", "F12"));
         rows.Add(row); ButtonGrid.SelectedItem = row; ButtonGrid.ScrollIntoView(row);
     }
     void DeleteButton(object sender, RoutedEventArgs e) { if (ButtonGrid.SelectedItem is ButtonRow row) rows.Remove(row); }
     void MoveUp(object sender, RoutedEventArgs e) => Move(-1);
     void MoveDown(object sender, RoutedEventArgs e) => Move(1);
-    void Move(int delta) { var i = ButtonGrid.SelectedIndex; if (i >= 0 && i + delta >= 0 && i + delta < rows.Count) rows.Move(i, i + delta); }
+    void Move(int delta) { var i = ButtonGrid.SelectedItem is ButtonRow row ? rows.IndexOf(row) : -1; if (i >= 0 && i + delta >= 0 && i + delta < rows.Count) rows.Move(i, i + delta); }
     async void WindowClosing(object? sender, CancelEventArgs e)
     {
         if (closing) return;

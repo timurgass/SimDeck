@@ -16,6 +16,21 @@ jobs:
       - run: python tools/qa/check-vehicle-mods.py
       - run: dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release
       - run: dotnet publish companion/SimDeck.App/SimDeck.App.csproj -c Release -r win-x64 --self-contained true -o artifacts/Companion
+      - name: Bundle USB bridge
+        shell: pwsh
+        run: |
+          $sdk = $env:ANDROID_HOME
+          if (-not $sdk) { $sdk = $env:ANDROID_SDK_ROOT }
+          if (-not $sdk) { throw 'Android SDK is required to package the USB bridge' }
+          $source = Join-Path $sdk 'platform-tools'
+          $destination = 'artifacts/Companion/platform-tools'
+          New-Item -ItemType Directory -Force $destination | Out-Null
+          foreach ($name in @('adb.exe','AdbWinApi.dll','AdbWinUsbApi.dll','libwinpthread-1.dll','NOTICE.txt')) {
+            $file = Join-Path $source $name
+            if (Test-Path $file) { Copy-Item -LiteralPath $file -Destination $destination }
+            elseif ($name -ne 'libwinpthread-1.dll') { throw "Missing Android platform tool: $name" }
+          }
+      - run: dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release --no-build -- --render-editor artifacts/companion-preview.png
       - run: dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release --no-build -- --smoke-app artifacts/Companion/SimDeck.exe artifacts/smoke-state
       - run: dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release --no-build -- --smoke-startup-failure artifacts/Companion/SimDeck.exe artifacts/smoke-failed-state
       - uses: actions/upload-artifact@v4

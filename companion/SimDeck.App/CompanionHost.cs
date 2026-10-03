@@ -28,6 +28,7 @@ public sealed class CompanionHost : IAsyncDisposable
     public string Status { get; private set; } = "Запуск…";
     public string LastCommand { get; private set; } = "Команд пока нет";
     public string Device { get; private set; } = "Не подключено";
+    public string? ActiveTransport { get; private set; }
     public int InvalidPackets;
     public int ReceivedPackets;
     public BrowserHost? Browser { get; private set; }
@@ -475,6 +476,7 @@ public sealed class CompanionHost : IAsyncDisposable
             using var socket = await context.WebSockets.AcceptWebSocketAsync();
             Input.BeginSession(session);
             Device = device + " · подключено";
+            ActiveTransport = device == "Android" ? context.Connection.RemoteIpAddress is { } address && IPAddress.IsLoopback(address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address) ? "usb" : "wifi" : "browser";
             var queue = Channel.CreateBounded<object>(new BoundedChannelOptions(64) { FullMode = BoundedChannelFullMode.Wait, SingleReader = true, SingleWriter = false });
             var profile = Profile;
             await queue.Writer.WriteAsync(new { protocolMajor = 1, type = "hello", sessionId = session, profileId = profile.Id, profileRevision = profile.Revision,
@@ -494,7 +496,7 @@ public sealed class CompanionHost : IAsyncDisposable
             lock (controllerGate)
             {
                 if (ReferenceEquals(clientStop, lifetime))
-                { Device = "Не подключено"; clientStop = null; activeControllerKey = null; }
+                { Device = "Не подключено"; ActiveTransport = null; clientStop = null; activeControllerKey = null; }
             }
             controller.Release();
         }
