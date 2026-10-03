@@ -5,7 +5,7 @@ const profileQuick={
  'beamng-default':['БЫСТРОЕ УПРАВЛЕНИЕ',[['ignition','ЗАЖИГАНИЕ'],['lights','ФАРЫ'],['esc','ESC / TCS'],['fourWheelDrive','ПРИВОД'],['hazards','АВАРИЙКА'],['recoverRoad','НА ДОРОГУ']]],
  ams2:['БЫСТРЫЕ ДЕЙСТВИЯ',[['amsIcmCycle','ICM'],['amsRequestPit','ПИТ-СТОП'],['amsPitLimiter','ЛИМИТЕР'],['amsCamera','КАМЕРА']]],
  ets2:['КАБИНА И ТРАНСМИССИЯ',[['etsLights','ФАРЫ'],['etsHighBeam','ДАЛЬНИЙ'],['etsDifferential','БЛОКИРОВКА'],['etsParkingBrake','РУЧНИК'],['etsHorn','СИГНАЛ'],['etsCamera','КАМЕРА']]],
- snowrunner:['ПОЛЕВЫЕ ДЕЙСТВИЯ',[['snowAwd','ПОЛНЫЙ ПРИВОД'],['snowDifferential','БЛОКИРОВКА'],['snowQuickWinch','ЛЕБЁДКА'],['snowPackCargo','ГРУЗ'],['snowMap','КАРТА'],['snowRecover','ЭВАКУАЦИЯ']]],
+ snowrunner:['ПОЛЕВЫЕ ДЕЙСТВИЯ',[['snowQuickWinch','ЛЕБЁДКА'],['snowPackCargo','ГРУЗ'],['snowMap','КАРТА'],['snowRecover','ЭВАКУАЦИЯ']]],
  fs25:['РАБОТА С ОРУДИЕМ',[['fs25Lower','ОПУСТИТЬ / ПОДНЯТЬ'],['fs25TurnOn','ВКЛ / ВЫКЛ'],['fs25Attach','ПРИЦЕПИТЬ / ОТЦЕПИТЬ'],['fs25Fold','СЛОЖИТЬ / РАЗЛОЖИТЬ']]]
 };
 let dashboardProfile='',dashboardRevision=-1;
@@ -41,6 +41,7 @@ function mountProfileDashboard(){
  if(dashboardProfile===profileId&&dashboardRevision===revision)return;
  dashboardProfile=profileId;dashboardRevision=revision;clear(root);
  const banner=node('div','profileBanner');root.append(banner);
+ document.querySelector('.controls').classList.toggle('overviewControls',page==='Обзор');
  banner.hidden=['beamng-default','acc','fs25','snowrunner'].includes(profileId);
  if(['ams2','snowrunner','fs25'].includes(profileId)){
   const info=node('div');info.append(node('small','caption',profileId==='fs25'?'ХОЗЯЙСТВО':profileNames[profileId]),node('h1','',({ams2:'Гонка под контролем.',snowrunner:'Любая дорога начинается здесь.',fs25:'Хороший день для работы.'})[profileId]));
@@ -57,7 +58,7 @@ function mountProfileDashboard(){
   }
   case 'acc': {
    left.append(dashboardMetric('ОБОРОТЫ ДВИГАТЕЛЯ','rpm','accRpm'));const strip=node('div','profileRpm');strip.innerHTML='<i></i>'.repeat(10);left.append(strip);const speed=node('div','accSpeed');speed.append(dashboardMetric('ПЕРЕДАЧА','gear'),dashboardMetric('КМ/Ч','speed'));left.append(speed,dashboardButtons([['accPitLimiter','ЛИМИТЕР'],['accHeadlights','ФАРЫ'],['accWipers','ДВОРНИКИ'],['accRainLight','ДОЖД. СВЕТ']],'quickTiles accSwitches'));
-   right.append(node('h2','caption','ШИНЫ И ТОРМОЗА'));const tyres=node('div','accTyres');for(let i=0;i<4;i++){const card=node('div');card.append(node('small','caption',['ПЕРЕДНЯЯ ЛЕВАЯ','ПЕРЕДНЯЯ ПРАВАЯ','ЗАДНЯЯ ЛЕВАЯ','ЗАДНЯЯ ПРАВАЯ'][i]));const temp=node('strong','reading');temp.dataset.metric='tyre'+i;const extra=node('small');extra.dataset.metric='tyreExtra'+i;card.append(temp,extra);tyres.append(card);}const engine=node('small');engine.dataset.metric='engine';right.append(tyres,engine,dashboardButtons([['accRequestPit','ПИТ-СТРАТЕГИЯ']],'pitStrategy'));break;
+   right.append(node('h2','caption','ШИНЫ И ТОРМОЗА'),vehicleSvg('gt',[]));const tyres=node('div','accTyres');for(let i=0;i<4;i++){const card=node('div');card.append(node('small','caption',['ПЕРЕДНЯЯ ЛЕВАЯ','ПЕРЕДНЯЯ ПРАВАЯ','ЗАДНЯЯ ЛЕВАЯ','ЗАДНЯЯ ПРАВАЯ'][i]));const temp=node('strong','reading');temp.dataset.metric='tyre'+i;const extra=node('small');extra.dataset.metric='tyreExtra'+i;card.append(temp,extra);tyres.append(card);}const engine=node('small');engine.dataset.metric='engine';right.append(tyres,engine,dashboardButtons([['accRequestPit','ПИТ-СТРАТЕГИЯ']],'pitStrategy'));break;
   }
   case 'ams2':left.append(node('h2','caption','ПРИБОРЫ'),dashboardRow('Скорость','speed'),dashboardRow('Передача','gear'),dashboardRow('Обороты','rpm'));{const strip=node('div','profileRpm');strip.innerHTML='<i></i>'.repeat(10);left.append(strip);}break;
   case 'ets2': {
@@ -77,7 +78,7 @@ function updateProfileDashboard(data){
  const toggle=(id,on='ВКЛ',off='ВЫКЛ')=>typeof data?.actionStates?.[id]==='boolean'?(data.actionStates[id]?on:off):'—';
  const farm=frame?.data?.fs25,advisor=frame?.data?.fs25Advisor,tasks=advisor?.tasks||[],done=tasks.filter(t=>t.status===1).length;
  const values={speed:data?Math.round(data.speedMps*3.6):'—',gear:data?.gearDisplay??'—',rpm:data?Math.round(data.rpm)+' RPM':'— RPM',fuel:data?.fuelFraction!=null?Math.round(data.fuelFraction*100)+'%':'—',fuelBar:data?.fuelFraction??0,
-  live:frame?.source==='demo'?'● ДЕМО':data?'● LIVE':'● НЕТ ДАННЫХ',mode:'МАШИНА · '+({arcade:'АРКАДА',realistic:'РЕАЛИЗМ'}[data?.gearboxMode]||'—'),ignition:toggle('ignition','Работает','Выключен'),etsCruise:toggle('etsCruise'),route:fmt(data?.ets2Navigation?.remainingKm,' км')+' · '+fmt(data?.ets2Navigation?.remainingMinutes,' мин'),limit:fmt(data?.ets2Navigation?.speedLimitKmh,' км/ч'),
+  live:frame?.source==='demo'?'● ДЕМО':currentData()?'● LIVE':data?'● ПОСЛЕДНИЕ ДАННЫЕ':'● ОЖИДАНИЕ',mode:'МАШИНА · '+({arcade:'АРКАДА',realistic:'РЕАЛИЗМ'}[data?.gearboxMode]||'—'),ignition:toggle('ignition','Работает','Выключен'),etsCruise:toggle('etsCruise'),route:fmt(data?.ets2Navigation?.remainingKm,' км')+' · '+fmt(data?.ets2Navigation?.remainingMinutes,' мин'),limit:fmt(data?.ets2Navigation?.speedLimitKmh,' км/ч'),
   farm:farm?[farm.header?.savegameName,farm.header?.mapTitle,farm.environment?.period?.russianMonth].filter(Boolean).join(' · '):'Сохраните ферму в игре',vehicle:(data?.vehicle||lastKnownVehicle)?.controlled?(data?.vehicle||lastKnownVehicle).name:'Ждём технику',fs25Lower:toggle('fs25Lower','Опущено','Поднято'),fs25TurnOn:toggle('fs25TurnOn','Работает','Выключен'),fs25Motor:toggle('fs25Motor','Запущен','Остановлен'),tasks:tasks.length?done+' / '+tasks.length:'—',tasksBar:tasks.length?done/tasks.length:0,engine:data?.acc?'Двигатель '+fmt(data.acc.waterTemperature,' °C')+' · трасса '+fmt(data.acc.roadTemperature,' °C'):'Двигатель — · трасса —',input:({ready:'● ВВОД ГОТОВ',unfocused:'Открой окно игры на ПК',disabled:'Разреши ввод в Companion',demo:'Демо · ввод отключён'})[availability]||'Ожидание подключения',command:$('command').textContent};
  for(let i=0;i<4;i++){const w=data?.acc?.wheels?.[i];values['tyre'+i]=fmt(w?.coreTemperature,' °C');values['tyreExtra'+i]=fmt(w?.pressure,' PSI',1)+' · тормоз '+fmt(w?.brakeTemperature,' °C');}
  for(const el of root.querySelectorAll('[data-metric]')){const value=values[el.dataset.metric];if(el.tagName==='PROGRESS')el.value=value||0;else el.textContent=value??'—';}

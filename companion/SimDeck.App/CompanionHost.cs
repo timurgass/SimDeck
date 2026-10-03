@@ -249,7 +249,7 @@ public sealed class CompanionHost : IAsyncDisposable
                     userDataDir ??= Fs25GamePaths.FindUserDataDir();
                     var live=userDataDir is null?null:Fs25LiveReader.ReadSnapshot(userDataDir,DateTime.UtcNow);
                     if(live is not null) lock(profileGate) {
-                        if(IsFs25 && !Demo) Telemetry.PublishFs25Live(live.States,live.Vehicle);
+                        if(IsFs25 && !Demo) Telemetry.PublishFs25Live(live.States,live.Vehicle,live.AgeMs);
                     }
                 } catch(Exception ex) { fs25Diagnostic="FS25: ошибка чтения живого состояния ("+ex.GetType().Name+")."; }
                 await Task.Delay(250,stop.Token);

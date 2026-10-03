@@ -116,14 +116,14 @@ public sealed class TelemetryHub
     {
         lock (gate) { latest = data; receivedAt = Environment.TickCount64; sequence++; }
     }
-    public void PublishFs25Live(IReadOnlyDictionary<string, bool> states, VehicleInfo? vehicle = null)
+    public void PublishFs25Live(IReadOnlyDictionary<string, bool> states, VehicleInfo? vehicle = null, long sourceAgeMs = 0)
     {
         lock (gate)
         {
             if (source != "fs25") return;
             fs25LiveStates = new Dictionary<string, bool>(states);
             fs25Vehicle = vehicle;
-            fs25LiveAt = Environment.TickCount64;
+            fs25LiveAt = Environment.TickCount64 - Math.Clamp(sourceAgeMs, 0, int.MaxValue);
             sequence++;
         }
     }
@@ -138,7 +138,9 @@ public sealed class TelemetryHub
     (Telemetry? Data, long Age) Current()
     {
         var now = Environment.TickCount64;
-        if (source == "fs25" && fs25LiveStates is not null && now - fs25LiveAt < 1500)
+        // Save metadata can refresh independently. It must neither erase the last live
+        // equipment nor make a stopped game stream look fresh again.
+        if (source == "fs25" && fs25LiveStates is not null)
             return ((latest ?? new Telemetry(0, 0, 0, null, 0, 0, 0)) with { ActionStates = fs25LiveStates, Vehicle = fs25Vehicle }, now - fs25LiveAt);
         return (latest, latest is null ? long.MaxValue : Math.Max(0, now - receivedAt));
     }

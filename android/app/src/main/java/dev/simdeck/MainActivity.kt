@@ -229,8 +229,8 @@ internal fun Fs25Overview(state: DeckState) {
     val design = LocalProfileDesign.current
     var down by remember { mutableStateOf(false) }
     var startingIgnition by remember { mutableStateOf(false) }
-    val enabled = state.connected && !state.demo && state.inputAvailability == "ready" && !state.menuBusy
-    val feedback = Protocol.feedback(action, state.telemetry, state.stale || state.demo || !state.connected)
+    val enabled = controlsAvailable(state)
+    val feedback = Protocol.feedback(action, state.telemetry, state.demo || !state.connected)
     val active = feedback.active == true
     val ets2 = state.profileId == "ets2"
     val fs25 = state.profileId == "fs25"
@@ -253,7 +253,7 @@ internal fun Fs25Overview(state: DeckState) {
         down -> design.panelAlt
         else -> design.panel
     }
-    val displaySubtitle = feedback.description ?: subtitle
+    val displaySubtitle = (if(state.stale && feedback.description!=null) "Последнее: " else "") + (feedback.description ?: subtitle)
     Box(modifier.heightIn(min = heightDp.dp).background(fill, RoundedCornerShape(design.radius.dp))
         .border(if (active) 2.dp else 1.dp, if (active || down) accent else design.line, RoundedCornerShape(design.radius.dp))
         .semantics { contentDescription = "$label, $displaySubtitle"; stateDescription = when(feedback.active) { true -> "Включено"; false -> "Выключено"; null -> "" } }

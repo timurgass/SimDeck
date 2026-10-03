@@ -6,7 +6,7 @@ using SimDeck.Core;
 
 namespace SimDeck.App;
 
-public sealed record Fs25LiveSnapshot(IReadOnlyDictionary<string, bool> States, VehicleInfo? Vehicle);
+public sealed record Fs25LiveSnapshot(IReadOnlyDictionary<string, bool> States, VehicleInfo? Vehicle, long AgeMs = 0);
 
 /// <summary>Read-only bridge for the optional FS25_SimDeckStatus in-game mod.</summary>
 public static class Fs25LiveReader
@@ -23,20 +23,25 @@ public static class Fs25LiveReader
     public static Fs25LiveSnapshot? ReadSnapshot(string userDataDir, DateTime nowUtc)
     {
         var path = Path.Combine(userDataDir, FileName);
-        if (!File.Exists(path) || nowUtc - File.GetLastWriteTimeUtc(path) > TimeSpan.FromMilliseconds(1200)) return null;
         try
         {
+            if (!File.Exists(path)) return null;
+            var writtenAt = File.GetLastWriteTimeUtc(path);
+            var age = (long)Math.Max(0, (nowUtc - writtenAt).TotalMilliseconds);
+            if (age > 1200) return null;
             using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             if (file.Length > 65536) return null;
             using var reader = XmlReader.Create(file, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 65536 });
             var root = XElement.Load(reader);
+            // A poll must not stamp an unchanged file as a newly produced game frame.
+            if (File.GetLastWriteTimeUtc(path) != writtenAt) return null;
             var version = (string?)root.Attribute("version");
             if (root.Name != "simdeckStatus" || version is not ("1" or "2")) return null;
             var states = new Dictionary<string, bool>(StringComparer.Ordinal);
             foreach (var (attribute, action) in Mappings)
                 if (bool.TryParse((string?)root.Attribute(attribute), out var value)) states[action] = value;
-            if (version == "1") return states.Count == 0 ? null : new(states, null);
-            if (Bool(root, "controlled") == false) return new(new Dictionary<string, bool>(), new("", "", "unknown", [], [], false));
+            if (version == "1") return states.Count == 0 ? null : new(states, null, age);
+            if (Bool(root, "controlled") == false) return new(new Dictionary<string, bool>(), new("", "", "unknown", [], [], false), age);
             var machines = root.Elements("vehicle").Take(33).ToArray();
             if (machines.Length is < 1 or > 32 || Bool(root, "controlled") != true) return null;
             var first = machines[0];
@@ -52,7 +57,7 @@ public static class Fs25LiveReader
                     Bool(machine, "lowered"), Bool(machine, "turnedOn"), Number(machine, "fold", 1) is >= 0 and var fold ? fold : null, Str(machine,"mount") is "front" or "rear" ? Str(machine,"mount") : "unknown"));
             }
             return new(states, new(rootId, Str(first, "name"),
-                VehicleKinds.Resolve(Str(first, "kind")), Wheels(first), attachments));
+                VehicleKinds.Resolve(Str(first, "kind")), Wheels(first), attachments), age);
         }
         catch (Exception ex) when (ex is IOException or XmlException or UnauthorizedAccessException or InvalidDataException) { return null; }
     }

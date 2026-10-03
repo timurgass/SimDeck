@@ -39,14 +39,15 @@ internal fun profileShortName(id: String) = when(id) {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
             sections.forEach { name -> FilterChip(selected=selected==name,onClick={model.releaseAll(); section=name},label={Text(name,fontSize=14.sp)}) }
         }
+        TelemetryStatus(state)
         if(selected!="Обзор") { DesignCard { Controls(state,model,selected,showPages=false) }; return@Column }
         ProfileBanner(state)
         BoxWithConstraints {
             val wide = maxWidth >= 650.dp
             val left: @Composable () -> Unit = {
                 if(state.profileId in setOf("fs25","ets2","beamng-default")) VehiclePanel(state)
-                if(state.profileId=="snowrunner") SnowVehiclePanel(state)
-                if(state.profileId in setOf("acc","ams2")) DesignCard { RoadDrawing(if(state.profileId=="acc") "gt" else "formula"); Text("Схема класса · параметры из доступной телеметрии",fontSize=11.sp,color=design.muted) }
+                if(state.profileId=="snowrunner") SnowVehiclePanel(state,model)
+                if(state.profileId=="ams2") RacingClassPanel()
                 ProfileReadout(state, model)
             }
             val right: @Composable () -> Unit = { ProfileQuickPanel(state, model) }
@@ -72,12 +73,12 @@ internal fun profileShortName(id: String) = when(id) {
     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) { Text(label, fontSize = 12.sp); Text(value, fontSize = 12.sp, color = d.accent, fontWeight = FontWeight.Bold) }
     HorizontalDivider(color = d.line)
 }
-private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off: String = "ВЫКЛ") = if(state.stale) "—" else when(state.telemetry?.actionStates?.get(id)) { true -> on; false -> off; null -> "—" }
+private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off: String = "ВЫКЛ") = when(state.telemetry?.actionStates?.get(id)) { true -> on; false -> off; null -> "—" }
 
 @Composable private fun ProfileBanner(state: DeckState) {
     if(state.profileId in setOf("beamng-default","acc","fs25","snowrunner")) return
     val d = LocalProfileDesign.current
-    val data = state.telemetry.takeUnless { state.stale }
+    val data = state.telemetry
     val fs = state.telemetry?.fs25
     val content: @Composable () -> Unit = {
         when(state.profileId) {
@@ -113,7 +114,7 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
 
 @Composable private fun ProfileReadout(state: DeckState, model: DeckModel) {
     val d = LocalProfileDesign.current
-    val data = state.telemetry.takeUnless { state.stale }
+    val data = state.telemetry
     val speed = data?.let { "%.0f".format(it.speedMps*3.6) } ?: "—"
     val gear = data?.let { Protocol.gear(it.gear,it.gearboxMode) } ?: "—"
     val rpm = data?.let { "%.0f".format(it.rpm) } ?: "—"
@@ -161,12 +162,13 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
     }
 }
 
-@Composable private fun LiveTag(state: DeckState) { Text(if(state.demo) "● ДЕМО" else if(state.stale) "● НЕТ ДАННЫХ" else "● LIVE",fontSize=10.sp,color=LocalProfileDesign.current.accent) }
+@Composable private fun LiveTag(state: DeckState) { Text(if(state.demo) "● ДЕМО" else if(state.stale) { if(state.telemetry!=null) "● ПОСЛЕДНИЕ ДАННЫЕ" else "● ОЖИДАНИЕ" } else "● LIVE",fontSize=10.sp,color=LocalProfileDesign.current.accent) }
 
 @Composable private fun ProfileQuickPanel(state: DeckState, model: DeckModel) {
     if(state.profileId=="acc") {
-        val d=LocalProfileDesign.current; val acc=state.telemetry.takeUnless { state.stale }?.acc
+        val d=LocalProfileDesign.current; val acc=state.telemetry?.acc
         DesignCard { Caption("ШИНЫ И ТОРМОЗА")
+            RoadDrawing("gt",heightOverride=220.dp)
             listOf(0,1,2,3).chunked(2).forEach { row -> Row(horizontalArrangement=Arrangement.spacedBy(9.dp)) {
                 row.forEach { i -> val w=acc?.wheels?.getOrNull(i)
                     Column(Modifier.weight(1f).background(d.panelAlt).drawBehind { drawRect(d.accent, size=androidx.compose.ui.geometry.Size(4.dp.toPx(),size.height)) }.padding(12.dp)) {
@@ -184,11 +186,39 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
         "beamng-default" -> "БЫСТРОЕ УПРАВЛЕНИЕ" to listOf("ignition" to "ЗАЖИГАНИЕ","lights" to "ФАРЫ","esc" to "ESC / TCS","fourWheelDrive" to "ПРИВОД","hazards" to "АВАРИЙКА","recoverRoad" to "ВЕРНУТЬ НА ДОРОГУ")
         "ams2" -> "БЫСТРЫЕ ДЕЙСТВИЯ" to listOf("amsIcmCycle" to "ICM","amsRequestPit" to "ПИТ-СТОП","amsPitLimiter" to "ЛИМИТЕР","amsCamera" to "КАМЕРА")
         "ets2" -> "КАБИНА И ТРАНСМИССИЯ" to listOf("etsLights" to "ФАРЫ","etsHighBeam" to "ДАЛЬНИЙ","etsDifferential" to "БЛОКИРОВКА","etsParkingBrake" to "РУЧНИК","etsHorn" to "СИГНАЛ","etsCamera" to "КАМЕРА")
-        "snowrunner" -> "ПОЛЕВЫЕ ДЕЙСТВИЯ" to listOf("snowAwd" to "ПОЛНЫЙ ПРИВОД","snowDifferential" to "БЛОКИРОВКА","snowQuickWinch" to "ЛЕБЁДКА","snowPackCargo" to "ГРУЗ","snowMap" to "КАРТА","snowRecover" to "ЭВАКУАЦИЯ")
+        "snowrunner" -> "ПОЛЕВЫЕ ДЕЙСТВИЯ" to listOf("snowQuickWinch" to "ЛЕБЁДКА","snowPackCargo" to "ГРУЗ","snowMap" to "КАРТА","snowRecover" to "ЭВАКУАЦИЯ")
         "fs25" -> "РАБОТА С ОРУДИЕМ" to listOf("fs25Lower" to "ОПУСТИТЬ / ПОДНЯТЬ","fs25TurnOn" to "ВКЛ / ВЫКЛ","fs25Attach" to "ПРИЦЕПИТЬ / ОТЦЕПИТЬ","fs25Fold" to "СЛОЖИТЬ / РАЗЛОЖИТЬ")
         else -> "ДЕЙСТВИЯ" to emptyList()
     }
     DesignCard { Caption(title); QuickGrid(state,model,entries,columns=if(state.profileId=="snowrunner") 3 else 2,height=when(state.profileId) { "beamng-default","ets2" -> 98; "snowrunner" -> 112; else -> 124 }) }
+}
+
+@Composable internal fun TelemetryStatus(state: DeckState) {
+    val d=LocalProfileDesign.current
+    val text=when {
+        !state.connected -> "Связь с ПК потеряна · последние показания сохранены"
+        state.profileId in setOf("ams2","snowrunner") -> "Профиль управления · живая телеметрия этой игры пока не подключена"
+        state.demo -> "Демонстрационные данные · игровой ввод выключен"
+        state.stale && state.telemetry!=null -> "Обновление задержалось · показаны последние данные. Обычные кнопки доступны при активной игре."
+        state.stale -> "Ожидание данных игры · обычные кнопки доступны при активной игре"
+        else -> "● ЖИВЫЕ ДАННЫЕ · управление подключено отдельно"
+    }
+    Text(text,fontSize=12.sp,lineHeight=16.sp,color=if(state.stale && state.profileId !in setOf("ams2","snowrunner")) Color(0xFFFFC449) else d.muted,
+        minLines=2,maxLines=2,modifier=Modifier.fillMaxWidth())
+}
+
+@Composable private fun RacingClassPanel() {
+    var kind by rememberSaveable { mutableStateOf("formula") }
+    DesignCard {
+        Caption("АВТОМОБИЛЬ · ВЫБОР КЛАССА")
+        Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+            listOf("formula" to "Формула","gt" to "GT","car" to "Кузов").forEach { (id,label) ->
+                FilterChip(selected=kind==id,onClick={kind=id},label={Text(label)})
+            }
+        }
+        RoadDrawing(kind,heightOverride=240.dp)
+        Text("Ручная схема класса · модель и состояния AMS2 пока не передаются",fontSize=11.sp,color=LocalProfileDesign.current.muted)
+    }
 }
 
 @Composable private fun QuickGrid(state: DeckState, model: DeckModel, entries: List<Pair<String,String>>, columns: Int = 2, height: Int = 110) {

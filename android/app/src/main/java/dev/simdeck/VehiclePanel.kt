@@ -55,7 +55,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
             val linked=v.attachments.firstOrNull { it.parentId==v.id && farmSprite(it.kind)!=null && (it.mount!="unknown" || it.kind=="header") }
             if(farm) key(v.id,linked?.id) { FarmDrawing(v.kind,linked) } else {
                 val trailer=v.attachments.firstOrNull { it.kind=="trailer" }.takeIf { state.profileId=="ets2" }
-                if(v.wear.isEmpty() || !live) RoadDrawing(v.kind,if(live) v.wheels else v.wheels.map { it.copy(powered=null) },trailer) else BoxWithConstraints {
+                if(v.wear.isEmpty()) RoadDrawing(v.kind,v.wheels,trailer) else BoxWithConstraints {
                     if(maxWidth>=390.dp) Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                         Column(Modifier.weight(1f)) { RoadDrawing(v.kind,v.wheels,trailer,heightOverride=300.dp) }
                         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)) { WearRows(v.wear) }
@@ -67,7 +67,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
                 HorizontalDivider(color=d.line)
                 Text("↳ ${a.name.ifBlank { vehicleLabels[a.kind] ?: "Орудие" }}",fontWeight=FontWeight.Bold,fontSize=16.sp)
                 if(a!=linked && farm) FarmDrawing(a.kind,null,small=true)
-                Text(if(!live) "Состояние орудия: данные устарели" else listOfNotNull(a.lowered?.let { if(it) "ОПУЩЕНО" else "ПОДНЯТО" },a.turnedOn?.let { if(it) "РАБОТАЕТ" else "ВЫКЛЮЧЕНО" },a.fold?.let { "Складывание ${(it*100).toInt()}%" }).joinToString(" · ").ifBlank { "Состояние не передано игрой" },fontSize=13.sp,color=d.accent)
+                Text((if(!live) "Последнее: " else "") + listOfNotNull(a.lowered?.let { if(it) "ОПУЩЕНО" else "ПОДНЯТО" },a.turnedOn?.let { if(it) "РАБОТАЕТ" else "ВЫКЛЮЧЕНО" },a.fold?.let { "Складывание ${(it*100).toInt()}%" }).joinToString(" · ").ifBlank { "Состояние не передано игрой" },fontSize=13.sp,color=d.accent)
             } }
             if(!farm && v.wear.isEmpty()) Text("Повреждения узлов: нет данных",fontSize=13.sp,color=d.muted)
         }
@@ -128,7 +128,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
         } }
     }
 }
-@Composable internal fun SnowVehiclePanel(state:DeckState) {
+@Composable internal fun SnowVehiclePanel(state:DeckState,model:DeckModel) {
     var count by rememberSaveable { mutableIntStateOf(4) };val d=LocalProfileDesign.current
     DesignCard {
         Text("ПРИВОД И БЛОКИРОВКА",fontSize=20.sp,fontWeight=FontWeight.Black)
@@ -139,6 +139,12 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
         }
         RoadDrawing(if(count==4) "suv" else "truck",List(count) { i -> VehicleWheel(if(i%2==0) -1.0 else 1.0,(i/2).toDouble(),null) })
         Text("$count колёс · ${count/2} оси · иллюстрация",color=d.accent,fontSize=14.sp)
-        Text("Полный привод: неизвестно\nБлокировка: неизвестно",fontSize=16.sp)
+        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            listOf("snowAwd" to "ПОЛНЫЙ ПРИВОД","snowDifferential" to "БЛОКИРОВКА").forEach { (id,label) ->
+                state.controls.firstOrNull { it.id==id }?.let { a ->
+                    Control(label,"Состояние неизвестно · ${a.key}",id,a.gesture=="hold",state,model,Modifier.weight(1f),100,tile=true)
+                }
+            }
+        }
     }
 }

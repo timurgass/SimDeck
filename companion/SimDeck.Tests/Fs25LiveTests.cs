@@ -25,6 +25,18 @@ static class Fs25LiveTests
                 "FS25 live states overlay save data without making it stale");
             hub.ClearFs25Live();
             check(hub.Read().Data?.ActionStates is null, "FS25 removes state indicators when live bridge disappears");
+            var vehicle = new VehicleInfo("combine", "MF 8570", "combine", [], []);
+            hub.PublishFs25Live(states!, vehicle, 2000);
+            var delayed = hub.Read();
+            check(!hub.HasFs25Live && delayed.Age >= 2000 && delayed.Data?.Vehicle == vehicle,
+                "Expired FS25 stream retains its last machine and its real stale age");
+            hub.Publish(new Telemetry(0, 0, 0, null, 0, 0, 0));
+            check(hub.Read().Age >= 2000 && hub.Read().Data?.ActionStates?["fs25Lower"] == true,
+                "A fresh save report neither revives nor erases a stopped live stream");
+            File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddMilliseconds(-700));
+            var aged = Fs25LiveReader.ReadSnapshot(dir, DateTime.UtcNow);
+            check(aged?.AgeMs is >= 650 and < 1200,
+                "FS25 reader carries the file production age instead of resetting it on every poll");
             File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(-5));
             check(Fs25LiveReader.Read(dir, DateTime.UtcNow) is null, "FS25 never displays an old implement state as current");
             File.WriteAllText(path, "<!DOCTYPE x [<!ENTITY e SYSTEM \"file:///secret\">]><simdeckStatus version=\"1\" lowered=\"true\"/>");

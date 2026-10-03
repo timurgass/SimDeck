@@ -18,7 +18,7 @@ private fun n(value: Double?, unit: String = "", decimals: Int = 0): String = va
 private fun compound(value: Double?) = when(value?.toInt()) { 16, 20 -> "Soft"; 17, 21 -> "Medium"; 18, 22 -> "Hard"; 19 -> "Super Soft"; 7 -> "Intermediate"; 8, 15 -> "Wet"; null -> "—"; else -> "Состав ${value.toInt()}" }
 
 @Composable internal fun F1Panel(panel: String, state: DeckState, model: DeckModel) {
-    val data = state.telemetry?.f1.takeUnless { state.stale }
+    val data = state.telemetry?.f1
     val v = data?.values.orEmpty()
     val gameName = gameDisplayName(state.profileId, state.profileName)
     Surface(color = LocalProfileDesign.current.panel, shape = MaterialTheme.shapes.medium) {

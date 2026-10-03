@@ -49,11 +49,16 @@ import androidx.compose.ui.unit.sp
                 }
             }
         } else {
-            val data = state.telemetry.takeUnless { state.stale }
+            val data = state.telemetry
             Row(Modifier.fillMaxWidth().background(design.panel).padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("${data?.let { Protocol.gear(it.gear, it.gearboxMode) } ?: "—"}  ·  ${data?.let { "%.0f".format(it.speedMps * 3.6) } ?: "—"} КМ/Ч", fontWeight = FontWeight.Bold)
                 Text("${data?.let { "%.0f".format(it.rpm) } ?: "—"} RPM", color = design.accent, fontWeight = FontWeight.Bold)
             }
+        }
+        TelemetryStatus(state)
+        if(destination=="race") DesignCard {
+            Text("БОЛИД · ШИНЫ И ПОВРЕЖДЕНИЯ",fontSize=18.sp,fontWeight=FontWeight.Bold)
+            F1Schematic(state.telemetry?.f1)
         }
         DesignCard {
             key(destination) {
@@ -68,7 +73,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable private fun F1RaceInstruments(state: DeckState, model: DeckModel, navigate: (String) -> Unit) {
     val design = LocalProfileDesign.current
-    val data = state.telemetry.takeUnless { state.stale }
+    val data = state.telemetry
     val player = data?.f1?.race?.drivers?.firstOrNull { it.player }
     DesignCard {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -109,7 +114,7 @@ import androidx.compose.ui.unit.sp
         }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            F1QuickAction("Радио", "radio", false, state.connected && state.inputAvailability == "ready" && !state.menuBusy, Modifier.weight(1f)) { model.press("radio", false) }
+            F1QuickAction("Радио", "radio", false, controlsAvailable(state), Modifier.weight(1f)) { model.press("radio", false) }
             F1QuickAction("Пит-стоп", "pit", true, true, Modifier.weight(1f)) { navigate("pit") }
             F1QuickAction("MFD", "mfd", false, true, Modifier.weight(1f)) { navigate("mfd") }
         }
@@ -137,7 +142,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable private fun F1RaceSummary(state: DeckState) {
     val design = LocalProfileDesign.current
-    val data = state.telemetry.takeUnless { state.stale }
+    val data = state.telemetry
     val race = data?.f1?.race
     val drivers = race?.drivers.orEmpty()
     val index = drivers.indexOfFirst { it.player }

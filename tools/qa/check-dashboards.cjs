@@ -18,7 +18,24 @@ const fs=require('fs');const profiles=JSON.parse(fs.readFileSync(process.argv[2]
   for(const p of profiles){
    await page.evaluate(id=>{window.fixtureProfile=window.fixtureProfiles.find(p=>p.id===id);window.fixtureSocket.hello();window.commands=[];window.fixtureVehicle=null;window.telemetryMissing=['ams2','snowrunner'].includes(id);window.inputAvailability='ready';},p.id);await page.waitForTimeout(600);
    if(!await page.locator('#brandGame').textContent())throw Error('Profile title missing '+p.id);
-   if(p.id.startsWith('f1-')){for(const dest of ['race','pit','mfd','track','menu']){await page.evaluate(dest=>goF1(dest),dest);const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth);if(overflow)throw Error(`${p.id} ${width} ${dest} overflow`);}await page.evaluate(()=>{goF1('mfd');panel='mfdDamage';renderF1Panel();});await page.waitForTimeout(150);if(await page.locator('.tyreCard').count()!==4)throw Error('F1 tyre diagram missing');if(width===390||width===1340)await page.locator('#f1Panel').screenshot({path:`${process.argv[4] || '.'}/f1-schematic-${p.id}-${width}.png`});await page.evaluate(()=>goF1('race'));}
+   if(!await page.locator('#telemetryStatus').isVisible())throw Error('Telemetry status missing '+p.id);
+   if(p.id.startsWith('f1-')){
+    if(!await page.locator('#f1VehicleOverview').isVisible()||await page.locator('#f1VehicleOverview .tyreCard').count()!==4)throw Error('F1 schematic missing on race overview '+p.id);
+   }else{
+    if(await page.locator('#f1VehicleOverview').isVisible())throw Error('F1 schematic leaked into '+p.id);
+    if(['acc','ams2','snowrunner'].includes(p.id)&&!await page.locator('#profileDashboard .vehicleDrawing').count())throw Error('Vehicle class absent '+p.id);
+   }
+   // Stop the game stream while retaining the controller: readings and ordinary input
+   // must survive, including profiles with no game data source at all.
+   const reading=await page.locator(p.id.startsWith('f1-')?'#speed':p.id==='snowrunner'?'#profileDashboard [data-metric="gear"]':p.id==='fs25'?'#profileDashboard [data-metric="vehicle"]':'#profileDashboard [data-metric="speed"]').first().textContent();
+   await page.evaluate(()=>window.telemetryMissing=true);await page.waitForTimeout(250);
+   const lastReading=await page.locator(p.id.startsWith('f1-')?'#speed':p.id==='snowrunner'?'#profileDashboard [data-metric="gear"]':p.id==='fs25'?'#profileDashboard [data-metric="vehicle"]':'#profileDashboard [data-metric="speed"]').first().textContent();
+   if(lastReading!==reading)throw Error('Readout disappeared on delayed telemetry '+p.id);
+   const inputButton=page.locator(p.id.startsWith('f1-')?'#f1Quick button:first-child':'#profileDashboard .action:enabled').first();
+   if(!await inputButton.isEnabled())throw Error('Ordinary controls gated by telemetry '+p.id);
+   await inputButton.click();if(!await page.evaluate(()=>commands.some(m=>m.type==='control.invoke')))throw Error('Delayed telemetry blocked command '+p.id);
+   await page.evaluate(()=>{window.telemetryMissing=['ams2','snowrunner'].includes(window.fixtureProfile.id);window.commands=[];});await page.waitForTimeout(250);
+   if(p.id.startsWith('f1-')){for(const dest of ['race','pit','mfd','track','menu']){await page.evaluate(dest=>goF1(dest),dest);const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth);if(overflow)throw Error(`${p.id} ${width} ${dest} overflow`);}await page.evaluate(()=>{goF1('mfd');panel='mfdDamage';renderF1Panel();});await page.waitForTimeout(150);if(await page.locator('#f1Panel .tyreCard').count()!==4)throw Error('F1 tyre diagram missing');if(width===390||width===1340)await page.locator('#f1Panel').screenshot({path:`${process.argv[4] || '.'}/f1-schematic-${p.id}-${width}.png`});await page.evaluate(()=>goF1('race'));}
    const overflow=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:document.documentElement.clientWidth}));if(overflow.scroll>overflow.width)throw Error(JSON.stringify({id:p.id,width,overflow}));
    if(!p.id.startsWith('f1-')){
     const count=await page.locator('#profileDashboard .action').count();if(count<4)throw Error('Quick actions missing '+p.id);
@@ -61,7 +78,7 @@ const fs=require('fs');const profiles=JSON.parse(fs.readFileSync(process.argv[2]
     if(!await page.locator('#vehiclePanel').textContent().then(t=>t.includes('Вы не в технике')))throw Error('Dismount did not clear diagram');
     await page.evaluate(()=>window.fixtureVehicle=null);
    }
-   if(p.id==='fs25'){await page.evaluate(()=>window.fixtureAgeMs=750);await page.waitForTimeout(300);if(!await page.locator('#profileDashboard [data-action="fs25Lower"]').evaluate(e=>e.classList.contains('on')))throw Error('FS25 indicator flickers after missed file poll');await page.evaluate(()=>window.fixtureAgeMs=1500);await page.waitForTimeout(300);if(await page.locator('#profileDashboard [data-action="fs25Lower"]').evaluate(e=>e.classList.contains('on')))throw Error('FS25 old indicator did not expire');await page.evaluate(()=>window.fixtureAgeMs=0);await page.waitForTimeout(300);}
+   if(p.id==='fs25'){await page.evaluate(()=>window.fixtureAgeMs=750);await page.waitForTimeout(300);if(!await page.locator('#profileDashboard [data-action="fs25Lower"]').evaluate(e=>e.classList.contains('on')))throw Error('FS25 indicator flickers after missed file poll');await page.evaluate(()=>window.fixtureAgeMs=1500);await page.waitForTimeout(300);if(!await page.locator('#profileDashboard [data-action="fs25Lower"]').evaluate(e=>e.classList.contains('on'))||!await page.locator('#telemetryStatus').evaluate(e=>e.classList.contains('delayed')))throw Error('FS25 last state lost or not marked delayed');await page.evaluate(()=>window.fixtureAgeMs=0);await page.waitForTimeout(300);}
    if(['fs25','ets2','beamng-default'].includes(p.id)){await page.evaluate(id=>{const farm=id==='fs25',truck=id==='ets2',count=truck?6:4;window.fixtureVehicle={id:'gallery',name:farm?'MT635':truck?'FH16':'Hatchback',kind:farm?'tractor':truck?'truck':'car',controlled:true,wheels:Array.from({length:count},(_,i)=>({x:i%2===0?-1:1,z:Math.floor(i/2)*2-2,powered:i>1})),attachments:farm?[{id:'980',parentId:'gallery',name:'980',kind:'cultivator',mount:'rear',lowered:true,fold:0}]:truck?[{id:'trailer',parentId:'gallery',name:'Полуприцеп',kind:'trailer',wheels:Array.from({length:6},(_,i)=>({x:i%2===0?-1:1,z:Math.floor(i/2)*2-2}))}]:[],wear:truck?{engine:.03,transmission:.01,cabin:.08,chassis:.02,wheels:.04}:{}};},p.id);await page.waitForTimeout(250);}
    if(width===390||width===1340)await page.screenshot({path:`${process.argv[4] || '.'}/dashboard-${p.id}-${width}.png`,fullPage:true});
   }

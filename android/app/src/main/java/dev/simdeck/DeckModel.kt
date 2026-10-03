@@ -36,6 +36,10 @@ data class DeckState(
     val reconnectCount: Int = 0, val lastDisconnect: String = ""
 )
 
+// Receiving game telemetry and sending keyboard commands are independent capabilities.
+internal fun controlsAvailable(state: DeckState) =
+    state.connected && !state.demo && state.inputAvailability == "ready" && !state.menuBusy
+
 class DeckModel(app: Application) : AndroidViewModel(app) {
     private val mutable = MutableStateFlow(DeckState())
     val state = mutable.asStateFlow()
@@ -154,14 +158,14 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                                 profileId = root.getString("profileId")
                                 lastMessage = SystemClock.elapsedRealtime()
                                 val controls = Protocol.controls(root)
-                                mutable.update { it.copy(connected = true, status = "${computer.name} · подключено", controls = controls, profileId = profileId, profileName = root.getString("profileName"), telemetry = null, lastVehicle = it.lastVehicle.takeIf { _ -> it.profileId == profileId }, stale = true, ignitionReady = false, command = "") }
+                                mutable.update { it.copy(connected = true, status = "${computer.name} · подключено", controls = controls, profileId = profileId, profileName = root.getString("profileName"), telemetry = it.telemetry.takeIf { _ -> it.profileId == profileId }, lastVehicle = it.lastVehicle.takeIf { _ -> it.profileId == profileId }, stale = true, ignitionReady = false, command = "") }
                             }
                             "telemetry.snapshot" -> {
                                 require(root.getString("sessionId") == session)
                                 lastFrame = SystemClock.elapsedRealtime()
                                 sourceAge = if (root.isNull("ageMs")) Long.MAX_VALUE else root.getLong("ageMs")
                                 val telemetry = Protocol.telemetry(root)
-                                mutable.update { it.copy(telemetry = telemetry, lastVehicle = telemetry?.vehicle ?: it.lastVehicle,
+                                mutable.update { it.copy(telemetry = telemetry ?: it.telemetry, lastVehicle = telemetry?.vehicle ?: it.lastVehicle,
                                     stale = !Protocol.telemetryFresh(profileId,sourceAge,0), demo = root.optString("source") == "demo") }
                             }
                             "input.state" -> {
@@ -215,7 +219,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
         releaseAll(); generation++; session = null; lastFrame = 0; sourceAge = Long.MAX_VALUE
         socket?.cancel(); socket = null
         client?.connectionPool?.evictAll(); client?.dispatcher?.executorService?.shutdown(); client = null
-        mutable.update { it.copy(connected = false, stale = true, telemetry = null, ignitionReady = false, inputAvailability = "unknown") }
+        mutable.update { it.copy(connected = false, stale = true, ignitionReady = false, inputAvailability = "unknown") }
     }
     private fun send(type: String, fill: JSONObject.() -> Unit = {}) {
         val currentSession = session ?: return
@@ -224,7 +228,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
     }
     fun press(action: String, hold: Boolean): String? {
         if (menuSequence?.isActive == true) return null
-        if (!active || session == null || state.value.demo) return null
+        if (!active || session == null || !controlsAvailable(state.value)) return null
         mutable.update { it.copy(pitCursor=null,pitTyre=null,pitRepair=null,pitSent=false) }
         val id = UUID.randomUUID().toString()
         if (hold) presses[id] = action
