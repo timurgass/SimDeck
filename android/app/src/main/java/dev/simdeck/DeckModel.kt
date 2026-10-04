@@ -68,7 +68,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
     private var mapLoadedAt=0L
     private val navigatorCalls=java.util.concurrent.atomic.AtomicInteger()
     internal fun navigatorRequest(requestedProfile:String,path:String,body:String,complete:(String?,String?)->Unit) {
-        if(path.length>2000 || body.length>12000 || !path.matches(Regex("/(ets2-map|truck-nav/(places|route))\\?.*")) ||
+        if(path.length>2000 || body.length>12000 || !path.matches(Regex("/(ets2-map|truck-nav/(places|route|landscape))\\?.*")) ||
             !isScsTruck(requestedProfile) || requestedProfile!=profileId ||
             (body.isNotEmpty() != path.startsWith("/truck-nav/route?"))) { complete(null,"Недопустимый запрос навигатора");return }
         val pc=state.value.selected;val http=client;val token=vault.read();val current=generation;val requestedSession=session

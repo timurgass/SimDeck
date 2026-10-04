@@ -3,7 +3,7 @@ android {
     namespace = "dev.simdeck"
     compileSdk = 35
     buildToolsVersion = "36.0.0"
-    defaultConfig { applicationId = "dev.simdeck"; minSdk = 29; targetSdk = 35; versionCode = 42; versionName = "0.9.17"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    defaultConfig { applicationId = "dev.simdeck"; minSdk = 29; targetSdk = 35; versionCode = 43; versionName = "0.9.18"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
     flavorDimensions += "device"
     productFlavors {
         create("tablet") {

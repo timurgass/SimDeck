@@ -4,12 +4,12 @@
 
 ## Скачать и установить
 
-1. [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.9.17/SimDeck-0.9.17-Windows.zip): полностью распакуйте и запустите `SimDeck.exe`.
+1. [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.9.18/SimDeck-0.9.18-Windows.zip): полностью распакуйте и запустите `SimDeck.exe`.
 2. [Пресет ATS](https://github.com/timurgass/SimDeck/releases/download/v0.9.16/SimDeck-ATS-Preset-0.9.16.zip): сохраните игру, полностью закройте ATS, распакуйте **весь** архив и запустите `Install-ATS-Preset.cmd`. Выберите нужный профиль, если их несколько. Установщик меняет 29 клавиатурных назначений в `Documents/American Truck Simulator/steam_profiles` или `profiles`, сохраняет резервную копию и сохраняет назначения геймпада/руля. Для сложных сочетаний или неизвестного формата он откажется менять файл.
 3. [Плагин телеметрии ATS](https://github.com/timurgass/SimDeck/releases/download/v0.9.16/SimDeck-ATS-Telemetry-0.9.16.zip): при закрытой игре распакуйте **весь** архив и запустите `Install-ATS.cmd`. Укажите папку **American Truck Simulator** с `bin/win_x64/amtrucks.exe`. DLL попадёт в `bin/win_x64/plugins`; отличающийся старый плагин сохраняется в резервную копию.
 4. Запустите ATS, загрузите грузовик и подключите телефон/планшет к Companion. Для команд окно ATS должно быть активным. Если игра не реагирует, сверьте пресет и попробуйте режим ввода Virtual-Key в Companion.
 
-Обновите также [планшетный APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.17/SimDeck-0.9.17-Android.apk) или [SimDeck Phone](https://github.com/timurgass/SimDeck/releases/download/v0.9.17/SimDeck-0.9.17-Phone.apk). Для iPhone нужен только новый Companion.
+Обновите также [планшетный APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.18/SimDeck-0.9.18-Android.apk) или [SimDeck Phone](https://github.com/timurgass/SimDeck/releases/download/v0.9.18/SimDeck-0.9.18-Phone.apk). Для iPhone нужен только новый Companion.
 
 ## Кнопки
 
@@ -39,6 +39,6 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-ETS2-Preset.ps
 
 Плагин: MIT-лицензия [RenCloud/scs-sdk-plugin 1.12.1](https://github.com/RenCloud/scs-sdk-plugin/releases/tag/V.1.12.1). Формат revision 12 различает ETS2 (1) и ATS (2); Companion принимает телеметрию только выбранной игры. Не запускайте ETS2 и ATS одновременно: DLL используют одно имя разделяемой памяти.
 
-## Навигатор 0.9.17
+## Навигатор 0.9.18
 
 [Маршрут, остановки, поиск и ведение](docs/TRUCK-NAVIGATOR.md). Линию рассчитывает SimDeck по файлам игры: она не меняет игровой GPS. APK и Companion обновляются вместе; плагин и пресет 0.9.16 менять не требуется.

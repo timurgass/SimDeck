@@ -17,6 +17,8 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
     string ProcessName => ProfileId == "ats" ? "amtrucks" : "eurotrucks2";
     readonly object gate=new();
     readonly CancellationTokenSource stop=new();
+    TruckLandscapeService? landscape;
+    public IResult LandscapeResponse(HttpContext c) {TruckLandscapeService service;lock(gate)service=landscape??=new(FindGame,CacheDirectory,ProfileId);return service.Response(c);}
     Ets2MapIndex? index;
     TruckRouting? routing;
     readonly SemaphoreSlim routeGate=new(2,2);
@@ -104,7 +106,7 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
             catch(ArgumentException) { return Results.BadRequest(); }
         }
     }
-    public void Dispose() { stop.Cancel(); }
+    public void Dispose() { stop.Cancel();landscape?.Dispose(); }
     public IResult PlacesResponse(HttpContext context)
     {
         if(context.Request.Query["profile"]!=ProfileId)return Results.Conflict(new {error="Профиль игры изменился"});

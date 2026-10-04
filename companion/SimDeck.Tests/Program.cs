@@ -172,6 +172,7 @@ AccTelemetryTests.Run(Check);
 ScsTelemetryTests.Run(Check);
 Ets2MapTests.Run(Check);
 TruckRoutingTests.Run(Check);
+TruckLandscapeTests.Run(Check);
 Fs25CatalogTests.Run(Check);
 Fs25SaveTests.Run(Check);
 Fs25LiveTests.Run(Check);

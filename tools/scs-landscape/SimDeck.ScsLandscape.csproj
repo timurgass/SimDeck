@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWindowsForms>true</UseWindowsForms><AssemblyName>SimDeck.ScsLandscape</AssemblyName></PropertyGroup>
+  <ItemGroup><PackageReference Include="TruckLib" Version="0.5.1"/><ProjectReference Include="../../third_party/ts-map/TsMap/TsMap.csproj"/></ItemGroup>
+  <ItemGroup><Content Include="LICENSE" CopyToOutputDirectory="PreserveNewest"/><Content Include="NOTICE.md" CopyToOutputDirectory="PreserveNewest"/></ItemGroup>
+</Project>
