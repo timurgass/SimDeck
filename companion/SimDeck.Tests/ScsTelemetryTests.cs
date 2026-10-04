@@ -36,6 +36,13 @@ internal static class ScsTelemetryTests
               Math.Abs(frame.Ets2Navigation!.RemainingKm!.Value - 309.63) < .01 &&
               Math.Abs(frame.Ets2Navigation.SpeedLimitKmh!.Value - 50) < .01,
             "SCS revision 12 memory exposes ETS2 speed, RPM, gear, fuel and switch states");
+        U32(52, 2);
+        check(ScsTelemetryParser.TryParse(bytes, out _, out frame, 2) && frame!.ActionStates!["etsEngine"] && frame.Ets2Navigation!.RemainingKm > 300,
+            "ATS game 2 shares the SCS telemetry, navigation and switch state contract");
+        check(!ScsTelemetryParser.TryParse(bytes, out _, out _), "ETS2 profile rejects ATS telemetry");
+        U32(52, 1);
+        check(!ScsTelemetryParser.TryParse(bytes, out _, out _, 2), "ATS profile rejects ETS2 telemetry");
+        check(!ScsTelemetryParser.TryParse(bytes, out _, out _, 0), "Unknown expected SCS game is rejected");
         bytes[1584] = 1;
         check(ScsTelemetryParser.TryParse(bytes,out _,out frame) && frame!.Ets2Navigation is { WorldX:-12500.25,WorldZ:2400.5,Heading:.75 },"ETS2 world position retains signed doubles and heading at SDK dplacement offsets");
         BinaryPrimitives.WriteDoubleLittleEndian(bytes.AsSpan(2200),double.NaN);

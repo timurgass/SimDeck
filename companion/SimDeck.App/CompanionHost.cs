@@ -21,7 +21,9 @@ public sealed class CompanionHost : IAsyncDisposable
 {
     public SettingsStore Store { get; }
     public TelemetryHub Telemetry { get; } = new();
-    public Ets2MapService Ets2Map { get; }
+    readonly Ets2MapService ets2Map;
+    readonly Ets2MapService atsMap;
+    public Ets2MapService Ets2Map => Profile.Id == "ats" ? atsMap : ets2Map;
     public PairingGate Pairing { get; } = new();
     public WindowsInput Backend { get; } = new();
     public InputEngine Input { get; }
@@ -45,7 +47,7 @@ public sealed class CompanionHost : IAsyncDisposable
     bool IsF1 => Profile.Id is "f1-24" or "f1-25";
     bool IsBeamNg => Profile.Id == "beamng-default";
     bool IsAcc => Profile.Id == "acc";
-    bool IsEts2 => Profile.Id == "ets2";
+    bool IsEts2 => Profile.Id is "ets2" or "ats";
     bool IsFs25 => Profile.Id == "fs25";
     string GameId => IsBeamNg ? "beamng" : Profile.Id;
     public string TelemetryDiagnostic => IsF1
@@ -76,7 +78,7 @@ public sealed class CompanionHost : IAsyncDisposable
     readonly ScsSharedMemoryReader scsReader = new();
     ulong lastScsTimestamp;
     long lastScsPacketAt;
-    string scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите ETS2.";
+    string scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите выбранную игру ETS2/ATS.";
     string fs25Diagnostic = "Ожидание сохранения Farming Simulator 25.";
     Fs25SaveWatcher? fs25Watcher;
     string? fs25SavePath;
@@ -96,7 +98,8 @@ public sealed class CompanionHost : IAsyncDisposable
         Func<Fs25SavegameDir, DateTime, Fs25Details>? readFs25Save = null)
     {
         Store = new(dataDirectory);
-        Ets2Map = new(dataDirectory);
+        ets2Map = new(dataDirectory);
+        atsMap = new(dataDirectory, "ats");
         this.inputBackend = inputBackend ?? Backend;
         this.readFs25Save = readFs25Save;
         Input = new(this.inputBackend);
@@ -159,7 +162,7 @@ public sealed class CompanionHost : IAsyncDisposable
             accReader.Reset(); lastAccPacket = int.MinValue; lastAccPacketAt = lastAccReconnect = 0;
             accDiagnostic = "Ожидание ACC Shared Memory. Запустите заезд и выйдите на трассу.";
             scsReader.Reset(); lastScsTimestamp = 0; lastScsPacketAt = 0;
-            scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите ETS2.";
+            scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите выбранную игру ETS2/ATS.";
             fs25Watcher = null; fs25SavePath = null; fs25Crops = null;
             fs25Diagnostic = "Ожидание сохранения Farming Simulator 25.";
             Telemetry.Reset(Demo ? "demo" : GameId);
@@ -439,7 +442,7 @@ public sealed class CompanionHost : IAsyncDisposable
                         else if (IsEts2)
                         {
                             Ets2Map.Ensure();
-                            if (scsReader.TryRead(out var timestamp, out var frame, out var error))
+                            if (scsReader.TryRead(out var timestamp, out var frame, out var error, Profile.Id == "ats" ? 2u : 1u))
                             {
                                 if (timestamp != lastScsTimestamp)
                                 {
@@ -594,7 +597,7 @@ public sealed class CompanionHost : IAsyncDisposable
         Backend.Enabled = false;
         Input.ReleaseAll();
         stop.Cancel();
-        Ets2Map.Dispose();
+        ets2Map.Dispose(); atsMap.Dispose();
         if (Browser is not null) await Browser.DisposeAsync();
         udp?.Dispose();
         f1Udp?.Dispose();

@@ -1,6 +1,9 @@
-param([string]$GameDirectory)
+﻿param([ValidateSet("ets2", "ats")][string]$Game = "ets2",
+    [string]$GameDirectory)
 
 $ErrorActionPreference = 'Stop'
+$gameName = if ($Game -eq 'ats') { 'American Truck Simulator' } else { 'Euro Truck Simulator 2' }
+$processName = if ($Game -eq 'ats') { 'amtrucks' } else { 'eurotrucks2' }
 $expectedHash = '1D03DBC7A975E72203C60A7B9998021CEB8800B836BF28A131279979AD386CD4'
 $source = Join-Path $PSScriptRoot 'scs-telemetry.dll'
 if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
@@ -13,21 +16,21 @@ if ((Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash -ne $expectedHash
 if (-not $GameDirectory) {
     Add-Type -AssemblyName System.Windows.Forms
     $picker = [System.Windows.Forms.FolderBrowserDialog]::new()
-    $picker.Description = 'Select the Euro Truck Simulator 2 game folder (contains bin)'
+    $picker.Description = "Select the $gameName game folder (contains bin)"
     if ($picker.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) {
         throw 'No game folder selected.'
     }
     $GameDirectory = $picker.SelectedPath
 }
 $gameDirectoryResolved = (Resolve-Path -LiteralPath $GameDirectory).Path
-$gameExe = Join-Path $gameDirectoryResolved 'bin\win_x64\eurotrucks2.exe'
+$gameExe = Join-Path $gameDirectoryResolved ("bin\win_x64\" + $processName + ".exe")
 if (-not (Test-Path -LiteralPath $gameExe -PathType Leaf)) {
-    throw "Euro Truck Simulator 2 executable not found: $gameExe"
+    throw "$gameName executable not found: $gameExe"
 }
-if (Get-Process -Name eurotrucks2 -ErrorAction SilentlyContinue | Where-Object {
+if (Get-Process -Name $processName -ErrorAction SilentlyContinue | Where-Object {
     -not $_.Path -or [string]::Equals($_.Path, $gameExe, [StringComparison]::OrdinalIgnoreCase)
 }) {
-    throw 'Close Euro Truck Simulator 2 before installing the telemetry plugin.'
+    throw "Close $gameName before installing the telemetry plugin."
 }
 
 $plugins = Join-Path $gameDirectoryResolved 'bin\win_x64\plugins'
@@ -47,4 +50,4 @@ if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -ne $expectedHash
     throw "Installed plugin checksum mismatch: $target"
 }
 Write-Host "Installed: $target"
-Write-Host 'Start ETS2, load a truck, and select the ETS2 profile in SimDeck Companion.'
+Write-Host "Start $gameName, load a truck, and select its profile in SimDeck Companion."

@@ -54,7 +54,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
             Text(if(!live) "Последняя известная техника · данные устарели" else "Состояние техники · живые данные",fontSize=12.sp,color=d.muted,minLines=2,maxLines=2)
             val linked=v.attachments.firstOrNull { it.parentId==v.id && farmSprite(it.kind)!=null && (it.mount!="unknown" || it.kind=="header") }
             if(farm) key(v.id,linked?.id) { FarmDrawing(v.kind,linked) } else {
-                val trailer=v.attachments.firstOrNull { it.kind=="trailer" }.takeIf { state.profileId=="ets2" }
+                val trailer=v.attachments.firstOrNull { it.kind=="trailer" }.takeIf { isScsTruck(state.profileId) }
                 if(v.wear.isEmpty()) RoadDrawing(v.kind,v.wheels,trailer) else BoxWithConstraints {
                     if(maxWidth>=390.dp) Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                         Column(Modifier.weight(1f)) { RoadDrawing(v.kind,v.wheels,trailer,heightOverride=300.dp) }

@@ -4,7 +4,7 @@ body[data-profile="f1-24"],body[data-profile="f1-25"]{--p-bg:#17191d;--p-panel:#
 body[data-profile="beamng-default"]{--p-bg:#181c1e;--p-panel:#242a2e;--p-alt:#30383c;--p-accent:#f5842d;--p-muted:#aebbbd;--p-line:#435054;--p-radius:8px}
 body[data-profile="acc"]{--p-bg:#111314;--p-panel:#1d2020;--p-alt:#2a3030;--p-accent:#ffae3b;--p-muted:#a9b9b2;--p-line:#3a4843;--p-radius:5px}
 body[data-profile="ams2"]{--p-bg:#0c1c24;--p-panel:#132e37;--p-alt:#1c4248;--p-accent:#b8e44b;--p-muted:#a6c4c0;--p-line:#356061;--p-radius:16px}
-body[data-profile="ets2"]{--p-bg:#1b2325;--p-panel:#273133;--p-alt:#334144;--p-accent:#ddb66a;--p-muted:#b0beb7;--p-line:#4c5f59;--p-radius:19px}
+body:is([data-profile="ets2"],[data-profile="ats"]){--p-bg:#1b2325;--p-panel:#273133;--p-alt:#334144;--p-accent:#ddb66a;--p-muted:#b0beb7;--p-line:#4c5f59;--p-radius:19px}
 body[data-profile="snowrunner"]{--p-bg:#1a221e;--p-panel:#27322b;--p-alt:#364239;--p-accent:#d8a961;--p-muted:#afbdad;--p-line:#4c5b4b;--p-radius:7px}
 body[data-profile="fs25"]{--p-bg:#17241d;--p-panel:#223428;--p-alt:#314837;--p-accent:#76bb59;--p-muted:#a6bea8;--p-line:#49654c;--p-radius:17px}
 body[data-profile] header{background:var(--p-panel);border-bottom:1px solid var(--p-line);padding:16px 19px}
@@ -81,12 +81,12 @@ body[data-profile="ams2"] .action{min-height:112px;border:0;border-radius:12px}
 body[data-profile="ams2"] .action.on{background:#3a5e2f}
 
 /* ETS2: route first, then road instruments and cabin switches. */
-body[data-profile="ets2"] .gauges{display:flex;flex-direction:column;border-top:0}
-body[data-profile="ets2"] .gauges>.inline{order:-2}
-body[data-profile="ets2"] .gauges>.route{order:-1;border-top:0;border-bottom:1px solid var(--p-line);padding:0 0 15px;margin:0 0 15px;background:#24434a;border-radius:10px;padding:12px}
-body[data-profile="ets2"] .numbers>div:first-child{border-radius:80px 80px 12px 12px}
-body[data-profile="ets2"] #speed{font-size:64px}
-body[data-profile="ets2"] .action.on{background:#4d4630}
+body:is([data-profile="ets2"],[data-profile="ats"]) .gauges{display:flex;flex-direction:column;border-top:0}
+body:is([data-profile="ets2"],[data-profile="ats"]) .gauges>.inline{order:-2}
+body:is([data-profile="ets2"],[data-profile="ats"]) .gauges>.route{order:-1;border-top:0;border-bottom:1px solid var(--p-line);padding:0 0 15px;margin:0 0 15px;background:#24434a;border-radius:10px;padding:12px}
+body:is([data-profile="ets2"],[data-profile="ats"]) .numbers>div:first-child{border-radius:80px 80px 12px 12px}
+body:is([data-profile="ets2"],[data-profile="ats"]) #speed{font-size:64px}
+body:is([data-profile="ets2"],[data-profile="ats"]) .action.on{background:#4d4630}
 
 /* SnowRunner: dense, square equipment buttons. */
 body[data-profile="snowrunner"] header{background:var(--p-alt)}
@@ -169,7 +169,7 @@ body.f1Deck:not([data-f1-page="race"]) .gauges,body.f1Deck:not([data-f1-page="ra
   body.f1Deck #speed{font-size:38px}
   body.f1Deck header{gap:8px}
   body.f1Deck #connection{font-size:11px}
-  body[data-profile="beamng-default"] #speed,body[data-profile="ets2"] #speed{font-size:53px}
+  body[data-profile="beamng-default"] #speed,body:is([data-profile="ets2"],[data-profile="ats"]) #speed{font-size:53px}
   body[data-profile] .action{min-height:89px;padding:10px;font-size:14px}
   body[data-profile] .actionIcon{width:24px;height:24px}
 }

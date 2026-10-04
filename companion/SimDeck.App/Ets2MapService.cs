@@ -9,15 +9,19 @@ using SimDeck.Core;
 
 namespace SimDeck.App;
 
-public sealed class Ets2MapService(string dataDirectory) : IDisposable
+public sealed class Ets2MapService(string dataDirectory, string profileId = "ets2") : IDisposable
 {
+    public string ProfileId { get; } = profileId is "ets2" or "ats" ? profileId : throw new ArgumentException("Unknown SCS game", nameof(profileId));
+    public string CacheDirectory => Path.Combine(dataDirectory, ProfileId + "-map");
+    string GameName => ProfileId == "ats" ? "ATS" : "ETS2";
+    string ProcessName => ProfileId == "ats" ? "amtrucks" : "eurotrucks2";
     readonly object gate=new();
     readonly CancellationTokenSource stop=new();
     Ets2MapIndex? index;
     string revision="";
     long checkedAt;
     bool busy;
-    public string Status { get; private set; } = "Запустите ETS2: карта подготовится из файлов игры.";
+    public string Status { get; private set; } = $"Запустите {(profileId == "ats" ? "ATS" : "ETS2")}: карта подготовится из файлов игры.";
     public void Ensure()
     {
         lock(gate)
@@ -36,13 +40,13 @@ public sealed class Ets2MapService(string dataDirectory) : IDisposable
             var files=Directory.GetFiles(game,"*.scs").OrderBy(Path.GetFileName,StringComparer.Ordinal).Select(p=>new FileInfo(p));
             var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("vector-v1\n"+string.Join('\n',files.Select(f=>$"{f.Name}:{f.Length}:{f.LastWriteTimeUtc.Ticks}"))))).ToLowerInvariant();
             lock(gate) { if(index is not null && revision==hash) return; index=null; }
-            var cache=Path.Combine(dataDirectory,"ets2-map","roads-"+hash+".json");
+            var cache=Path.Combine(CacheDirectory,"roads-"+hash+".json");
             if(!File.Exists(cache))
             {
-                var version=FileVersionInfo.GetVersionInfo(Path.Combine(game,"bin","win_x64","eurotrucks2.exe"));
+                var version=FileVersionInfo.GetVersionInfo(Path.Combine(game,"bin","win_x64",ProcessName+".exe"));
                 if(version.FileMajorPart!=1 || version.FileMinorPart is <59 or >61)
-                { Status="Для этой версии ETS2 чтение карты ещё не проверено."; return; }
-                Status="Подготовка дорог из ETS2…";
+                { Status=$"Для этой версии {GameName} чтение карты ещё не проверено."; return; }
+                Status=$"Подготовка дорог из {GameName}…";
                 Directory.CreateDirectory(Path.GetDirectoryName(cache)!);
                 var executable=Path.Combine(AppContext.BaseDirectory,"SimDeck.exe");
                 if(!File.Exists(executable)) { Status="Подготовьте карту в Companion.";return; }
@@ -53,7 +57,7 @@ public sealed class Ets2MapService(string dataDirectory) : IDisposable
                 process.Start();
                 try { await process.WaitForExitAsync(timeout.Token); }
                 catch { if(!process.HasExited)process.Kill(true);throw; }
-                if(process.ExitCode!=0 || !File.Exists(cache)) throw new InvalidDataException("Не удалось прочитать карту установленной ETS2.");
+                if(process.ExitCode!=0 || !File.Exists(cache)) throw new InvalidDataException($"Не удалось прочитать карту установленной {GameName}.");
             }
             if(new FileInfo(cache).Length>100_000_000) throw new InvalidDataException("Файл карты слишком большой.");
             await using var stream=File.OpenRead(cache);
@@ -65,12 +69,12 @@ public sealed class Ets2MapService(string dataDirectory) : IDisposable
         }
         catch(OperationCanceledException) { Status="Подготовка карты прервана."; }
         catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or JsonException or System.ComponentModel.Win32Exception)
-        { Status="Не удалось подготовить карту ETS2. Проверьте файлы игры и перезапустите Companion."; }
+        { Status=$"Не удалось подготовить карту {GameName}. Проверьте файлы игры и перезапустите Companion."; }
         finally { lock(gate) busy=false; }
     }
-    static string? FindGame()
+    string? FindGame()
     {
-        foreach(var process in Process.GetProcessesByName("eurotrucks2"))
+        foreach(var process in Process.GetProcessesByName(ProcessName))
         {
             using(process) try
             {

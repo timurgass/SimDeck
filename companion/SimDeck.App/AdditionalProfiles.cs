@@ -2,12 +2,17 @@ namespace SimDeck.App;
 
 public static class AdditionalProfiles
 {
-    public const int CatalogVersion = 9;
+    public const int CatalogVersion = 10;
 
     public static IReadOnlyList<GameProfile> All() =>
     [
-        Acc(), Automobilista2(), Ets2(), SnowRunner(), Fs25Profile.Default()
+        Acc(), Automobilista2(), Ets2(), Ats(), SnowRunner(), Fs25Profile.Default()
     ];
+
+    // Keep shared SCS action IDs so telemetry, icons and presets use the same contract.
+    // Copy the list: changing one game's bindings must not affect the other profile.
+    public static GameProfile Ats() => Ets2() with
+    { Id = "ats", Name = "American Truck Simulator", TargetProcess = "amtrucks", Actions = Ets2().Actions.ToList() };
 
     public static GameProfile Acc() => new("acc", "Assetto Corsa Competizione", "AC2-Win64-Shipping",
     [

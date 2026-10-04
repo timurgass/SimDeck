@@ -82,6 +82,7 @@ profiles = {
     "ams2": ["drive", "pit", "camera", "more"],
     "beamng-default": ["drive", "condition", "camera", "more"],
     "ets2": ["drive", "map", "condition", "more"],
+    "ats": ["drive", "map", "condition", "more"],
     "fs25": ["drive", "fields", "prices", "more"],
     "snowrunner": ["drive", "winch", "cargo", "more"],
 }

@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 internal fun profileShortName(id: String) = when(id) {
-    "f1-24" -> "F1 24"; "f1-25" -> "F1 25"; "beamng-default" -> "BEAMNG"; "acc" -> "ACC"; "ams2" -> "AMS2"; "ets2" -> "ETS2"; "snowrunner" -> "SNOWRUNNER"; "fs25" -> "FS25"; else -> "ПУЛЬТ"
+    "f1-24" -> "F1 24"; "f1-25" -> "F1 25"; "beamng-default" -> "BEAMNG"; "acc" -> "ACC"; "ams2" -> "AMS2"; "ets2" -> "ETS2"; "ats" -> "ATS"; "snowrunner" -> "SNOWRUNNER"; "fs25" -> "FS25"; else -> "ПУЛЬТ"
 }
 
 /** Real controls and real telemetry in the compositions of the approved concepts. */
@@ -38,7 +38,7 @@ internal fun profileShortName(id: String) = when(id) {
     val selected = section.takeIf { it in sections } ?: "Обзор"
     val compact = LocalConfiguration.current.screenWidthDp >= 650 && LocalConfiguration.current.screenHeightDp < 750
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(if(compact) 8.dp else 14.dp)) {
-        val tabs=sections.map { name->name to if(name=="Обзор") when(state.profileId){"fs25"->"Техника";"beamng-default"->"Машина";"ets2"->"Техника и маршрут";"snowrunner"->"Трансмиссия";else->name} else name }
+        val tabs=sections.map { name->name to if(name=="Обзор") when(state.profileId){"fs25"->"Техника";"beamng-default"->"Машина";"ets2", "ats" ->"Техника и маршрут";"snowrunner"->"Трансмиссия";else->name} else name }
         DeckHeader(state,tabs,selected,{ model.releaseAll();section=it },connection)
         TelemetryStatus(state)
         if(state.profileId=="fs25") Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -49,12 +49,12 @@ internal fun profileShortName(id: String) = when(id) {
         if(selected=="Цены" && state.profileId=="fs25") { Fs25PricesPanel(state); return@Column }
         if(selected=="Поля" && state.profileId=="fs25") { Fs25Fields(state); return@Column }
         if(selected!="Обзор") { if(state.profileId=="fs25" && selected=="Хозяйство") Fs25Overview(state);DesignCard { Controls(state,model,selected,showPages=false) }; return@Column }
-        if(state.profileId in setOf("fs25","ets2","beamng-default","snowrunner")) { ReferenceDashboard(state,model);return@Column }
+        if(state.profileId in setOf("fs25","ets2","ats","beamng-default","snowrunner")) { ReferenceDashboard(state,model);return@Column }
         ProfileBanner(state)
         BoxWithConstraints {
             val wide = maxWidth >= 650.dp
             val left: @Composable () -> Unit = {
-                if(state.profileId in setOf("fs25","ets2","beamng-default")) VehiclePanel(state)
+                if(state.profileId in setOf("fs25","ets2","ats","beamng-default")) VehiclePanel(state)
                 if(state.profileId=="snowrunner") SnowVehiclePanel(state,model)
                 if(state.profileId=="ams2") RacingClassPanel()
                 ProfileReadout(state, model)
@@ -91,7 +91,7 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
     val fs = state.telemetry?.fs25
     val content: @Composable () -> Unit = {
         when(state.profileId) {
-            "ets2" -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            "ets2", "ats" -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Ets2Icon("etsMap", d.accent)
                 Column(Modifier.weight(1f)) { Caption("МАРШРУТ ИЗ ИГРЫ"); Text("${data?.ets2Navigation?.remainingKm?.let { "%.0f км".format(it) } ?: "— км"}  ·  ${data?.ets2Navigation?.remainingMinutes?.let { "%.0f мин".format(it) } ?: "— мин"}", fontSize = 20.sp, fontWeight = FontWeight.Bold) }
                 Column { Caption("ЛИМИТ"); Text(data?.ets2Navigation?.speedLimitKmh?.let { "%.0f км/ч".format(it) } ?: "—", color = d.accent) }
@@ -108,7 +108,7 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
             else -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Caption(if(state.profileId == "acc") "GT COCKPIT · ACC" else "VEHICLE CONTROL UNIT"); Text(if(state.demo) "● ДЕМО" else if(state.stale) "● НЕТ ДАННЫХ" else "● LIVE", color = d.accent, fontSize = 11.sp) }
         }
     }
-    val gradient = when(state.profileId) { "ams2" -> Color(0xFF1D5759); "ets2" -> Color(0xFF24434A); "snowrunner" -> Color(0xFF344A3C); "fs25" -> Color(0xFF315B3A); else -> d.panel }
+    val gradient = when(state.profileId) { "ams2" -> Color(0xFF1D5759); "ets2", "ats" -> Color(0xFF24434A); "snowrunner" -> Color(0xFF344A3C); "fs25" -> Color(0xFF315B3A); else -> d.panel }
     Column(Modifier.fillMaxWidth().background(Brush.horizontalGradient(listOf(gradient,d.background)), RoundedCornerShape(d.radius.dp)).padding(if(state.profileId in setOf("ams2","snowrunner","fs25")) 22.dp else 14.dp)) { content() }
 }
 
@@ -128,7 +128,7 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
     val gear = data?.let { Protocol.gear(it.gear,it.gearboxMode) } ?: "—"
     val rpm = data?.let { "%.0f".format(it.rpm) } ?: "—"
     val fuel = data?.fuelFraction?.let { "%.0f%%".format(it*100) } ?: "—"
-    if(state.profileId == "ets2") {
+    if(isScsTruck(state.profileId)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
             Column(Modifier.weight(.9f).fillMaxHeight().background(d.panel,RoundedCornerShape(100.dp,100.dp,16.dp,16.dp)).border(1.dp,d.line,RoundedCornerShape(100.dp,100.dp,16.dp,16.dp)).padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) { Caption("СКОРОСТЬ"); Value(speed,64,true); Caption("КМ/Ч") }
             Column(Modifier.weight(1.1f)) { DesignCard(8) { Caption("КРУИЗ-КОНТРОЛЬ"); Value(switchValue(state,"etsCruise"),30)
@@ -194,12 +194,12 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
     val (title, entries) = when(state.profileId) {
         "beamng-default" -> "БЫСТРОЕ УПРАВЛЕНИЕ" to listOf("ignition" to "ЗАЖИГАНИЕ","lights" to "ФАРЫ","esc" to "ESC / TCS","fourWheelDrive" to "ПРИВОД","hazards" to "АВАРИЙКА","recoverRoad" to "ВЕРНУТЬ НА ДОРОГУ")
         "ams2" -> "БЫСТРЫЕ ДЕЙСТВИЯ" to listOf("amsIcmCycle" to "ICM","amsRequestPit" to "ПИТ-СТОП","amsPitLimiter" to "ЛИМИТЕР","amsCamera" to "КАМЕРА")
-        "ets2" -> "КАБИНА И ТРАНСМИССИЯ" to listOf("etsLights" to "ФАРЫ","etsHighBeam" to "ДАЛЬНИЙ","etsDifferential" to "БЛОКИРОВКА","etsParkingBrake" to "РУЧНИК","etsHorn" to "СИГНАЛ","etsCamera" to "КАМЕРА")
+        "ets2", "ats" -> "КАБИНА И ТРАНСМИССИЯ" to listOf("etsLights" to "ФАРЫ","etsHighBeam" to "ДАЛЬНИЙ","etsDifferential" to "БЛОКИРОВКА","etsParkingBrake" to "РУЧНИК","etsHorn" to "СИГНАЛ","etsCamera" to "КАМЕРА")
         "snowrunner" -> "ПОЛЕВЫЕ ДЕЙСТВИЯ" to listOf("snowQuickWinch" to "ЛЕБЁДКА","snowPackCargo" to "ГРУЗ","snowMap" to "КАРТА","snowRecover" to "ЭВАКУАЦИЯ")
         "fs25" -> "РАБОТА С ОРУДИЕМ" to listOf("fs25Lower" to "ОПУСТИТЬ / ПОДНЯТЬ","fs25TurnOn" to "ВКЛ / ВЫКЛ","fs25Attach" to "ПРИЦЕПИТЬ / ОТЦЕПИТЬ","fs25Fold" to "СЛОЖИТЬ / РАЗЛОЖИТЬ")
         else -> "ДЕЙСТВИЯ" to emptyList()
     }
-    DesignCard { Caption(title); QuickGrid(state,model,entries,columns=if(state.profileId=="snowrunner") 3 else 2,height=when(state.profileId) { "beamng-default","ets2" -> 98; "snowrunner" -> 112; else -> 124 }) }
+    DesignCard { Caption(title); QuickGrid(state,model,entries,columns=if(state.profileId=="snowrunner") 3 else 2,height=when(state.profileId) { "beamng-default","ets2", "ats" -> 98; "snowrunner" -> 112; else -> 124 }) }
 }
 
 @Composable internal fun TelemetryStatus(state: DeckState) {

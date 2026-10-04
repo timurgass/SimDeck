@@ -9,7 +9,7 @@ class PhoneNavigationTest {
     private fun profiles()=JSONArray(javaClass.classLoader!!.getResource("phone-preview-profiles.json")!!.readText())
     @Test fun shippedShortcutsUseReceivedActionsAndKeepGestures() {
         val profiles=profiles()
-        assertEquals(8,profiles.length())
+        assertEquals(9,profiles.length())
         for(i in 0 until profiles.length()) {
             val p=profiles.getJSONObject(i);val id=p.getString("id")
             val actions=Protocol.controls(JSONObject().put("controls",p.getJSONArray("actions")))
@@ -28,6 +28,10 @@ class PhoneNavigationTest {
         assertEquals(custom.take(2),phonePageActions(custom,"Моя страница"))
         assertEquals("hold",phonePageActions(custom,"Моя страница").first().gesture)
         assertEquals(custom.toSet(),phonePages(custom).flatMap {phonePageActions(custom,it)}.toSet())
+    }
+    @Test fun scsGamesShareNavigationAndActions() {
+        assertEquals(phoneTabs("ets2"),phoneTabs("ats"))
+        assertEquals(phoneShortcuts("ets2"),phoneShortcuts("ats"))
     }
     @Test fun formulaYearsShareDestinationsAndActions() {
         assertEquals(phoneTabs("f1-24"),phoneTabs("f1-25"))

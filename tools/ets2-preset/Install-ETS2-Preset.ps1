@@ -1,5 +1,6 @@
 ﻿[CmdletBinding()]
 param(
+    [ValidateSet("ets2", "ats")][string]$Game = "ets2",
     [string]$ControlsPath,
     [string]$ProfileId,
     [switch]$ListProfiles,
@@ -13,7 +14,9 @@ if (-not (Test-Path -LiteralPath $manifestPath)) {
     throw 'Рядом с установщиком не найден preset-actions.json. Полностью распакуйте архив.'
 }
 
-$root = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Euro Truck Simulator 2'
+$gameName = if ($Game -eq 'ats') { 'American Truck Simulator' } else { 'Euro Truck Simulator 2' }
+$processName = if ($Game -eq 'ats') { 'amtrucks' } else { 'eurotrucks2' }
+$root = Join-Path ([Environment]::GetFolderPath('MyDocuments')) $gameName
 function Get-ProfileLabel([string]$folderName) {
     if ($folderName.Length % 2 -eq 0 -and $folderName -match '^[0-9A-Fa-f]+$') {
         try {
@@ -36,7 +39,7 @@ $candidates = @(
 ) | Sort-Object FullName -Unique | Sort-Object LastWriteTime -Descending
 
 if ($ListProfiles) {
-    if (-not $candidates) { throw 'Профили ETS2 с controls.sii не найдены.' }
+    if (-not $candidates) { throw 'Профили выбранной игры с controls.sii не найдены.' }
     $candidates | Select-Object @{Name='Profile';Expression={Get-ProfileLabel $_.Directory.Name}},LastWriteTime,FullName | Format-Table -AutoSize
     return
 }
@@ -47,7 +50,7 @@ if ($ControlsPath) {
 } else {
     $choices = @($candidates)
     if ($ProfileId) { $choices = @($choices | Where-Object { $_.Directory.Name -eq $ProfileId }) }
-    if ($choices.Count -eq 0) { throw 'Профиль ETS2 не найден. Запустите с -ListProfiles или укажите -ControlsPath.' }
+    if ($choices.Count -eq 0) { throw 'Профиль выбранной игры не найден. Запустите с -ListProfiles или укажите -ControlsPath.' }
     if ($choices.Count -gt 1) {
         Write-Host 'Найдено несколько профилей ETS2:'
         for ($i = 0; $i -lt $choices.Count; $i++) {
@@ -69,8 +72,8 @@ if ((Split-Path -Leaf $ControlsPath) -ne 'controls.sii') {
 }
 $liveRoot = $root.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
 $isLiveProfile = $ControlsPath.StartsWith($liveRoot, [StringComparison]::OrdinalIgnoreCase)
-if ($isLiveProfile -and (Get-Process -Name eurotrucks2 -ErrorAction SilentlyContinue)) {
-    throw 'Сохраните игру и полностью закройте ETS2: при выходе она перезапишет controls.sii.'
+if ($isLiveProfile -and (Get-Process -Name $processName -ErrorAction SilentlyContinue)) {
+    throw 'Сохраните игру и полностью закройте выбранную игру: при выходе она перезапишет controls.sii.'
 }
 
 $actions = Get-Content -LiteralPath $manifestPath -Raw -Encoding utf8 | ConvertFrom-Json
@@ -95,7 +98,7 @@ foreach ($row in $actions) {
     $pattern = '(?m)^(?<prefix>[ \t]*config_lines\[\d+\]:[ \t]*"mix[ \t]+' + [regex]::Escape($action) + '[ \t]+`)(?<expr>[^`]*)(?<suffix>`"[ \t]*\r?)$'
     $hits = [regex]::Matches($updated, $pattern)
     if ($hits.Count -ne 1) {
-        throw "Команда ETS2 '$action' должна встречаться ровно один раз, найдено $($hits.Count). Файл не изменён."
+        throw "Команда SCS '$action' должна встречаться ровно один раз, найдено $($hits.Count). Файл не изменён."
     }
     $oldExpression = $hits[0].Groups['expr'].Value
     $parts = @($oldExpression -split '[ \t]+\|[ \t]+')
@@ -128,4 +131,4 @@ try {
 } finally {
     if (Test-Path -LiteralPath $temp) { Remove-Item -LiteralPath $temp -Force }
 }
-Write-Host "Готово: 29 команд ETS2 соответствуют кнопкам SimDeck. Резервная копия: $backup"
+Write-Host "Готово: 29 команд выбранной игры соответствуют кнопкам SimDeck. Резервная копия: $backup"

@@ -1,6 +1,6 @@
 'use strict';
 // Same compositions and action IDs as Android/ProfileDashboard.kt. Values never come from mockups.
-const profileNames={'f1-24':'F1 24','f1-25':'F1 25','beamng-default':'BEAMNG',acc:'ACC',ams2:'AMS2',ets2:'ETS2',snowrunner:'SNOWRUNNER',fs25:'FS25'};
+const profileNames={'f1-24':'F1 24','f1-25':'F1 25','beamng-default':'BEAMNG',acc:'ACC',ams2:'AMS2',ets2:'ETS2',ats:'ATS',snowrunner:'SNOWRUNNER',fs25:'FS25'};
 const profileQuick={
  'beamng-default':['БЫСТРОЕ УПРАВЛЕНИЕ',[['ignition','ЗАЖИГАНИЕ'],['lights','ФАРЫ'],['esc','ESC / TCS'],['fourWheelDrive','ПРИВОД'],['hazards','АВАРИЙКА'],['recoverRoad','НА ДОРОГУ']]],
  ams2:['БЫСТРЫЕ ДЕЙСТВИЯ',[['amsIcmCycle','ICM'],['amsRequestPit','ПИТ-СТОП'],['amsPitLimiter','ЛИМИТЕР'],['amsCamera','КАМЕРА']]],
@@ -51,7 +51,7 @@ function mountProfileDashboard(){
   const info=node('div');info.append(node('small','caption',profileId==='fs25'?'ХОЗЯЙСТВО':profileNames[profileId]),node('h1','',({ams2:'Гонка под контролем.',snowrunner:'Любая дорога начинается здесь.',fs25:'Хороший день для работы.'})[profileId]));
   const sub=node('small','',({ams2:'Важные действия под рукой',snowrunner:'Трансмиссия · лебёдка · груз',fs25:'Сохраните ферму в игре'})[profileId]);if(profileId==='fs25')sub.dataset.metric='farm';info.append(sub);banner.append(info);
   if(profileId==='snowrunner'){const compass=node('div','compass');compass.innerHTML='<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M40 12 58 62 40 52 22 62Z"/></svg><small>СЕВЕР</small>';banner.append(compass);}
- }else if(profileId==='ets2'){banner.append(dashboardMetric('МАРШРУТ ИЗ ИГРЫ','route','routeReading'),dashboardMetric('ЛИМИТ','limit'));}
+ }else if(isScsTruck()){banner.append(dashboardMetric('МАРШРУТ ИЗ ИГРЫ','route','routeReading'),dashboardMetric('ЛИМИТ','limit'));}
  else{banner.append(node('strong','caption',profileId==='acc'?'GT COCKPIT · ACC':'VEHICLE CONTROL UNIT'));const status=node('span','caption');status.dataset.metric='live';banner.append(status);}
  const layout=node('div','profileLayout'),stack=node('div','vehicleStack'),left=dashboardCard(),right=dashboardCard();mountVehiclePanel(stack);stack.append(left);layout.append(stack,right);root.append(layout);
  if(['beamng-default','acc'].includes(profileId)){const live=node('span','instrumentLive');live.dataset.metric='live';left.append(live);}
@@ -65,7 +65,7 @@ function mountProfileDashboard(){
    right.append(node('h2','caption','ШИНЫ И ТОРМОЗА'),vehicleSvg('gt',[]));const tyres=node('div','accTyres');for(let i=0;i<4;i++){const card=node('div');card.append(node('small','caption',['ПЕРЕДНЯЯ ЛЕВАЯ','ПЕРЕДНЯЯ ПРАВАЯ','ЗАДНЯЯ ЛЕВАЯ','ЗАДНЯЯ ПРАВАЯ'][i]));const temp=node('strong','reading');temp.dataset.metric='tyre'+i;const extra=node('small');extra.dataset.metric='tyreExtra'+i;card.append(temp,extra);tyres.append(card);}const engine=node('small');engine.dataset.metric='engine';right.append(tyres,engine,dashboardButtons([['accRequestPit','ПИТ-СТРАТЕГИЯ']],'pitStrategy'));break;
   }
   case 'ams2':left.append(node('h2','caption','ПРИБОРЫ'),dashboardRow('Скорость','speed'),dashboardRow('Передача','gear'),dashboardRow('Обороты','rpm'));{const strip=node('div','profileRpm');strip.innerHTML='<i></i>'.repeat(10);left.append(strip);}break;
-  case 'ets2': {
+  case 'ats': case 'ets2': {
    left.classList.add('etsGauges');const dial=dashboardMetric('СКОРОСТЬ','speed','etsDial');dial.append(node('small','caption','КМ/Ч'));const trip=node('div','etsTrip');trip.append(dashboardMetric('КРУИЗ-КОНТРОЛЬ','etsCruise'),dashboardButtons([['etsCruiseDown','−'],['etsCruise','КРУИЗ'],['etsCruiseUp','+']],'cruiseButtons'),dashboardRow('Передача','gear'),dashboardRow('Топливо','fuel'));left.append(dial,trip);break;
   }
   case 'snowrunner':left.append(node('h2','caption','ТРАНСМИССИЯ'),dashboardMetric('ТЕКУЩАЯ ПЕРЕДАЧА','gear','snowGear'),dashboardRow('Топливо','fuel'));{const fuel=node('progress');fuel.max=1;fuel.dataset.metric='fuelBar';left.append(fuel,node('p','hint','Профиль кнопок. Живая телеметрия SnowRunner пока недоступна.'));}break;
@@ -88,3 +88,5 @@ function updateProfileDashboard(data){
  for(const el of root.querySelectorAll('[data-metric]')){const value=values[el.dataset.metric];if(el.tagName==='PROGRESS')el.value=value||0;else el.textContent=value??'—';}
  const fraction=Math.max(0,Math.min(1,(data?.rpm||0)/(data?.maxRpm||8000)));root.querySelectorAll('.profileRpm i').forEach((el,i)=>el.classList.toggle('filled',i<fraction*10));root.style.setProperty('--speed-sweep',Math.max(0,Math.min(270,(data?.speedMps||0)*3.6/240*270))+'deg');
 }
+
+profileQuick.ats=profileQuick.ets2;

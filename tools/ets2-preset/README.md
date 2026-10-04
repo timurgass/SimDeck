@@ -22,3 +22,7 @@
 Для команд `-Preview`, `-ProfileId` и `-ControlsPath` игра также должна быть закрыта, если указан её настоящий профиль. Старый `Install-ETS2-Cruise.cmd` из версии 0.8.6 менял только F8/F9; новый полный установщик заменяет его.
 
 Пневмосигнал требует установленного аксессуара на самом грузовике. Если физическая `N` в игре молчит, пресет не сможет добавить этот звук.
+
+## American Truck Simulator
+
+Для ATS используйте `Install-ATS-Preset.cmd` из [архива ATS](https://github.com/timurgass/SimDeck/releases/download/v0.9.16/SimDeck-ATS-Preset-0.9.16.zip). Общий скрипт получает `-Game ats`: отдельная папка профилей `American Truck Simulator`, проверка процесса `amtrucks`, тот же манифест 29 действий. [Полная инструкция ATS](../../ATS-PROFILE.md).

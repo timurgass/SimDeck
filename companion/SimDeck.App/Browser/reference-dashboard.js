@@ -1,7 +1,7 @@
 'use strict';
 // These layouts share action IDs, sources and illustrations with ReferenceDashboard.kt.
 function mountReferenceDashboard(root){
- if(!['fs25','ets2','beamng-default','snowrunner'].includes(profileId))return false;
+ if(!['fs25','ets2','ats','beamng-default','snowrunner'].includes(profileId))return false;
  root.classList.add('referenceDashboard');
  const layout=node('div','referenceLayout'),left=node('div','referenceScene'),right=dashboardCard();layout.append(left,right);root.append(layout);
  if(profileId!=='snowrunner')mountVehiclePanel(left);
@@ -10,7 +10,7 @@ function mountReferenceDashboard(root){
   right.append(dashboardRow('ПЕРЕДНЯЯ СЦЕПКА','frontAttachment'),dashboardRow('ЗАДНЯЯ СЦЕПКА','rearAttachment'));
   for(const[label,key]of [['Положение орудия','fs25Lower'],['Рабочий режим','fs25TurnOn'],['Положение складывания','fold']])right.append(referenceStatusRow(label,key,key==='fold'?'fs25Fold':key));
   right.append(dashboardButtons([['fs25Lower','Поднять / опустить'],['fs25TurnOn','Включить / выключить'],['fs25Fold','Сложить / разложить']],'referenceWorkButtons'));
- }else if(profileId==='ets2'){
+ }else if(isScsTruck()){
   right.classList.add('navigatorCard');right.append(node('h2','','НАВИГАТОР'),node('small','caption','МАРШРУТ ИЗ ИГРЫ'),dashboardMetric('ОСТАЛОСЬ','route','referenceRoute'));
   mountEtsMap(right);
   const speed=node('div','navigatorSpeed');speed.append(dashboardMetric('СКОРОСТЬ · КМ/Ч','speed'),dashboardMetric('ОГРАНИЧЕНИЕ','limit'));right.append(speed,dashboardButtons([['etsCruiseDown','Круиз −'],['etsCruise','Круиз'],['etsCruiseUp','Круиз +'],['etsLights','Свет']],'referenceQuickBar'));

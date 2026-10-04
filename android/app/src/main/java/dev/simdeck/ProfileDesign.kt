@@ -35,7 +35,7 @@ internal fun profileDesign(id: String): ProfileDesign = when (id) {
     "beamng-default" -> ProfileDesign(Color(0xFF0B1519), Color(0xFF101E23), Color(0xFF1B2C33), Color(0xFFF5842D), Color(0xFFABBDC7), Color(0xFF324B56), 6, "VEHICLE CONTROL UNIT")
     "acc" -> ProfileDesign(Color(0xFF0B1519), Color(0xFF101E23), Color(0xFF1B2C33), Color(0xFFFFAE3B), Color(0xFFABBDC7), Color(0xFF324B56), 6, "GT COCKPIT")
     "ams2" -> ProfileDesign(Color(0xFF0B1519), Color(0xFF101E23), Color(0xFF1B2C33), Color(0xFFB8E44B), Color(0xFFABBDC7), Color(0xFF324B56), 6, "COCKPIT CONTROL")
-    "ets2" -> ProfileDesign(Color(0xFF0B1519), Color(0xFF101E23), Color(0xFF1B2C33), Color(0xFFDDB66A), Color(0xFFABBDC7), Color(0xFF324B56), 6, "LONG HAUL DASHBOARD")
+    "ets2", "ats" -> ProfileDesign(Color(0xFF0B1519), Color(0xFF101E23), Color(0xFF1B2C33), Color(0xFFDDB66A), Color(0xFFABBDC7), Color(0xFF324B56), 6, "LONG HAUL DASHBOARD")
     "snowrunner" -> ProfileDesign(Color(0xFF0B1519), Color(0xFF101E23), Color(0xFF1B2C33), Color(0xFFB8E44B), Color(0xFFABBDC7), Color(0xFF324B56), 6, "FIELD OPERATIONS")
     "fs25" -> ProfileDesign(Color(0xFF0B1519), Color(0xFF101E23), Color(0xFF1B2C33), Color(0xFF9CDA65), Color(0xFFABBDC7), Color(0xFF324B56), 6, "FARM OPERATIONS")
     else -> ProfileDesign(Color(0xFF0B1115), Color(0xFF182026), Color(0xFF23343A), Color(0xFFF2B84B), Color(0xFF8D9FA8), Color(0xFF304049), 16, "YOUR RIG. ONE TOUCH.")

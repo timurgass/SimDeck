@@ -10,11 +10,11 @@ public static class ScsTelemetryParser
     public const int MinimumSnapshotSize = 2048;
     public const int PluginRevision = 12;
 
-    public static bool TryParse(ReadOnlySpan<byte> data, out ulong timestamp, out Telemetry? telemetry)
+    public static bool TryParse(ReadOnlySpan<byte> data, out ulong timestamp, out Telemetry? telemetry, uint expectedGame = 1)
     {
         timestamp = 0;
         telemetry = null;
-        if (data.Length < MinimumSnapshotSize || data[0] != 1 || data[4] != 0 || U(data, 40) != PluginRevision || U(data, 52) != 1)
+        if (data.Length < MinimumSnapshotSize || data[0] != 1 || data[4] != 0 || U(data, 40) != PluginRevision || (expectedGame is not (1 or 2) || U(data, 52) != expectedGame))
             return false;
 
         timestamp = BinaryPrimitives.ReadUInt64LittleEndian(data[8..]);

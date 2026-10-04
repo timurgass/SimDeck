@@ -16,8 +16,15 @@ static class ProfileTests
         foreach (var profile in additional) GameProfiles.Validate(profile);
         check(full.Actions.Count == 69 && full.Actions.Select(a => a.Page).Distinct().Count() == 3 && full.Actions.All(a => !a.Key.Contains("NumPad")), "F1 75-percent catalog validates all 69 actions across three sections");
         check(full25.Actions.SequenceEqual(full.Actions) && full25.TargetProcess == "F1_25", "F1 25 reuses the verified bindings with its own process target");
-        check(additional.Select(p => p.Id).SequenceEqual(new[] { "acc", "ams2", "ets2", "snowrunner", "fs25" }) && additional.All(p => p.Actions.Count >= 25 && p.Actions.Select(a => a.Page).Distinct().Count() >= 3), "ACC, AMS2, ETS2, SnowRunner and FS25 ship complete multi-page button-box profiles");
-        check(additional.Select(p => p.TargetProcess).SequenceEqual(new[] { "AC2-Win64-Shipping", "AMS2AVX", "eurotrucks2", "SnowRunner", "FarmingSimulator2025Game" }), "Additional profiles target the actual Windows game processes");
+        check(additional.Select(p => p.Id).SequenceEqual(new[] { "acc", "ams2", "ets2", "ats", "snowrunner", "fs25" }) && additional.All(p => p.Actions.Count >= 25 && p.Actions.Select(a => a.Page).Distinct().Count() >= 3), "ACC, AMS2, ETS2, SnowRunner and FS25 ship complete multi-page button-box profiles");
+        check(additional.Select(p => p.TargetProcess).SequenceEqual(new[] { "AC2-Win64-Shipping", "AMS2AVX", "eurotrucks2", "amtrucks", "SnowRunner", "FarmingSimulator2025Game" }), "Additional profiles target the actual Windows game processes");
+        var ats = AdditionalProfiles.Ats(); var ets = AdditionalProfiles.Ets2();
+        check(ats.Actions.SequenceEqual(ets.Actions) && ats.Id != ets.Id && ats.TargetProcess == "amtrucks", "ATS reuses all 29 SCS actions with its own game identity and process");
+        ats.Actions[0] = ats.Actions[0] with { Key = "F12" };
+        check(ets.Actions[0].Key != "F12", "ATS bindings can change independently of ETS2");
+        using var etsMap = new Ets2MapService(directory);
+        using var atsMap = new Ets2MapService(directory, "ats");
+        check(etsMap.CacheDirectory != atsMap.CacheDirectory && atsMap.Status.Contains("ATS"), "ATS and ETS2 map geometry uses separate caches and startup messages");
         var acc = AdditionalProfiles.Acc();
         check(acc.Actions.Single(a => a.Id == "accIgnition").Key == "I" && acc.Actions.Single(a => a.Id == "accIgnitionOff").Key == "F2", "ACC exposes ignition on and a supported MFD-based ignition off control");
 
@@ -121,7 +128,7 @@ static class ProfileTests
         await using var host = new CompanionHost(path);
         check(host.Backend.Enabled && host.Store.Value.KeyboardInputEnabled,"Keyboard input starts enabled by default with foreground filtering intact");
         var token = PairingGate.NewToken(); host.Store.Trust("test", token);
-        check(host.Profile.Actions.Single(a => a.Id == "lights").Key == "F10" && host.Store.Value.Profiles.Count == 8, "Profile migration preserves existing user keys and adds all installed game profiles");
+        check(host.Profile.Actions.Single(a => a.Id == "lights").Key == "F10" && host.Store.Value.Profiles.Count == 9, "Profile migration preserves existing user keys and adds all installed game profiles");
         check(host.Store.Value.Profiles.Select(p => p.Id).ToHashSet().SetEquals(GameProfiles.KnownIds), "Profile catalog migration adds ACC, AMS2, ETS2, SnowRunner and FS25 exactly once");
         var custom = new DeckAction("custom-test", "Мои кнопки", "CUSTOM", "Test", "Ctrl+F12", "hold");
         var oldRevision = host.Profile.Revision;
@@ -142,7 +149,7 @@ static class ProfileTests
         disabledHost.SaveProfile(disabledHost.Profile);
         check(!disabledHost.Backend.Enabled,"Binding edits preserve disabled input preference");
         check(reloaded.Value.ActiveProfile.Actions.Contains(custom) && reloaded.IsTrusted(token) && reloaded.Value.ActiveProfile.Actions.All(a => a.Id != "camera") && reloaded.Value.UseVirtualKeyInput, "Custom edits, pairing and input compatibility mode survive restart");
-        check(reloaded.Value.Profiles.Count == 8 && reloaded.Value.ProfileCatalogVersion == AdditionalProfiles.CatalogVersion, "Additional profile migration is idempotent across restart");
+        check(reloaded.Value.Profiles.Count == 9 && reloaded.Value.ProfileCatalogVersion == AdditionalProfiles.CatalogVersion, "Additional profile migration is idempotent across restart");
         try { GameProfiles.Validate(host.Profile with { Actions = [custom, custom] }); check(false, "Duplicate actions rejected"); } catch (ArgumentException) { check(true, "Duplicate actions rejected"); }
         try { GameProfiles.Validate(host.Profile with { Actions = [custom with { Id = "ignition", Gesture = "press" }] }); check(false, "Ignition safety preserved"); } catch (ArgumentException) { check(true, "Ignition safety preserved"); }
     }

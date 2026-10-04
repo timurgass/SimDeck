@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
         when(state.profileId) {
             "snowrunner" -> SnowDiagram()
             else -> DesignCard(if(compact) 7 else 12,if(compact) 12 else 17) {
-                Text(when(state.profileId){"fs25"->"ТЕХНИКА И ОРУДИЯ";"ets2"->"СОСТОЯНИЕ ГРУЗОВИКА";else->"ПОВРЕЖДЕНИЯ МАШИНЫ"},fontSize=if(compact) 20.sp else 22.sp,lineHeight=if(compact) 24.sp else 26.sp,fontWeight=FontWeight.Black)
+                Text(when(state.profileId){"fs25"->"ТЕХНИКА И ОРУДИЯ";"ets2", "ats" ->"СОСТОЯНИЕ ГРУЗОВИКА";else->"ПОВРЕЖДЕНИЯ МАШИНЫ"},fontSize=if(compact) 20.sp else 22.sp,lineHeight=if(compact) 24.sp else 26.sp,fontWeight=FontWeight.Black)
                 Text(v?.name ?: "Ждём сведения о технике",fontSize=if(compact) 17.sp else 20.sp,lineHeight=if(compact) 21.sp else 24.sp,color=d.accent,fontWeight=FontWeight.Bold)
                 Text(v?.let { "${vehicleLabels[it.kind]} · ${it.axleCount?.let { n->"$n оси" } ?: "колёса неизвестны"}" } ?: "Нужны данные мода / плагина",fontSize=12.sp,lineHeight=16.sp,color=d.muted)
                 if(farm) {
@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.sp
                     if(v?.attachments.isNullOrEmpty()) Text("Подключённых орудий нет",color=d.muted,fontSize=13.sp,lineHeight=17.sp)
                     v?.attachments?.filter { it.id!=linked?.id }?.forEach { a->Text("${a.name} · ${vehicleLabels[a.kind]}",color=d.muted,fontSize=13.sp,lineHeight=17.sp);FarmDrawing(a.kind,null,small=true) }
                 } else if(v!=null) {
-                    if(state.profileId=="ets2") DamageScheme(v) else RoadDrawing(v.kind,v.wheels,heightOverride=430.dp)
+                    if(isScsTruck(state.profileId)) DamageScheme(v) else RoadDrawing(v.kind,v.wheels,heightOverride=430.dp)
                 }
                 Text(if(state.stale) "Последние показания · обновление задержалось" else "Состояние из игры",fontSize=12.sp,lineHeight=16.sp,color=d.muted)
             }
@@ -64,7 +64,7 @@ import androidx.compose.ui.unit.sp
                 Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) { Fs25Icon("fs25Fold",d.accent);Column {Text("Положение складывания",fontSize=14.sp,lineHeight=18.sp,color=d.muted);Text(fold?.let { "%.0f%%".format(it*100) } ?: "НЕТ ДАННЫХ",fontSize=19.sp,lineHeight=23.sp,color=d.accent)} }
                 ReferenceButtons(state,model,listOf("fs25Lower" to "Поднять / опустить","fs25TurnOn" to "Включить / выключить","fs25Fold" to "Сложить / разложить"),1)
             }
-            "ets2" -> DesignCard {
+            "ets2", "ats" -> DesignCard {
                 Text("НАВИГАТОР",fontSize=23.sp,lineHeight=27.sp,fontWeight=FontWeight.Black)
                 Text("Маршрут из игры",fontSize=16.sp,lineHeight=20.sp,color=d.muted)
                 val n=state.telemetry?.ets2Navigation

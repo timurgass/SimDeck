@@ -67,11 +67,13 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
     private var mapAttempt=0L
     private var mapLoadedAt=0L
     private fun updateEtsMap(n:Ets2Navigation?,current:Int) {
-        if(profileId!="ets2" || n?.worldX==null || n.worldZ==null || mapRequest?.isActive==true) return
+        if(!isScsTruck(profileId) || n?.worldX==null || n.worldZ==null || mapRequest?.isActive==true) return
         val now=SystemClock.elapsedRealtime();if(now-mapAttempt<2500) return
         val old=state.value.etsMap
         if(old!=null && now-mapLoadedAt<60000 && kotlin.math.abs(old.x-n.worldX)<old.span/4 && kotlin.math.abs(old.z-n.worldZ)<old.span/4) return
         val pc=state.value.selected ?: return;val http=client ?: return;val token=vault.read() ?: return
+        val requestedProfile=profileId
+        val requestedSession=session
         mapAttempt=now
         mapRequest=viewModelScope.launch {
             try {
@@ -86,9 +88,9 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                         EtsMap.parse(JSONObject(text))
                     }
                 }
-                if(current==generation && profileId=="ets2") { mapLoadedAt=SystemClock.elapsedRealtime();mutable.update { it.copy(etsMap=map,etsMapStatus="Карта готова") } }
+                if(current==generation && profileId==requestedProfile && session==requestedSession) { mapLoadedAt=SystemClock.elapsedRealtime();mutable.update { it.copy(etsMap=map,etsMapStatus="Карта готова") } }
             } catch(e:CancellationException) { throw e }
-            catch(e:Exception) { if(current==generation)mutable.update { it.copy(etsMapStatus=e.message?.take(100) ?: "Карта пока недоступна") } }
+            catch(e:Exception) { if(current==generation && profileId==requestedProfile && session==requestedSession)mutable.update { it.copy(etsMapStatus=e.message?.take(100) ?: "Карта пока недоступна") } }
         }
     }
     init {
@@ -200,6 +202,10 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                         lastMessage = SystemClock.elapsedRealtime()
                         when (root.getString("type")) {
                             "hello" -> {
+                                if(profileId != root.getString("profileId")) {
+                                    mapRequest?.cancel();mapRequest=null;mapAttempt=0;mapLoadedAt=0
+                                    mutable.update { it.copy(etsMap=null,etsMapStatus="Подготовка карты игры…") }
+                                }
                                 session = root.getString("sessionId")
                                 profileRevision = root.getInt("profileRevision")
                                 profileId = root.getString("profileId")
@@ -406,4 +412,3 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
     private fun stopDiscovery() { discovery?.let { runCatching { nsd.stopServiceDiscovery(it) } }; discovery = null }
     override fun onCleared() { backgroundClose?.cancel(); active = false; retry?.cancel(); disconnect(); stopDiscovery(); super.onCleared() }
 }
-

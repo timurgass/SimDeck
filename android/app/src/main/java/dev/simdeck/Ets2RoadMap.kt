@@ -68,6 +68,6 @@ data class EtsMap(val x:Double,val z:Double,val span:Double,val roads:List<EtsRo
             Text(map?.cities?.minByOrNull { c->hypot(c.x-(n?.worldX?:map.x),c.z-(n?.worldZ?:map.z)) }?.name ?: "Север ↑",color=design.muted)
             TextButton(onClick={span=min(3200.0,span*2)}) { Text("−") }
         }
-        Text(if(map==null)state.etsMapStatus else "Дороги из ETS2 · позиция грузовика · без линии GPS-маршрута",color=design.muted)
+        Text(if(map==null)state.etsMapStatus else "Дороги из ${profileShortName(state.profileId)} · позиция грузовика · без линии GPS-маршрута",color=design.muted)
     }
 }

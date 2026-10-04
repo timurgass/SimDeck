@@ -4,7 +4,7 @@
 
 В `android` выполните `./gradlew testPhoneDebugUnitTest testTabletDebugUnitTest assemblePhoneDebug assembleTabletDebug`. Установите `app/build/outputs/apk/phone/debug/app-phone-debug.apk` на один разрешённый для USB-отладки телефон.
 
-Из корня: `python tools/qa/check-phone-device.py <путь-к-adb> artifacts/phone-0915`. Скрипт получает 32 вертикальных и 8 горизонтальных снимков настоящего Compose-интерфейса, проверяет их целостность/ориентацию, открывает «Ещё» касанием и возвращается кнопкой Android Back в каждом профиле. Настройки поворота восстанавливаются в `finally`. Снимки содержат только область приложения. `--resume` сохраняет уже полученные вертикальные снимки и повторяет горизонтальные/навигацию.
+Из корня: `python tools/qa/check-phone-device.py <путь-к-adb> artifacts/phone-0915`. Скрипт получает 36 вертикальных и 9 горизонтальных снимков настоящего Compose-интерфейса, проверяет их целостность/ориентацию, открывает «Ещё» касанием и возвращается кнопкой Android Back в каждом профиле. Настройки поворота восстанавливаются в `finally`. Снимки содержат только область приложения. `--resume` сохраняет уже полученные вертикальные снимки и повторяет горизонтальные/навигацию.
 
 Просмотр включается только явными debug-extras `preview_profile`, `preview_tab`, `preview_capture`. Он использует заводские профили из `android/app/src/debug/assets/phone-preview-profiles.json`, не устанавливает сетевое соединение и не отправляет игровой ввод. Результат `result.json` появляется после успешного завершения всех проверок. Перед новым запуском не считайте оставшийся от прежнего запуска результат доказательством успеха.
 
@@ -36,7 +36,7 @@ $env:SIMDECK_BROWSER = 'webkit'
 node check-dashboards.cjs ../../artifacts/profiles.json http://127.0.0.1:8765 ../../artifacts
 ```
 
-`SIMDECK_BROWSER_EXECUTABLE` позволяет использовать установленный Chromium-браузер. Для WebKit оставьте эту переменную пустой. Скрипт проверяет все восемь профилей на размерах 320×640, 390×844, 844×390, 800×1340 и 1340×800: переполнение, навигацию F1, доступность пользовательских действий, отправку нажатия, удержание/отпускание, блокировку ввода и отсутствие выдуманной телеметрии AMS2/SnowRunner. Снимки создаются для телефона и планшета. WebSocket и игровые показания заменены фикстурами; проверка не отправляет команды в игру и не подтверждает бинды установленной игры. WebKit на Windows также не заменяет проверку на физическом iPhone.
+`SIMDECK_BROWSER_EXECUTABLE` позволяет использовать установленный Chromium-браузер. Для WebKit оставьте эту переменную пустой. Скрипт проверяет все девять профилей на размерах 320×640, 390×844, 844×390, 800×1340 и 1340×800: переполнение, навигацию F1, доступность пользовательских действий, отправку нажатия, удержание/отпускание, блокировку ввода и отсутствие выдуманной телеметрии AMS2/SnowRunner. Снимки создаются для телефона и планшета. WebSocket и игровые показания заменены фикстурами; проверка не отправляет команды в игру и не подтверждает бинды установленной игры. WebKit на Windows также не заменяет проверку на физическом iPhone.
 
 Для визуальной проверки **настоящего Compose-интерфейса** есть отдельный записывающий хост:
 
@@ -49,3 +49,5 @@ dotnet run --project companion/SimDeck.Tests -c Release -- --dashboard-server ar
 Дополнительно проверьте на устройстве короткое нажатие и последующее удержание зажигания BeamNG, ориентации и возврат из экрана подключения. После QA восстановите размер, ориентацию и подключение устройства. Публичные снимки обрежьте по границам приложения, удалите IP/коды сопряжения и обозначьте тестовые показания.
 
 FS25 0.9.6: run `python tools/qa/generate-fs25-registry.py --check` before building. This validates generated C#/Kotlin/JS/Lua parity and PNG source bounds. `check-vehicle-mods.py` covers 103 store categories and the important equipment capability refinements. With the local dashboard server running on port 18978, `node tools/qa/check-fs25-catalog.cjs` exercises all 92 illustrated classes in the actual renderer. It accepts a server URL as the first argument and uses the same Chromium/WebKit environment options as the main dashboard check.
+
+ATS и ETS2 используют общий набор SCS-кнопок. `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/qa/check-scs-installers.ps1` проверяет оба пресета на синтетических файлах: предварительный просмотр, 29 назначений, сохранность руля/пользовательских команд, резервную копию и повторную установку. Повторный запуск используйте с новой `-Directory artifacts/scs-test-2`.

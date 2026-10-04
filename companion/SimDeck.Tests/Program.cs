@@ -184,10 +184,10 @@ using (var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContex
 {
     var installerKeys = manifest.RootElement.EnumerateArray()
         .ToDictionary(row => row.GetProperty("id").GetString()!, row => row.GetProperty("simDeckKey").GetString()!, StringComparer.Ordinal);
-    var profile = AdditionalProfiles.Ets2();
+    foreach (var profile in new[] { AdditionalProfiles.Ets2(), AdditionalProfiles.Ats() })
     Check(installerKeys.Count == profile.Actions.Count &&
           profile.Actions.All(action => installerKeys.TryGetValue(action.Id, out var key) && key == action.Key),
-        "ETS2 game preset matches every shipped SimDeck action and key");
+        "SCS game preset matches every shipped ETS2/ATS action and key");
 }
 var oldKeys = new Dictionary<string, string> { ["lights"] = "N", ["horn"] = "H", ["ignition"] = "V", ["reset"] = "F10" };
 Check(BeamNgProfile.AddMissingKeys(oldKeys) && oldKeys.Count == 22 && oldKeys["reset"] == "F10", "Profile upgrade adds 18 actions and preserves user bindings");

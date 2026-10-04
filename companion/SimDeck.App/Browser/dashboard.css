@@ -51,7 +51,7 @@ body[data-profile="ams2"] .profileCard{border-radius:14px}
 body[data-profile="ams2"] .stateRow{font-size:16px;padding:17px 0}.stateRow:last-child{border-bottom:0}
 body[data-profile="ams2"] .stateRow b{font-size:26px;color:#edf4f5}
 body[data-profile="ams2"] .action.on{background:#3a5e2f}
-body[data-profile="ets2"] .profileBanner{background:#24434a}
+body:is([data-profile="ets2"],[data-profile="ats"]) .profileBanner{background:#24434a}
 .routeReading .reading{font-size:22px}
 .profileBanner>div:last-child:not(:first-child) .reading{font-size:22px}
 body[data-profile] .etsGauges{padding:0;border:0;background:transparent;display:grid;grid-template-columns:.9fr 1.1fr;gap:13px}
@@ -62,8 +62,8 @@ body[data-profile] .etsGauges{padding:0;border:0;background:transparent;display:
 .cruiseButtons{display:grid;grid-template-columns:.7fr 1.5fr .7fr;gap:5px;margin:15px 0}
 body[data-profile] .cruiseButtons .action{min-height:52px;font-size:12px;padding:7px;text-align:center;align-items:center}
 .cruiseButtons .actionIcon,.cruiseButtons small{display:none}
-body[data-profile="ets2"] .quickTiles .action{min-height:100px}
-body[data-profile="ets2"] .action.on{background:#4d4630}
+body:is([data-profile="ets2"],[data-profile="ats"]) .quickTiles .action{min-height:100px}
+body:is([data-profile="ets2"],[data-profile="ats"]) .action.on{background:#4d4630}
 body[data-profile="snowrunner"] .profileBanner{background:linear-gradient(110deg,#344a3c,var(--p-bg));min-height:167px;padding:26px}
 .compass{width:101px;height:101px;border:2px solid var(--p-line);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
 .compass svg{width:43px;height:43px;fill:none;stroke:var(--p-accent);stroke-width:2}

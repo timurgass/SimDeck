@@ -266,7 +266,7 @@ internal fun Fs25Overview(state: DeckState) {
     val enabled = controlsAvailable(state)
     val feedback = Protocol.feedback(action, state.telemetry, state.demo || !state.connected)
     val active = feedback.active == true
-    val ets2 = state.profileId == "ets2"
+    val ets2 = isScsTruck(state.profileId)
     val fs25 = state.profileId == "fs25"
     val accent = when {
         primary -> design.background

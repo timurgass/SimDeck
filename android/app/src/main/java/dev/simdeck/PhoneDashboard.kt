@@ -25,7 +25,7 @@ internal fun phoneDesign(id:String):ProfileDesign {
         "beamng-default" -> listOf(0xFF181C1E,0xFF242A2E,0xFF30373B,0xFF434C50)
         "acc" -> listOf(0xFF111314,0xFF1D2020,0xFF2B2E2D,0xFF45453D)
         "ams2" -> listOf(0xFF0C1C24,0xFF132E37,0xFF20414A,0xFF356061)
-        "ets2" -> listOf(0xFF1B2325,0xFF273133,0xFF364042,0xFF535950)
+        "ets2", "ats" -> listOf(0xFF1B2325,0xFF273133,0xFF364042,0xFF535950)
         "snowrunner" -> listOf(0xFF1A221E,0xFF27322B,0xFF384439,0xFF58604C)
         "fs25" -> listOf(0xFF17241D,0xFF223428,0xFF304635,0xFF49624C)
         else -> listOf(0xFF17191D,0xFF202226,0xFF2B2D33,0xFF484044)
@@ -61,13 +61,13 @@ internal fun phoneDesign(id:String):ProfileDesign {
                 when(selected) {
                     "drive" -> {PhoneReadout(state);PhoneVehicle(state);PhoneGrid(state,model,phoneShortcuts(state.profileId),height=86)
                         if(state.profileId.startsWith("f1-")) OutlinedButton(onClick={navigate("pit")},modifier=Modifier.fillMaxWidth().heightIn(min=52.dp)) {Text("Выбор шин и настройка пит-стопа")}
-                        if(state.profileId=="ets2") PhoneGrid(state,model,listOf("etsCruiseDown" to "Круиз −","etsCruiseUp" to "Круиз +")) }
+                        if(isScsTruck(state.profileId)) PhoneGrid(state,model,listOf("etsCruiseDown" to "Круиз −","etsCruiseUp" to "Круиз +")) }
                     "condition" -> when(state.profileId) {
                         "f1-24","f1-25" -> PhoneF1Condition(state)
                         "acc" -> {PhoneAccCondition(state);PhoneGrid(state,model,listOf("accTcDown" to "TC −","accTcUp" to "TC +","accAbsDown" to "ABS −","accAbsUp" to "ABS +"))}
                         else -> {PhoneVehicle(state,detail=true);PhoneWear(state)}
                     }
-                    "map" -> if(state.profileId=="ets2") {DesignCard {Text("НАВИГАТОР",fontWeight=FontWeight.Bold);Ets2RoadMap(state);val n=state.telemetry?.ets2Navigation;Text("${phoneNumber(n?.remainingKm," км")} · ${phoneNumber(n?.remainingMinutes," мин")} · лимит ${phoneNumber(n?.speedLimitKmh," км/ч")}")};PhoneGrid(state,model,listOf("etsMap" to "Карта в игре"))} else PhoneF1Map(state)
+                    "map" -> if(isScsTruck(state.profileId)) {DesignCard {Text("НАВИГАТОР",fontWeight=FontWeight.Bold);Ets2RoadMap(state);val n=state.telemetry?.ets2Navigation;Text("${phoneNumber(n?.remainingKm," км")} · ${phoneNumber(n?.remainingMinutes," мин")} · лимит ${phoneNumber(n?.speedLimitKmh," км/ч")}")};PhoneGrid(state,model,listOf("etsMap" to "Карта в игре"))} else PhoneF1Map(state)
                     "fields" -> Fs25Fields(state)
                     "prices" -> Fs25PricesPanel(state)
                     "pit" -> when(state.profileId) {
@@ -131,7 +131,7 @@ internal fun phoneNumber(value:Double?,unit:String="",dec:Int=0)=value?.let {Str
         }
     }
 }
-@Composable private fun PhoneIcon(profile:String,id:String,color:Color) {if(id=="menu") ProfileActionIcon(id,color) else if(profile=="fs25") Fs25Icon(id,color) else if(profile=="ets2") Ets2Icon(id,color) else ProfileActionIcon(id,color)}
+@Composable private fun PhoneIcon(profile:String,id:String,color:Color) {if(id=="menu") ProfileActionIcon(id,color) else if(profile=="fs25") Fs25Icon(id,color) else if(isScsTruck(profile)) Ets2Icon(id,color) else ProfileActionIcon(id,color)}
 @Composable internal fun PhoneGrid(state:DeckState,model:DeckModel,entries:List<Pair<String,String>>,height:Int=104) {
     val actions=entries.mapNotNull { (id,label)->state.controls.firstOrNull {it.id==id}?.let {it to label} }
     Column(verticalArrangement=Arrangement.spacedBy(9.dp)) {actions.chunked(2).forEach {row->Row(horizontalArrangement=Arrangement.spacedBy(9.dp)) {
@@ -169,7 +169,7 @@ internal fun phoneNumber(value:Double?,unit:String="",dec:Int=0)=value?.let {Str
         }
         else -> DesignCard(5,10) {
             Text(v?.name?:"Ждём сведения о машине",fontSize=17.sp,fontWeight=FontWeight.Bold,color=d.accent)
-            if(v!=null) RoadDrawing(v.kind,v.wheels,v.attachments.firstOrNull {it.kind=="trailer"}.takeIf {state.profileId=="ets2"},heightOverride=if(detail) 300.dp else 185.dp,wear=if(detail)v.wear else emptyMap())
+            if(v!=null) RoadDrawing(v.kind,v.wheels,v.attachments.firstOrNull {it.kind=="trailer"}.takeIf {isScsTruck(state.profileId)},heightOverride=if(detail) 300.dp else 185.dp,wear=if(detail)v.wear else emptyMap())
             else Text("Для определения класса нужны данные игрового мода / плагина",fontSize=12.sp,color=d.muted)
         }
     }

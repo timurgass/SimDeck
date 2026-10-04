@@ -10,7 +10,7 @@ internal sealed class ScsSharedMemoryReader : IDisposable
     MemoryMappedViewAccessor? view;
     readonly byte[] buffer = new byte[ScsTelemetryParser.SnapshotSize];
 
-    public bool TryRead(out ulong timestamp, out Telemetry? telemetry, out string error)
+    public bool TryRead(out ulong timestamp, out Telemetry? telemetry, out string error, uint expectedGame = 1)
     {
         timestamp = 0;
         telemetry = null;
@@ -26,10 +26,10 @@ internal sealed class ScsSharedMemoryReader : IDisposable
             }
             if (buffer[4] != 0)
             {
-                error = "Телеметрия ETS2 приостановлена игрой.";
+                error = "Телеметрия SCS приостановлена игрой.";
                 return false;
             }
-            if (!ScsTelemetryParser.TryParse(buffer, out timestamp, out telemetry))
+            if (!ScsTelemetryParser.TryParse(buffer, out timestamp, out telemetry, expectedGame))
             {
                 error = "Данные SCS недоступны или версия плагина не поддерживается (нужна revision 12).";
                 return false;
@@ -38,7 +38,7 @@ internal sealed class ScsSharedMemoryReader : IDisposable
         }
         catch (Exception ex) when (ex is FileNotFoundException or UnauthorizedAccessException or IOException or InvalidOperationException)
         {
-            error = "Плагин SCS Telemetry не найден. Установите Win64 DLL и перезапустите ETS2.";
+            error = "Плагин SCS Telemetry не найден. Установите Win64 DLL и перезапустите выбранную игру ETS2/ATS.";
             Reset();
             return false;
         }
