@@ -18,6 +18,8 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
     readonly object gate=new();
     readonly CancellationTokenSource stop=new();
     Ets2MapIndex? index;
+    TruckRouting? routing;
+    readonly SemaphoreSlim routeGate=new(2,2);
     string revision="";
     long checkedAt;
     bool busy;
@@ -38,8 +40,8 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
             var game=FindGame();
             if(game is null) return;
             var files=Directory.GetFiles(game,"*.scs").OrderBy(Path.GetFileName,StringComparer.Ordinal).Select(p=>new FileInfo(p));
-            var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("vector-v1\n"+string.Join('\n',files.Select(f=>$"{f.Name}:{f.Length}:{f.LastWriteTimeUtc.Ticks}"))))).ToLowerInvariant();
-            lock(gate) { if(index is not null && revision==hash) return; index=null; }
+            var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("navigator-v6\n"+string.Join('\n',files.Select(f=>$"{f.Name}:{f.Length}:{f.LastWriteTimeUtc.Ticks}"))))).ToLowerInvariant();
+            lock(gate) { if(index is not null && revision==hash) return; }
             var cache=Path.Combine(CacheDirectory,"roads-"+hash+".json");
             if(!File.Exists(cache))
             {
@@ -59,13 +61,14 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
                 catch { if(!process.HasExited)process.Kill(true);throw; }
                 if(process.ExitCode!=0 || !File.Exists(cache)) throw new InvalidDataException($"Не удалось прочитать карту установленной {GameName}.");
             }
-            if(new FileInfo(cache).Length>100_000_000) throw new InvalidDataException("Файл карты слишком большой.");
+            if(new FileInfo(cache).Length>300_000_000) throw new InvalidDataException("Файл карты слишком большой.");
             await using var stream=File.OpenRead(cache);
             var geometry=await JsonSerializer.DeserializeAsync<Ets2RoadMap>(stream,new JsonSerializerOptions(JsonSerializerDefaults.Web),stop.Token)
                 ?? throw new InvalidDataException("Пустая карта.");
             var loaded=new Ets2MapIndex(geometry);
-            lock(gate) { index=loaded;revision=hash; }
-            Status=$"Карта готова · {geometry.Roads.Length:N0} участков · {geometry.Cities.Length} городов";
+            var router=new TruckRouting(geometry);
+            lock(gate) { index=loaded;routing=router;revision=hash; }
+            Status=$"Карта готова · {geometry.Roads.Length:N0} участков · {geometry.Cities.Length} городов · {geometry.Pois?.Length??0} объектов";
         }
         catch(OperationCanceledException) { Status="Подготовка карты прервана."; }
         catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or JsonException or System.ComponentModel.Win32Exception)
@@ -88,6 +91,8 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
     }
     public IResult Response(HttpContext context)
     {
+        if(context.Request.Query.ContainsKey("profile") && context.Request.Query["profile"]!=ProfileId)
+            return Results.Conflict(new {error="Профиль игры изменился"});
         Ensure();
         if(!double.TryParse(context.Request.Query["x"],NumberStyles.Float,CultureInfo.InvariantCulture,out var x) ||
            !double.TryParse(context.Request.Query["z"],NumberStyles.Float,CultureInfo.InvariantCulture,out var z) ||
@@ -100,4 +105,30 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
         }
     }
     public void Dispose() { stop.Cancel(); }
+    public IResult PlacesResponse(HttpContext context)
+    {
+        if(context.Request.Query["profile"]!=ProfileId)return Results.Conflict(new {error="Профиль игры изменился"});
+        Ensure();TruckRouting? router;lock(gate)router=routing;
+        if(router is null)return Results.Json(new{error=Status},statusCode:503);
+        double? Number(string name)=>double.TryParse(context.Request.Query[name],NumberStyles.Float,CultureInfo.InvariantCulture,out var v)&&double.IsFinite(v)&&Math.Abs(v)<=1_000_000?v:null;
+        try{return Results.Json(new{places=router.Search(context.Request.Query["q"].ToString(),Number("x"),Number("z"),context.Request.Query["kind"].ToString() is {Length:>0} k?k:null),revision});}
+        catch(ArgumentException){return Results.BadRequest();}
+    }
+    public async Task<IResult> RouteResponse(HttpContext context)
+    {
+        if(context.Request.Query["profile"]!=ProfileId)return Results.Conflict(new{error="Профиль игры изменился"});
+        Ensure();TruckRouting? router;string currentRevision;lock(gate){router=routing;currentRevision=revision;}
+        if(router is null)return Results.Json(new{error=Status},statusCode:503);
+        if(!await routeGate.WaitAsync(TimeSpan.FromSeconds(1),context.RequestAborted))return Results.Json(new{error="Построение пути занято, повторите запрос"},statusCode:429);
+        try {
+            var r=await JsonSerializer.DeserializeAsync<TruckRouteRequest>(context.Request.Body,new JsonSerializerOptions(JsonSerializerDefaults.Web),context.RequestAborted);
+            if(r is null)return Results.BadRequest();
+            using var timeout=CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted,stop.Token);timeout.CancelAfter(TimeSpan.FromSeconds(12));
+            var plan=await Task.Run(()=>router.Route(r,timeout.Token),timeout.Token);
+            return Results.Json(plan with {Revision=currentRevision});
+        }
+        catch(Exception e) when(e is JsonException or ArgumentException or InvalidOperationException){return Results.Json(new{error=e is InvalidOperationException?e.Message:"Некорректный запрос маршрута"},statusCode:400);}
+        catch(OperationCanceledException){return Results.Json(new{error="Построение маршрута прервано"},statusCode:408);}
+        finally{routeGate.Release();}
+    }
 }

@@ -3,10 +3,11 @@ package dev.simdeck
 import org.json.JSONObject
 
 data class Ets2Navigation(val remainingKm: Double?, val remainingMinutes: Double?, val speedLimitKmh: Double?,
-    val worldX:Double?=null,val worldZ:Double?=null,val heading:Double?=null)
+    val worldX:Double?=null,val worldZ:Double?=null,val heading:Double?=null,
+    val scale:Double?=null,val restMinutes:Double?=null,val gameMinutes:Double?=null,val destinationCity:String?=null)
 data class Telemetry(val speedMps: Double, val rpm: Double, val gear: Int, val fuelFraction: Double?, val maxRpm: Double?, val gearboxMode: String? = null, val maxGear: Int? = null,
     val headlights: Int? = null, val actionStates: Map<String, Boolean> = emptyMap(), val f1: F1Data? = null, val acc: AccData? = null,
-    val ets2Navigation: Ets2Navigation? = null, val fs25: Fs25Data? = null, val vehicle: VehicleInfo? = null, val fs25Prices: Fs25Prices? = null)
+    val ets2Navigation: Ets2Navigation? = null, val fs25: Fs25Data? = null, val vehicle: VehicleInfo? = null, val fs25Prices: Fs25Prices? = null, val fuelLiters:Double?=null)
 data class DeckAction(val id: String, val page: String, val label: String, val description: String, val key: String, val gesture: String, val group: String = "")
 data class ControlFeedback(val active: Boolean? = null, val headlights: Int? = null, val description: String? = null)
 
@@ -71,11 +72,13 @@ object Protocol {
             fun metric(name: String, max: Double) = n.optDouble(name, Double.NaN).takeIf { it.isFinite() && it > 0 && it < max }
             fun position(name:String)=n.optDouble(name,Double.NaN).takeIf { it.isFinite() && kotlin.math.abs(it)<=1000000 }
             val heading=n.optDouble("heading",Double.NaN).takeIf { it.isFinite() && it in 0.0..1.0 }
-            Ets2Navigation(metric("remainingKm", 10000.0), metric("remainingMinutes", 200000.0), metric("speedLimitKmh", 360.0),position("worldX"),position("worldZ"),heading)
+            fun zeroMetric(name:String,max:Double)=n.optDouble(name,Double.NaN).takeIf{it.isFinite()&&it>=0&&it<max}
+            Ets2Navigation(metric("remainingKm", 10000.0), metric("remainingMinutes", 200000.0), metric("speedLimitKmh", 360.0),position("worldX"),position("worldZ"),heading,
+                metric("scale",31.0),zeroMetric("restMinutes",100000.0),zeroMetric("gameMinutes",100000000.0),n.optString("destinationCity").takeIf{!n.isNull("destinationCity")&&it.isNotBlank()}?.take(100))
         }
         return Telemetry(speed, rpm, d.getInt("gear"), fuel, maximum, mode, maxGear, lights, states,
             F1Data.parse(d.optJSONObject("f1")), AccData.parse(d.optJSONObject("acc")), nav,
-            Fs25Data.parse(d.optJSONObject("fs25"), d.optJSONObject("fs25Advisor")), VehicleInfo.parse(d.optJSONObject("vehicle")), Fs25Prices.parse(d.optJSONObject("fs25Prices")))
+            Fs25Data.parse(d.optJSONObject("fs25"), d.optJSONObject("fs25Advisor")), VehicleInfo.parse(d.optJSONObject("vehicle")), Fs25Prices.parse(d.optJSONObject("fs25Prices")),d.optDouble("fuelLiters",Double.NaN).takeIf{it.isFinite() && it in 0.0..5500.0})
     }
     fun feedback(action: String, data: Telemetry?, stale: Boolean): ControlFeedback {
         if (data == null || stale) return ControlFeedback()

@@ -22,6 +22,14 @@ import androidx.compose.ui.unit.sp
     val v=(state.telemetry?.vehicle ?: state.lastVehicle)?.takeIf { it.controlled }
     val farm=state.profileId=="fs25"
     val compact=LocalConfiguration.current.screenWidthDp>=650 && LocalConfiguration.current.screenHeightDp<750
+    if(isScsTruck(state.profileId)) {
+        TruckNavigator(state,model)
+        ReferenceButtons(state,model,listOf("etsCruiseDown" to "Круиз −","etsCruise" to "Круиз","etsCruiseUp" to "Круиз +","etsMap" to "Карта в игре"),4)
+        var details by rememberSaveable { mutableStateOf(false) }
+        OutlinedButton(onClick={details=!details},modifier=Modifier.fillMaxWidth()) { Text(if(details) "Скрыть состояние грузовика" else "Состояние грузовика и прицепа") }
+        if(details && v!=null) DesignCard {Text(v.name,fontWeight=FontWeight.Bold,color=d.accent);DamageScheme(v)}
+        return
+    }
     val left:@Composable ()->Unit={
         when(state.profileId) {
             "snowrunner" -> SnowDiagram()

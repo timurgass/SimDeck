@@ -29,6 +29,10 @@ static class BrowserTests
         check((await http.GetAsync(origin + "/vehicles/private.png")).StatusCode == HttpStatusCode.NotFound, "Sprite endpoint exposes only bundled image names");
         check((await http.GetStringAsync(origin + "/dashboard.css")).Contains("beamDial"), "Browser serves dashboard geometry without external assets");
         check((await http.GetStringAsync(origin + "/ets2-icons.js")).Contains("etsHighBeam"), "Browser serves ETS2 dashboard icons to Safari");
+        check((await http.GetStringAsync(origin+"/truck-navigator.js")).Contains("class Navigator"),"Shared interactive truck navigator bundled offline");
+        check((await http.GetStringAsync(origin+"/truck-navigator.css")).Contains("nav-maneuver"),"Responsive navigator design bundled offline");
+        check((await http.GetAsync(origin+"/truck-nav/places?profile=ets2")).StatusCode==HttpStatusCode.Unauthorized,"Navigator search requires pairing");
+        check((await http.PostAsJsonAsync(origin+"/truck-nav/route?profile=ets2",new{})).StatusCode==HttpStatusCode.Unauthorized,"Route calculation requires pairing");
         var fs25Icons = await http.GetStringAsync(origin + "/fs25-icons.js");
         check(fs25Icons.Contains("fs25Attach") && fs25Icons.Contains("fs25Lower") && fs25Icons.Contains("fs25TurnOn"), "Browser serves FS25 action icons to Safari");
         check((await http.GetStringAsync(origin + "/fs25.js")).Contains("ДАННЫЕ СОХРАНЕНИЯ"), "Browser serves the FS25 save dashboard to Safari");

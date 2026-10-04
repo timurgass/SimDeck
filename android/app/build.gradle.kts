@@ -3,7 +3,7 @@ android {
     namespace = "dev.simdeck"
     compileSdk = 35
     buildToolsVersion = "36.0.0"
-    defaultConfig { applicationId = "dev.simdeck"; minSdk = 29; targetSdk = 35; versionCode = 41; versionName = "0.9.16"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    defaultConfig { applicationId = "dev.simdeck"; minSdk = 29; targetSdk = 35; versionCode = 42; versionName = "0.9.17"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
     flavorDimensions += "device"
     productFlavors {
         create("tablet") {
@@ -30,7 +30,13 @@ android {
     sourceSets["test"].resources.srcDir("src/main/assets")
     sourceSets["test"].resources.srcDir("src/debug/assets")
     sourceSets["main"].assets.srcDir("../../assets")
+    sourceSets["main"].assets.srcDir(layout.buildDirectory.dir("generated/navigatorAssets"))
 }
+val navigatorAssets by tasks.registering(Copy::class) {
+    from("../../companion/SimDeck.App/Browser") { include("truck-navigator.js", "truck-navigator.css") }
+    into(layout.buildDirectory.dir("generated/navigatorAssets/navigator"))
+}
+tasks.named("preBuild").configure { dependsOn(navigatorAssets) }
 dependencies {
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.compose.ui:ui:1.7.6")
@@ -46,4 +52,3 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.6")
 }
-

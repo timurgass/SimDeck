@@ -58,6 +58,11 @@ public static class ScsTelemetryParser
             Finite(remainingMetres, 0, 10_000_000) && remainingMetres > 0 ? remainingMetres / 1000.0 : null,
             Finite(remainingSeconds, 0, 10_000_000) && remainingSeconds > 0 ? remainingSeconds / 60.0 : null,
             Finite(speedLimitMps, 0, 100) && speedLimitMps > 0 ? speedLimitMps * 3.6 : null);
+        var scale=F(data,700);var cruise=F(data,988);var rest=I(data,500);
+        navigation=navigation with {Scale=Finite(scale,1,30)?scale:null,RestMinutes=rest>=0&&rest<100000?rest:null,
+            GameMinutes=U(data,64),CruiseKmh=Finite(cruise,0,100)?cruise*3.6:null};
+        if(data.Length>=2940)navigation=navigation with {DestinationCityId=VehicleKinds.Text(data.Slice(2684,64)),
+            DestinationCity=VehicleKinds.Text(data.Slice(2748,64)),DestinationCompany=VehicleKinds.Text(data.Slice(2876,64))};
         // SDK revision 12: eighth zone is dplacement at byte 2200; heading is turns, anticlockwise.
         if(data.Length>=2232)
         {

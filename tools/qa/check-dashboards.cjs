@@ -28,9 +28,9 @@ const fs=require('fs');const profiles=JSON.parse(fs.readFileSync(process.argv[2]
    }
    // Stop the game stream while retaining the controller: readings and ordinary input
    // must survive, including profiles with no game data source at all.
-   const reading=await page.locator(p.id.startsWith('f1-')?'#speed':p.id==='snowrunner'?'#profileDashboard [data-metric="gear"]':p.id==='fs25'?'#profileDashboard [data-metric="vehicle"]':'#profileDashboard [data-metric="speed"]').first().textContent();
+   const reading=await page.locator(p.id.startsWith('f1-')?'#speed':p.id==='snowrunner'?'#profileDashboard [data-metric="gear"]':p.id==='fs25'?'#profileDashboard [data-metric="vehicle"]':['ets2','ats'].includes(p.id)?'#profileDashboard .nav-speed strong':'#profileDashboard [data-metric="speed"]').first().textContent();
    await page.evaluate(()=>window.telemetryMissing=true);await page.waitForTimeout(250);
-   const lastReading=await page.locator(p.id.startsWith('f1-')?'#speed':p.id==='snowrunner'?'#profileDashboard [data-metric="gear"]':p.id==='fs25'?'#profileDashboard [data-metric="vehicle"]':'#profileDashboard [data-metric="speed"]').first().textContent();
+   const lastReading=await page.locator(p.id.startsWith('f1-')?'#speed':p.id==='snowrunner'?'#profileDashboard [data-metric="gear"]':p.id==='fs25'?'#profileDashboard [data-metric="vehicle"]':['ets2','ats'].includes(p.id)?'#profileDashboard .nav-speed strong':'#profileDashboard [data-metric="speed"]').first().textContent();
    if(lastReading!==reading)throw Error('Readout disappeared on delayed telemetry '+p.id);
    const inputButton=page.locator(p.id.startsWith('f1-')?'#f1Quick button:first-child':'#profileDashboard .action:enabled').first();
    if(!await inputButton.isEnabled())throw Error('Ordinary controls gated by telemetry '+p.id);
@@ -55,6 +55,7 @@ const fs=require('fs');const profiles=JSON.parse(fs.readFileSync(process.argv[2]
    if(['fs25','ets2','ats','beamng-default'].includes(p.id)){
     await page.evaluate(()=>{window.fixtureVehicle={id:'truck',name:'Test truck',kind:'truck',controlled:true,wheels:Array.from({length:6},(_,i)=>({x:i%2===0?-1:1,z:Math.floor(i/2)*2-2,powered:i>1})),attachments:[{id:'trailer',parentId:'truck',name:'Trailer',kind:'trailer',wheels:[{x:-1,z:1},{x:1,z:1}],lowered:true,turnedOn:false}]};});await page.waitForTimeout(220);
     if(!await page.locator('#vehiclePanel').textContent().then(t=>t.includes('Test truck')&&t.includes('3 оси')))throw Error('Automatic truck selection failed');
+    if(['ets2','ats'].includes(p.id))await page.locator('.navTruckDetails').evaluate(el=>el.open=true);
     if(width===390||width===1340)await page.locator('#vehiclePanel').screenshot({path:`${process.argv[4] || '.'}/vehicle-${p.id}-${width}.png`});
     if(['ets2','ats'].includes(p.id)&&await page.locator('#vehiclePanel .vehicleGhost').count()!==1)throw Error('Transparent trailer missing');
     if(p.id==='fs25'){await page.evaluate(()=>{window.fixtureVehicle={id:'tractor',name:'MT635',kind:'tractor',controlled:true,wheels:[{x:-1,z:-1},{x:1,z:-1},{x:-1,z:1},{x:1,z:1}],attachments:[{id:'implement',parentId:'tractor',name:'980',kind:'cultivator',mount:'rear',lowered:true,fold:1}]};});await page.waitForTimeout(250);await page.evaluate(()=>window.savedImplement=document.querySelector('.vehicleImplement'));await page.evaluate(()=>window.fixtureVehicle.attachments[0].lowered=false);await page.waitForTimeout(500);if(!await page.evaluate(()=>savedImplement===document.querySelector('.vehicleImplement')&&savedImplement.style.transform.includes('-13.8px')))throw Error('Farm lift animation rebuilt or absent');if(width===390||width===1340)await page.locator('#vehiclePanel').screenshot({path:`${process.argv[4] || '.'}/farm-implement-${width}.png`});}

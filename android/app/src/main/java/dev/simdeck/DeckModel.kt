@@ -66,6 +66,34 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
     private var mapRequest:Job?=null
     private var mapAttempt=0L
     private var mapLoadedAt=0L
+    private val navigatorCalls=java.util.concurrent.atomic.AtomicInteger()
+    internal fun navigatorRequest(requestedProfile:String,path:String,body:String,complete:(String?,String?)->Unit) {
+        if(path.length>2000 || body.length>12000 || !path.matches(Regex("/(ets2-map|truck-nav/(places|route))\\?.*")) ||
+            !isScsTruck(requestedProfile) || requestedProfile!=profileId ||
+            (body.isNotEmpty() != path.startsWith("/truck-nav/route?"))) { complete(null,"Недопустимый запрос навигатора");return }
+        val pc=state.value.selected;val http=client;val token=vault.read();val current=generation;val requestedSession=session
+        if(pc==null || http==null || token==null || requestedSession==null) {complete(null,"Нет соединения с ПК");return}
+        if(navigatorCalls.incrementAndGet()>6){navigatorCalls.decrementAndGet();complete(null,"Карта занята");return}
+        viewModelScope.launch {
+            try {
+                val result=withContext(Dispatchers.IO) {
+                    val builder=Request.Builder().url("https://${pc.host}:${pc.port}$path").header("Authorization","Bearer $token")
+                    if(body.isNotEmpty())builder.post(body.toRequestBody("application/json".toMediaType()))
+                    val call=http.newCall(builder.build());call.timeout().timeout(15,TimeUnit.SECONDS)
+                    call.execute().use { response->
+                        require((response.body?.contentLength() ?: 0)<=12000000)
+                        val text=response.body?.string() ?: error("Пустой ответ карты");require(text.length<=12000000)
+                        if(!response.isSuccessful)error(runCatching{JSONObject(text).optString("error")}.getOrNull()?.takeIf{it.isNotBlank()} ?: "Карта недоступна (${response.code})")
+                        text
+                    }
+                }
+                if(current==generation && requestedProfile==profileId && requestedSession==session)complete(result,null)
+                else complete(null,"Подключение изменилось")
+            } catch(e:CancellationException){throw e}
+            catch(e:Exception){complete(null,e.message?.take(180) ?: "Карта пока недоступна")}
+            finally {navigatorCalls.decrementAndGet()}
+        }
+    }
     private fun updateEtsMap(n:Ets2Navigation?,current:Int) {
         if(!isScsTruck(profileId) || n?.worldX==null || n.worldZ==null || mapRequest?.isActive==true) return
         val now=SystemClock.elapsedRealtime();if(now-mapAttempt<2500) return

@@ -12,16 +12,45 @@ using System.Text.Json;
 using SimDeck.App;
 using SimDeck.Core;
 
+if(args.Length==3 && args[0]=="--truck-map-verify") {
+    var opt=new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    var geometry=JsonSerializer.Deserialize<Ets2RoadMap>(File.ReadAllText(args[1]),opt)!;
+    var router=new TruckRouting(geometry);var outcomes=new List<object>();
+    foreach(var city in geometry.Cities.Take(12)) {
+        var destination=geometry.Cities.Where(c=>c!=city).OrderBy(c=>double.Hypot(c.X-city.X,c.Z-city.Z)).Skip(1).First();
+        try {var r=router.Route(new(city.X,city.Z,new("check","city",destination.Name,destination.X,destination.Z)));
+            outcomes.Add(new {from=city.Name,to=destination.Name,r.Metres,points=r.Points.Length/2,turns=r.Maneuvers.Length,pois=r.Nearby.Length,success=true});}
+        catch(InvalidOperationException e){outcomes.Add(new{from=city.Name,to=destination.Name,success=false,error=e.Message});}
+    }
+    File.WriteAllText(args[2],JsonSerializer.Serialize(new {roads=geometry.Roads.Length,nodes=geometry.Nodes?.Length,edges=geometry.Edges?.Length,pois=geometry.Pois?.GroupBy(p=>p.Kind).ToDictionary(g=>g.Key,g=>g.Count()),areas=geometry.Areas?.Length,outcomes},opt));
+    Console.WriteLine(File.ReadAllText(args[2]));return;
+}
+
+if(args.Length==3 && args[0]=="--truck-route-probe") {
+    using var memory=System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting("Local\\SCSTelemetry",System.IO.MemoryMappedFiles.MemoryMappedFileRights.Read);
+    using var view=memory.CreateViewAccessor(0,ScsTelemetryParser.SnapshotSize,System.IO.MemoryMappedFiles.MemoryMappedFileAccess.Read);
+    var probeBytes=new byte[ScsTelemetryParser.SnapshotSize];view.ReadArray(0,probeBytes,0,probeBytes.Length);var paused=probeBytes[4]!=0;probeBytes[4]=0;
+    if(!ScsTelemetryParser.TryParse(probeBytes,out _,out var frame,expectedGame:2))throw new Exception("No ATS telemetry");
+    var options=new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    File.WriteAllText(args[2],JsonSerializer.Serialize(frame,options));
+    var map=JsonSerializer.Deserialize<Ets2RoadMap>(File.ReadAllText(args[1]),options)!;var router=new TruckRouting(map);var n=frame!.Ets2Navigation!;
+    foreach(var place in router.Search("",n.WorldX,n.WorldZ).Where(p=>p.Kind=="city").Take(12)) {
+        try {var route=router.Route(new(n.WorldX!.Value,n.WorldZ!.Value,place,Heading:n.Heading));Console.WriteLine($"{place.Name}: {route.Metres:F0} m, {route.Points.Length/2} points, {route.Maneuvers.Length} turns");}
+        catch(Exception e){Console.WriteLine($"{place.Name}: {e.Message}");}
+    }
+    Console.WriteLine($"Paused={paused}, position={n.WorldX},{n.WorldZ}, heading={n.Heading}");return;
+}
+
 if (args.Length == 2 && args[0] == "--export-profiles") {
     var profiles = new[] { new GameProfile("beamng-default", "BeamNG.drive", "BeamNG.drive.x64", [.. BeamNgProfile.Actions]), GameProfiles.F1(), GameProfiles.F125() }.Concat(AdditionalProfiles.All());
     File.WriteAllText(args[1], JsonSerializer.Serialize(profiles, new JsonSerializerOptions(JsonSerializerDefaults.Web))); return;
 }
 if (args.Length == 2 && args[0] == "--dashboard-server") { await DashboardQa.Run(args[1]); return; }
-if(args.Length==3 && args[0]=="--ets2-map-preview")
+if(args.Length is 3 or 4 && args[0]=="--ets2-map-preview")
 {
     await using var preview=new CompanionHost(args[1],new RecordingInput(Path.Combine(args[1],"input-events.json")));
-    preview.Store.Value.Port=29443;preview.Store.Value.UdpPort=24444;preview.SelectProfile("ets2");
-    await preview.StartAsync(localOnly:true);await preview.StartBrowserAsync(28787,true);
+    preview.Store.Value.Port=29443;preview.Store.Value.UdpPort=24444;preview.SelectProfile(args.Length==4?args[3]:"ets2");
+    await preview.StartAsync(localOnly:true,pollGameMemory:false);await preview.StartBrowserAsync(28787,true);
     File.WriteAllText(Path.Combine(args[1],"browser-pin.txt"),preview.Browser!.Pairing.Open());
     var sample=JsonSerializer.Deserialize<Telemetry>(File.ReadAllText(args[2]),new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
     for(var i=0;i<3000 && !File.Exists(Path.Combine(args[1],"stop"));i++) { preview.Telemetry.Publish(sample);await Task.Delay(100); }
@@ -142,6 +171,7 @@ F1RaceTests.Run(Check);
 AccTelemetryTests.Run(Check);
 ScsTelemetryTests.Run(Check);
 Ets2MapTests.Run(Check);
+TruckRoutingTests.Run(Check);
 Fs25CatalogTests.Run(Check);
 Fs25SaveTests.Run(Check);
 Fs25LiveTests.Run(Check);

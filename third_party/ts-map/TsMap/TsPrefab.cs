@@ -13,6 +13,8 @@ namespace TsMap
         public float RotX;
         public float RotZ;
         public int LaneCount;
+        public List<int> InputCurves;
+        public List<int> OutputCurves;
     }
 
     public struct TsMapPoint
@@ -64,6 +66,7 @@ namespace TsMap
         public List<TsSpawnPoint> SpawnPoints { get; private set; }
         public List<TsMapPoint> MapPoints { get; private set; }
         public List<TsTriggerPoint> TriggerPoints { get; private set; }
+        public List<TsNavCurve> NavCurves { get; private set; }
 
         public TsPrefab(string filePath, ulong token, string category)
         {
@@ -86,6 +89,7 @@ namespace TsMap
             SpawnPoints = new List<TsSpawnPoint>();
             MapPoints = new List<TsMapPoint>();
             TriggerPoints = new List<TsTriggerPoint>();
+            NavCurves = new List<TsNavCurve>();
 
             var fileOffset = 0x0;
 
@@ -107,6 +111,7 @@ namespace TsMap
             if (version > 0x15) fileOffset += 0x04; // http://modding.scssoft.com/wiki/Games/ETS2/Modding_guides/1.30#Prefabs
 
             var nodeOffset = MemoryHelper.ReadInt32(_stream, fileOffset += 0x08);
+            var navCurveOffset = MemoryHelper.ReadInt32(_stream, fileOffset + 0x04);
             var spawnPointOffset = MemoryHelper.ReadInt32(_stream, fileOffset += 0x10);
             var mapPointOffset = MemoryHelper.ReadInt32(_stream, fileOffset += 0x10);
             var triggerPointOffset = MemoryHelper.ReadInt32(_stream, fileOffset += 0x04);
@@ -120,23 +125,51 @@ namespace TsMap
                     Z = MemoryHelper.ReadSingle(_stream, nodeBaseOffset + 0x18),
                     RotX = MemoryHelper.ReadSingle(_stream, nodeBaseOffset + 0x1C),
                     RotZ = MemoryHelper.ReadSingle(_stream, nodeBaseOffset + 0x24),
+                    InputCurves = new List<int>(), OutputCurves = new List<int>(),
                 };
 
                 int laneCount = 0;
                 var nodeFileOffset = nodeBaseOffset + 0x24;
                 for (var j = 0; j < 8; j++)
                 {
-                    if (MemoryHelper.ReadInt32(_stream, nodeFileOffset += 0x04) != -1) laneCount++;
+                    var curve = MemoryHelper.ReadInt32(_stream, nodeFileOffset += 0x04);
+                    if (curve != -1) { laneCount++; node.InputCurves.Add(curve); }
                 }
 
                 for (var j = 0; j < 8; j++)
                 {
-                    if (MemoryHelper.ReadInt32(_stream, nodeFileOffset += 0x04) != -1) laneCount++;
+                    var curve = MemoryHelper.ReadInt32(_stream, nodeFileOffset += 0x04);
+                    if (curve != -1) { laneCount++; node.OutputCurves.Add(curve); }
                 }
                 node.LaneCount = laneCount;
 
                 PrefabNodes.Add(node);
             }
+
+            // PPD v21 uses 128 bytes; v22-v25 adds the navigation-node index.
+            // Geometry and explicit next-curve links preserve legal junction turns.
+            var curveSize = version == 21 ? 128 : 132;
+            if (version <= 25 && navCurveCount >= 0 && navCurveCount <= 20000 &&
+                navCurveOffset >= 0 && (long)navCurveOffset + (long)navCurveCount * curveSize <= _stream.Length)
+                for (var i = 0; i < navCurveCount; i++)
+                {
+                    var at = navCurveOffset + i * curveSize;
+                    var curve = new TsNavCurve {
+                        X1 = MemoryHelper.ReadSingle(_stream, at + 16), Z1 = MemoryHelper.ReadSingle(_stream, at + 24),
+                        X2 = MemoryHelper.ReadSingle(_stream, at + 28), Z2 = MemoryHelper.ReadSingle(_stream, at + 36),
+                        Length = MemoryHelper.ReadSingle(_stream, at + 72), Next = new List<int>()
+                    };
+                    float[] Tangent(int offset) {
+                        var x=MemoryHelper.ReadSingle(_stream,offset);var y=MemoryHelper.ReadSingle(_stream,offset+4);
+                        var z=MemoryHelper.ReadSingle(_stream,offset+8);var w=MemoryHelper.ReadSingle(_stream,offset+12);
+                        return new[]{2*(x*z+w*y),1-2*(x*x+y*y)};
+                    }
+                    curve.StartTangent=Tangent(at+40);curve.EndTangent=Tangent(at+56);
+                    var count=MemoryHelper.ReadInt32(_stream,at+108);
+                    if(count < 0 || count > 4) { NavCurves.Clear(); break; }
+                    for(var k=0;k<count;k++) { var next=MemoryHelper.ReadInt32(_stream,at+76+k*4);if(next>=0 && next<navCurveCount)curve.Next.Add(next); }
+                    NavCurves.Add(curve);
+                }
 
             var spawnPointBlockSize = version >= 24 ? SpawnPointV24BlockSize : SpawnPointBlockSize;
 

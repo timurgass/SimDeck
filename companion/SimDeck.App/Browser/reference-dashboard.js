@@ -11,9 +11,8 @@ function mountReferenceDashboard(root){
   for(const[label,key]of [['Положение орудия','fs25Lower'],['Рабочий режим','fs25TurnOn'],['Положение складывания','fold']])right.append(referenceStatusRow(label,key,key==='fold'?'fs25Fold':key));
   right.append(dashboardButtons([['fs25Lower','Поднять / опустить'],['fs25TurnOn','Включить / выключить'],['fs25Fold','Сложить / разложить']],'referenceWorkButtons'));
  }else if(isScsTruck()){
-  right.classList.add('navigatorCard');right.append(node('h2','','НАВИГАТОР'),node('small','caption','МАРШРУТ ИЗ ИГРЫ'),dashboardMetric('ОСТАЛОСЬ','route','referenceRoute'));
-  mountEtsMap(right);
-  const speed=node('div','navigatorSpeed');speed.append(dashboardMetric('СКОРОСТЬ · КМ/Ч','speed'),dashboardMetric('ОГРАНИЧЕНИЕ','limit'));right.append(speed,dashboardButtons([['etsCruiseDown','Круиз −'],['etsCruise','Круиз'],['etsCruiseUp','Круиз +'],['etsLights','Свет']],'referenceQuickBar'));
+  const truckDetails=node('details','navTruckDetails'),truckSummary=node('summary','','Состояние грузовика и прицепа');truckDetails.append(truckSummary,left);root.append(truckDetails);layout.style.display='block';right.classList.add('navigatorCard');mountEtsMap(right);
+  root.append(dashboardButtons([['etsCruiseDown','Круиз −'],['etsCruise','Круиз'],['etsCruiseUp','Круиз +'],['etsLights','Свет'],['etsMap','Карта в игре']],'referenceQuickBar'));
  }else if(profileId==='beamng-default'){
   right.classList.add('damageList');for(const[name,key,id]of [['Кузов','cabin','lights'],['Радиатор','radiator','ignition'],['Передняя подвеска','suspension','fourWheelDrive'],['Двигатель','engine','ignition'],['Трансмиссия','transmission','fourWheelDrive']])right.append(referenceStatusRow(name,'damage:'+key,id));
   right.append(node('p','hint','Состояния узлов требуют расширения мода BeamNG. Серый цвет означает отсутствие данных.'));

@@ -53,6 +53,13 @@ internal fun phoneDesign(id:String):ProfileDesign {
         HorizontalDivider(color=d.line)
         // Only the content scrolls. All four navigation destinations remain reachable.
         key(state.profileId,selected,page) {
+            if(selected=="map" && isScsTruck(state.profileId)) {
+                Column(Modifier.weight(1f).fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                    PhoneStatus(state)
+                    BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) { TruckNavigator(state,model,availableHeight=maxHeight) }
+                    PhoneGrid(state,model,listOf("etsMap" to "Карта в игре"),height=48)
+                }
+            } else {
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 PhoneStatus(state)
                 if(state.profileId=="fs25" && selected!="drive") Row(horizontalArrangement=Arrangement.spacedBy(9.dp)) {
@@ -67,7 +74,7 @@ internal fun phoneDesign(id:String):ProfileDesign {
                         "acc" -> {PhoneAccCondition(state);PhoneGrid(state,model,listOf("accTcDown" to "TC −","accTcUp" to "TC +","accAbsDown" to "ABS −","accAbsUp" to "ABS +"))}
                         else -> {PhoneVehicle(state,detail=true);PhoneWear(state)}
                     }
-                    "map" -> if(isScsTruck(state.profileId)) {DesignCard {Text("НАВИГАТОР",fontWeight=FontWeight.Bold);Ets2RoadMap(state);val n=state.telemetry?.ets2Navigation;Text("${phoneNumber(n?.remainingKm," км")} · ${phoneNumber(n?.remainingMinutes," мин")} · лимит ${phoneNumber(n?.speedLimitKmh," км/ч")}")};PhoneGrid(state,model,listOf("etsMap" to "Карта в игре"))} else PhoneF1Map(state)
+                    "map" -> if(isScsTruck(state.profileId)) {TruckNavigator(state,model);PhoneGrid(state,model,listOf("etsMap" to "Карта в игре"))} else PhoneF1Map(state)
                     "fields" -> Fs25Fields(state)
                     "prices" -> Fs25PricesPanel(state)
                     "pit" -> when(state.profileId) {
@@ -97,6 +104,7 @@ internal fun phoneDesign(id:String):ProfileDesign {
                 }
                 if(state.command.isNotBlank()) Text(state.command,color=d.muted,fontSize=12.sp)
                 Spacer(Modifier.height(6.dp))
+            }
             }
         }
         HorizontalDivider(color=d.line)

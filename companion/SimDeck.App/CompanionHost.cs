@@ -196,14 +196,16 @@ public sealed class CompanionHost : IAsyncDisposable
         // Wait until ServeController has released the single-controller gate.
         if (await controller.WaitAsync(TimeSpan.FromSeconds(2), cancellationToken)) controller.Release();
     }
-    public async Task StartAsync(X509Certificate2? serverCertificate = null, bool localOnly = false)
+    bool readGameMemory = true;
+    public async Task StartAsync(X509Certificate2? serverCertificate = null, bool localOnly = false, bool pollGameMemory = true)
     {
+        readGameMemory = pollGameMemory;
         certificate = serverCertificate ?? Store.Certificate();
         Fingerprint = Convert.ToHexString(SHA256.HashData(certificate.RawData)).ToLowerInvariant();
         var builder = WebApplication.CreateSlimBuilder();
         builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
         builder.Logging.ClearProviders();
-        builder.WebHost.ConfigureKestrel(o => { o.Limits.MaxRequestBodySize = 4096;
+        builder.WebHost.ConfigureKestrel(o => { o.Limits.MaxRequestBodySize = 16384;
             if (localOnly) o.Listen(IPAddress.Loopback, Store.Value.Port, l => l.UseHttps(certificate));
             else o.ListenAnyIP(Store.Value.Port, l => l.UseHttps(certificate)); });
         app = builder.Build();
@@ -216,6 +218,9 @@ public sealed class CompanionHost : IAsyncDisposable
             if(!auth.StartsWith("Bearer ",StringComparison.Ordinal) || !Store.IsTrusted(auth[7..])) return Results.StatusCode(401);
             return Ets2Map.Response(context);
         });
+        bool NavigationAuthorized(HttpContext c) {var a=c.Request.Headers.Authorization.ToString();return Profile.Id is "ets2" or "ats" && a.StartsWith("Bearer ",StringComparison.Ordinal)&&Store.IsTrusted(a[7..]);}
+        app.MapGet("/truck-nav/places",(HttpContext c)=>NavigationAuthorized(c)?Ets2Map.PlacesResponse(c):Results.StatusCode(401));
+        app.MapPost("/truck-nav/route",async(HttpContext c)=>NavigationAuthorized(c)?await Ets2Map.RouteResponse(c):Results.StatusCode(401));
         app.MapPost("/pair", async (HttpContext context) =>
         {
             try
@@ -418,6 +423,7 @@ public sealed class CompanionHost : IAsyncDisposable
                 {
                     lock (profileGate)
                     {
+                        if (IsEts2 && !readGameMemory) { Ets2Map.Ensure(); continue; }
                         if (IsAcc)
                         {
                             if (accReader.TryRead(out var packet, out var frame, out var error))
