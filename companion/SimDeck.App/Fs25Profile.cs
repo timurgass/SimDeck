@@ -19,7 +19,7 @@ namespace SimDeck.App;
 /// </remarks>
 public static class Fs25Profile
 {
-    public const int Revision = 3;
+    public const int Revision = 4;
 
     /// <summary>Process name without ".exe", from the game's own FarmingSimulator2025.xml cmdline.</summary>
     public const string TargetProcess = "FarmingSimulator2025Game";
@@ -72,6 +72,13 @@ public static class Fs25Profile
             : a).ToList();
         if(updated.All(a=>a.Id!="fs25UnloadHere")) updated.Add(shipped.Single(a=>a.Id=="fs25UnloadHere"));
         return existing with { Actions=updated, Revision=checked(existing.Revision+1) };
+    }
+
+    public static GameProfile UpgradeNavigation(GameProfile existing)
+    {
+        if(existing.Actions.Any(a=>a.Id=="fs25Back")) return existing;
+        var back=Default().Actions.Single(a=>a.Id=="fs25Back");
+        return existing with { Actions=[..existing.Actions,back], Revision=Math.Max(Revision,existing.Revision+1) };
     }
 
     static readonly Spec[] Specs =
@@ -177,6 +184,8 @@ public static class Fs25Profile
         // ---- Хозяйство ----
         new("fs25Menu", "MENU", "Хозяйство", "МЕНЮ",
             "Главное меню игры", "Escape", Group: "Экраны"),
+        new("fs25Back", "MENU_BACK", "Хозяйство", "НАЗАД / ЗАКРЫТЬ МЕНЮ",
+            "Возврат из игрового меню или карты; Escape", "Escape", Group: "Экраны"),
         new("fs25Store", "TOGGLE_STORE", "Хозяйство", "МАГАЗИН",
             "Открывает магазин техники", "P", Group: "Экраны"),
         new("fs25Map", "TOGGLE_MAP_SIZE", "Хозяйство", "КАРТА",

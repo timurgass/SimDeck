@@ -46,6 +46,7 @@ public partial class MainWindow : Window
                 ProfilePicker.ItemsSource = host.Store.Value.Profiles;
                 ProfilePicker.SelectedValue = host.Profile.Id;
                 CompatibleInput.IsChecked = host.Store.Value.UseVirtualKeyInput;
+                EnableInput.IsChecked = host.Store.Value.KeyboardInputEnabled;
                 LoadEditor();
                 await host.StartAsync();
                 FingerprintText.Text = host.Fingerprint;
@@ -179,7 +180,7 @@ public partial class MainWindow : Window
     }
     void Revoke(object sender, RoutedEventArgs e) { host?.RevokeDevices(); }
     void SourceChanged(object sender, RoutedEventArgs e) { host?.SetDemo(DemoBox.IsChecked == true); }
-    void InputChanged(object sender, RoutedEventArgs e) { if (host is not null) { host.Backend.Enabled = EnableInput.IsChecked == true; if (!host.Backend.Enabled) host.Input.ReleaseAll(); } }
+    void InputChanged(object sender, RoutedEventArgs e) { if (host is not null) { host.Backend.Enabled = EnableInput.IsChecked == true; host.Store.Value.KeyboardInputEnabled = host.Backend.Enabled; host.Store.Save(); if (!host.Backend.Enabled) host.Input.ReleaseAll(); } }
     void InputModeChanged(object sender, RoutedEventArgs e) { if (host is not null) host.SetCompatibleInput(CompatibleInput.IsChecked == true); }
     void SaveBindings(object sender, RoutedEventArgs e)
     {
@@ -190,9 +191,9 @@ public partial class MainWindow : Window
             ButtonGrid.CommitEdit(DataGridEditingUnit.Row, true);
             var target = ProcessName.Text.Trim();
             if (target.Length == 0 || target.IndexOfAny(['/', '\\']) >= 0) throw new ArgumentException("Введите имя процесса без пути.");
-            EnableInput.IsChecked = false;
+            host.Input.ReleaseAll();
             host.SaveProfile(host.Profile with { TargetProcess = target.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? target[..^4] : target, Actions = rows.Select(r => r.ToAction()).ToList() });
-            ErrorLabel.Text = "Сохранено. Планшет переподключится автоматически. Включите клавиатурный ввод после проверки назначений.";
+            ErrorLabel.Text = "Сохранено. Планшет переподключится автоматически. Разрешение ввода сохранено; проверьте назначения в активном окне игры.";
         }
         catch (Exception ex) { ErrorLabel.Text = ex.Message; }
     }
@@ -244,10 +245,10 @@ public partial class MainWindow : Window
             var changed = updated.Actions.Zip(host.Profile.Actions).Count(pair => pair.First.Key != pair.Second.Key);
             if (changed == 0) { ErrorLabel.Text = "Клавиши FS25 уже совпадают с профилем. Изменений нет."; return; }
             host.Store.Backup("before-fs25-import");
-            EnableInput.IsChecked = false;
+            host.Input.ReleaseAll();
             host.SaveProfile(updated);
             LoadEditor();
-            ErrorLabel.Text = $"Клавиши FS25 обновлены: {changed}. Пользовательские кнопки сохранены; резервная копия настроек создана. Включите ввод после проверки.";
+            ErrorLabel.Text = $"Клавиши FS25 обновлены: {changed}. Пользовательские кнопки сохранены; резервная копия настроек создана. Проверьте назначения в активном окне игры.";
         }
         catch (Exception ex) { ErrorLabel.Text = "Импорт FS25: " + ex.Message; }
     }
@@ -257,7 +258,7 @@ public partial class MainWindow : Window
         ButtonGrid.CommitEdit(DataGridEditingUnit.Cell, true); ButtonGrid.CommitEdit(DataGridEditingUnit.Row, true);
         if (!rows.Select(r => r.ToAction()).SequenceEqual(host.Profile.Actions) || ProcessName.Text != host.Profile.TargetProcess)
         { ErrorLabel.Text = "Сначала сохраните изменения текущего профиля."; return; }
-        EnableInput.IsChecked = false; host.SelectProfile(id); LoadEditor();
+        host.Input.ReleaseAll(); host.SelectProfile(id); LoadEditor();
         ErrorLabel.Text = "Профиль открыт. Планшет обновится автоматически; включите ввод для игры.";
     }
     void AddButton(object sender, RoutedEventArgs e)

@@ -101,6 +101,7 @@ public sealed class CompanionHost : IAsyncDisposable
         this.readFs25Save = readFs25Save;
         Input = new(this.inputBackend);
         Backend.UseVirtualKey = Store.Value.UseVirtualKeyInput;
+        Backend.Enabled = Store.Value.KeyboardInputEnabled;
         if (!string.IsNullOrWhiteSpace(Store.Value.Fs25PlanPath))
             try { fs25Plan = Fs25PlanLoader.LoadFile(Store.Value.Fs25PlanPath); }
             catch (Exception ex) when (ex is Fs25PlanException or UnauthorizedAccessException)
@@ -143,7 +144,7 @@ public sealed class CompanionHost : IAsyncDisposable
             var index = Store.Value.Profiles.FindIndex(p => p.Id == profile.Id);
             if (index < 0) throw new ArgumentException("Профиль не найден.");
             Store.Value.Profiles[index] = profile with { Actions = profile.Actions.ToList(), Revision = checked(Store.Value.Profiles[index].Revision + 1) };
-            Store.Save(); ApplyBindings();
+            Store.Save(); ApplyBindings(); Backend.Enabled = Store.Value.KeyboardInputEnabled;
         }
     }
     public void SelectProfile(string id)
@@ -162,6 +163,7 @@ public sealed class CompanionHost : IAsyncDisposable
             fs25Watcher = null; fs25SavePath = null; fs25Crops = null;
             fs25Diagnostic = "Ожидание сохранения Farming Simulator 25.";
             Telemetry.Reset(Demo ? "demo" : GameId);
+            Backend.Enabled = Store.Value.KeyboardInputEnabled;
         }
     }
     public void SetDemo(bool value)

@@ -46,6 +46,14 @@ static class Fs25LiveTests
                 "A newly produced FS25 frame is immediately read after an unchanged poll");
             File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(-5));
             check(Fs25LiveReader.Read(dir, DateTime.UtcNow) is null, "FS25 never displays an old implement state as current");
+            File.WriteAllText(path,"<simdeckStatus version=\"2\" controlled=\"true\" lights=\"true\" highBeam=\"false\" hazard=\"true\" paused=\"true\" coverOpen=\"false\" pipeOut=\"true\" unfoldedAll=\"false\"><vehicle id=\"0\" kind=\"tractor\"/></simdeckStatus>");
+            var toggles=Fs25LiveReader.Read(dir,DateTime.UtcNow)!;
+            check(toggles["fs25Lights"] && !toggles["fs25HighBeam"] && toggles["fs25Hazard"] && toggles["fs25Pause"] && !toggles["fs25Cover"] && toggles["fs25Pipe"] && !toggles["fs25Fold"],
+                "FS25 maps confirmed on/off states including time pause and keeps false distinct from unknown");
+            check(!toggles.ContainsKey("fs25Beacon") && !toggles.ContainsKey("fs25Radio"),"FS25 unsupported states stay unknown");
+            File.WriteAllText(path,"<simdeckStatus version=\"2\" controlled=\"false\" paused=\"true\" lights=\"true\"/>");
+            var outside=Fs25LiveReader.ReadSnapshot(dir,DateTime.UtcNow)!;
+            check(outside.States.Count==1 && outside.States["fs25Pause"] && outside.Vehicle?.Controlled==false,"Time pause remains visible on foot without carrying over vehicle switches");
             File.WriteAllText(path, "<!DOCTYPE x [<!ENTITY e SYSTEM \"file:///secret\">]><simdeckStatus version=\"1\" lowered=\"true\"/>");
             check(Fs25LiveReader.Read(dir, DateTime.UtcNow) is null, "FS25 live bridge rejects XML entities");
         }

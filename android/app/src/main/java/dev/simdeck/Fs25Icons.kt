@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 
 // Keep the matching action map and line paths in Browser/fs25-icons.js.
 private val symbols = mapOf(
+    "back" to "M20 8 L6 24 L20 40 M6 24 H42",
     "implement" to "M6 33 H42 M11 32 L16 19 H32 L37 32 M18 19 V13 H30 V19 M24 13 V7 M17 38 H31",
     "lower" to "M8 12 H40 M15 12 V29 H33 V12 M24 20 V40 M17 33 L24 40 L31 33",
     "power" to "M24 5 V25 M15 10 C4 20 12 40 24 41 C36 40 44 20 33 10",
@@ -49,7 +50,7 @@ private val kinds = mapOf(
     "fs25WorkLightBack" to "lights", "fs25Beacon" to "beacon", "fs25TurnLeft" to "left", "fs25TurnRight" to "right",
     "fs25Hazard" to "hazard", "fs25Horn" to "horn", "fs25Camera" to "camera", "fs25Axle" to "axle",
     "fs25Helper" to "helper", "fs25NextVehicle" to "direction", "fs25PrevVehicle" to "direction",
-    "fs25Enter" to "helper", "fs25Seat" to "helper", "fs25Menu" to "mode", "fs25Store" to "store",
+    "fs25Enter" to "helper", "fs25Seat" to "helper", "fs25Menu" to "mode", "fs25Back" to "back", "fs25Store" to "store",
     "fs25Map" to "map", "fs25Construction" to "store", "fs25Help" to "mode", "fs25Pause" to "pause",
     "fs25TimeUp" to "clock", "fs25TimeDown" to "clock", "fs25Radio" to "radio"
 )

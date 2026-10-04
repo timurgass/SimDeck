@@ -4,3 +4,5 @@
 .action.on .actionIcon{color:#79d4ab}.action.low .actionIcon{color:#83efad}.action.high .actionIcon{color:#9ac5ff}.action.brakeOn .actionIcon{color:#ffc0bd}
 #fs25Overview .fs25Row{padding:8px 10px;margin:5px 0;background:#101a20;border-radius:8px;font-size:14px}
 @media(min-width:760px){.fs25Deck #fs25Overview{grid-column:1;grid-row:1;align-self:start}}
+
+.fs25Prices label{margin:12px 0}.fs25Prices input,.fs25Prices select{width:100%;min-width:0;max-width:100%;font:inherit;letter-spacing:normal;color:inherit;background:var(--panel,#15232d);border:1px solid #45606c;border-radius:8px;padding:12px;margin-top:6px}.fs25Prices select{min-height:48px}.action.off{border-color:#65766e}.action[data-state="unknown"] small{opacity:.8}

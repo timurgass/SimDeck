@@ -74,6 +74,15 @@ class ProtocolTest {
         assertNull(Protocol.feedback("fourWheelDrive", t, false).active)
         assertEquals(false, Protocol.feedback("hazards", t.copy(actionStates = mapOf("hazards" to false)), false).active)
     }
+    @Test fun fs25PauseAndCoverFollowGameStateIncludingPhysicalKeyboardChanges() {
+        val data=Telemetry(0.0,0.0,0,null,null,actionStates=mapOf("fs25Pause" to true,"fs25Cover" to false))
+        assertEquals("Время остановлено",Protocol.feedback("fs25Pause",data,false).description)
+        assertEquals("Время идёт",Protocol.feedback("fs25Pause",data.copy(actionStates=mapOf("fs25Pause" to false)),false).description)
+        assertEquals(false,Protocol.feedback("fs25Cover",data,false).active)
+        assertEquals("Закрыто",Protocol.feedback("fs25Cover",data,false).description)
+        assertNull(Protocol.feedback("fs25Beacon",data,false).active)
+        assertEquals("Состояние неизвестно",Protocol.feedback("fs25Beacon",data,false).description)
+    }
     @Test fun staleAndLegacyDataClearConfirmedAppearance() {
         val t = Telemetry(0.0, 900.0, 0, .5, null, headlights = 2, actionStates = mapOf("hazards" to true))
         assertNull(Protocol.feedback("lights", t, true).headlights)

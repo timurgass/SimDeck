@@ -21,4 +21,9 @@ class Fs25FieldsTest {
     @Test fun malformedFieldLevelsDoNotShowAsZero() {
         assertNull(fs25Int(JSONObject("""{"value":-1}"""),"value"));assertNull(fs25Int(JSONObject("""{"value":1.5}"""),"value"));assertNull(fs25Int(JSONObject("""{"value":"3"}"""),"value"));assertEquals(0,fs25Int(JSONObject("""{"value":0}"""),"value"))
     }
+    @Test fun alphabeticalFieldsUseTranslatedNamesAndNumericIdsWithinCulture() {
+        val labels=Fs25FieldLabels(JSONObject("""{"crops":{"BARLEY":["Ячмень"],"HONEY":["Мёд"],"WHEAT":["Пшеница"]}}"""))
+        val fields=listOf(Fs25Field(1,"BARLEY","",null,null,null),Fs25Field(12,"WHEAT","",null,null,null),Fs25Field(2,"WHEAT","",null,null,null),Fs25Field(9,"HONEY","",null,null,null))
+        assertEquals(listOf(9,2,12,1),filteredFs25Fields(fields,"",null,labels).map { it.id })
+    }
 }

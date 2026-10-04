@@ -50,6 +50,37 @@ assert lua.globals().snapshots[5][b'simdeckStatus#controlled'] is False
 assert lua.globals().snapshots[5][b'simdeckStatus.vehicle(0)#id'] is None
 print('PASS FS25: 200 ms cadence, nested equipment, cycle bound, wheel axes, class switch, dismount clears state')
 
+# Switches must follow the live API, not the controller's last command.
+lua.execute(b'''
+Lights={LIGHT_TYPE_DEFAULT=0,LIGHT_TYPE_HIGHBEAM=1,LIGHT_TYPE_WORK_FRONT=2,LIGHT_TYPE_WORK_BACK=3,TURNLIGHT_LEFT=1,TURNLIGHT_RIGHT=2,TURNLIGHT_HAZARD=3}
+Drivable={CRUISECONTROL_STATE_OFF=0}
+g_currentMission={paused=true}
+current={typeName='tractor',spec_lights={},spec_aiFieldWorker={isActive=false},
+    getLightsTypesMask=function()return 5 end,getTurnLightState=function()return 3 end,
+    getBeaconLightsVisibility=function()return true end,getCruiseControlState=function()return 1 end}
+tool={spec_cover={hasCovers=true,state=1},spec_pipe={hasMovablePipe=true},getCurrentPipeState=function()return 2 end,
+    spec_combine={isSwathActive=false},spec_sprayer={doubledAmountIsActive=true},spec_foldable={hasFoldingParts=true},getIsUnfolded=function()return true end}
+current.getSelectedVehicle=function()return tool end
+current.getAttachedImplements=function()return {{object=tool}} end
+bridge:update(200)
+''')
+s=lua.globals().snapshots[len(lua.globals().snapshots)]
+for name in ('lights','workLightFront','beacon','turnLeft','turnRight','hazard','cruise','coverOpen','pipeOut','chopper','unfoldedAll','paused','doubleSpray'):
+    assert s[b'simdeckStatus#'+name.encode()] is True,name
+for name in ('highBeam','workLightBack','helper'):
+    assert s[b'simdeckStatus#'+name.encode()] is False,name
+lua.execute(b'current.getLightsTypesMask=function()return 0 end;current.getTurnLightState=function()return 1 end;g_currentMission.paused=false;tool.spec_cover.state=0;tool.spec_pipe=nil;tool.spec_combine=nil;bridge:update(200)')
+s=lua.globals().snapshots[len(lua.globals().snapshots)]
+assert s[b'simdeckStatus#lights'] is False and s[b'simdeckStatus#turnRight'] is False
+assert s[b'simdeckStatus#coverOpen'] is False and s[b'simdeckStatus#paused'] is False
+assert s[b'simdeckStatus#pipeOut'] is None and s[b'simdeckStatus#chopper'] is None
+lua.execute(b'current=nil;g_currentMission.paused=true;bridge:update(200)')
+s=lua.globals().snapshots[len(lua.globals().snapshots)]
+assert s[b'simdeckStatus#paused'] is True and s[b'simdeckStatus#lights'] is None
+lua.execute(b'g_currentMission=nil;bridge:onPauseGameChange(false)')
+assert lua.globals().snapshots[len(lua.globals().snapshots)][b'simdeckStatus#paused'] is False
+print('PASS FS25 switches: light masks, steady signals, cover, pipe, helper, double spray, time pause, physical changes and unsupported values')
+
 manifest=json.loads((root/'assets/fs25-equipment.json').read_text(encoding='utf-8'))
 lua.execute(b"shopCategory=nil; g_storeManager={getItemByXMLFilename=function() return {categoryNames={shopCategory}} end}")
 for category, expected in manifest['categories'].items():

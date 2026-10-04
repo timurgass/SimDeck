@@ -124,7 +124,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.9.10 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("Ранняя сборка 0.9.13 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
     }
 }
 
@@ -136,6 +136,8 @@ private fun Dashboard(state: DeckState, model: DeckModel,connection:()->Unit) {
 
 @Composable
 internal fun Fs25Overview(state: DeckState) {
+    val context=androidx.compose.ui.platform.LocalContext.current
+    val labels=remember { Fs25FieldLabels(org.json.JSONObject(context.assets.open("fs25-field-ui.json").bufferedReader().use { it.readText() })) }
     val data = state.telemetry?.fs25
     val design = LocalProfileDesign.current
     var allFields by rememberSaveable { mutableStateOf(false) }
@@ -169,8 +171,9 @@ internal fun Fs25Overview(state: DeckState) {
             }
             HorizontalDivider(color = design.line)
             Text("ПОЛЯ · ${data.fields.size}", fontWeight = FontWeight.Bold)
-            (if (allFields) data.fields else data.fields.take(6)).forEach { field ->
-                Text("№${field.id} · ${field.crop.ifBlank { "пусто" }} · ${field.ground.ifBlank { "состояние неизвестно" }} · сорняки ${field.weeds ?: "—"}/9 · известь ${field.lime ?: "—"}/3", fontSize = 12.sp)
+            val fields=filteredFs25Fields(data.fields,"",null,labels)
+            (if (allFields) fields else fields.take(6)).forEach { field ->
+                Text("№${field.id} · ${labels.crop(field.crop)} · ${field.ground.ifBlank { "состояние неизвестно" }} · сорняки ${fs25FieldPercent(field.weeds,9)?.let { "$it%" } ?: "—"} · известь ${fs25FieldPercent(field.lime,3)?.let { "$it%" } ?: "—"} · удобрение ${fs25FieldPercent(field.fertilizer,3)?.let { "$it%" } ?: "—"}", fontSize = 12.sp)
             }
             if (data.fields.size > 6) TextButton(onClick = { allFields = !allFields }) {
                 Text(if (allFields) "Свернуть поля" else "Показать все поля")
@@ -296,7 +299,7 @@ internal fun Fs25Overview(state: DeckState) {
                 if (fs25) Fs25Icon(action, if (enabled) accent else Muted)
                 if (!ets2 && !fs25) ProfileActionIcon(action, if (enabled) { if (primary || feedback.headlights != null) accent else design.accent } else Muted)
             }
-            if (active && !tile) Text(when(action) { "fs25Lower" -> "● ОПУЩЕНО"; "fs25TurnOn" -> "● РАБОТАЕТ"; "fs25Motor" -> "● ЗАПУЩЕН"; else -> "● ВКЛ" }, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = accent)
+            if (active && !tile) Text(when(action) { "fs25Lower" -> "● ОПУЩЕНО"; "fs25TurnOn" -> "● РАБОТАЕТ"; "fs25Motor" -> "● ЗАПУЩЕН"; "fs25Pause" -> "● ВРЕМЯ ОСТАНОВЛЕНО"; else -> "● ВКЛ" }, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = accent)
             Text(label, fontSize = if (state.profileId in setOf("f1-24","f1-25")) { if (label in listOf("↑", "←", "↓", "→")) 30.sp else 16.sp } else if (tile) 12.sp else 14.sp, maxLines = 2, textAlign = if (tile) TextAlign.Start else TextAlign.Center, fontWeight = FontWeight.Bold, color = if (enabled) accent else Muted)
             if (heightDp >= 70) Text(if (startingIgnition && down) "Запуск · держите кнопку" else displaySubtitle, fontSize = if (tile) 10.sp else if (state.profileId in setOf("f1-24","f1-25")) 13.sp else 11.sp, maxLines = if (tile) 2 else 3, textAlign = if (tile) TextAlign.Start else TextAlign.Center, color = if(primary) design.background else design.muted, modifier = Modifier.padding(top = 4.dp))
         }

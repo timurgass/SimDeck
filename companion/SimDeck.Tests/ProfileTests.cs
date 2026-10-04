@@ -37,10 +37,10 @@ static class ProfileTests
         foreach (var key in Fs25Profile.Default().Actions.Select(a => a.Key))
             WindowsInput.ParseBinding("probe", key, "press");
         var fs25 = Fs25Profile.Default();
-        check(fs25.Actions.Count == 54 && fs25.Actions.Select(a => a.Page).Distinct().Count() == 5
+        check(fs25.Actions.Count == 55 && fs25.Actions.Select(a => a.Page).Distinct().Count() == 5
             && fs25.Actions.All(a => a.Id is not ("ignition" or "fs25Detach")) && fs25.Actions.Single(a => a.Id == "fs25Attach").Label == "ПРИЦЕПИТЬ / ОТЦЕПИТЬ"
             && fs25.TargetProcess == "FarmingSimulator2025Game",
-            "FS25 ships one contextual hitch button and 54 parseable actions over five pages");
+            "FS25 ships one contextual hitch button and 55 parseable actions including Back over five pages");
         var reboundSample = Fs25Bindings.Read(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(
             """<inputBinding><actionBinding action="LOWER_IMPLEMENT"><binding device="KB_MOUSE_DEFAULT" input="KEY_k"/></actionBinding></inputBinding>""")));
         check(Fs25Profile.Build(reboundSample).Actions.Single(a => a.Id == "fs25Lower").Key == "K"
@@ -49,11 +49,11 @@ static class ProfileTests
         var fs25Custom = new GameProfile("fs25", "Farming Simulator 25", "FarmingSimulator2025Game",
             [new("fs25Lower", "Орудие", "ОПУСТИТЬ", "", "F11"), new("fs25Attach", "Орудие", "ПРИЦЕПИТЬ", "", "F10"), new("fs25Detach", "Орудие", "ОТЦЕПИТЬ", "", "Ctrl+Q"), new("fs25-mine", "Свои", "CUSTOM", "", "F12")], 1);
         var fs25Upgraded = Fs25Profile.Upgrade(fs25Custom, Fs25Bindings.Empty);
-        check(fs25Upgraded.Actions.Any(a => a.Id == "fs25-mine") && fs25Upgraded.Actions.Count == 55
+        check(fs25Upgraded.Actions.Any(a => a.Id == "fs25-mine") && fs25Upgraded.Actions.Count == 56
             && fs25Upgraded.Actions.All(a => a.Id != "fs25Detach")
             && fs25Upgraded.Actions.Single(a => a.Id == "fs25Lower").Key == "F11"
             && fs25Upgraded.Actions.Single(a => a.Id == "fs25Attach").Key == "F10"
-            && fs25Upgraded.Revision == 3, "FS25 upgrade removes redundant detach and keeps custom actions and keys");
+            && fs25Upgraded.Revision == Fs25Profile.Revision, "FS25 upgrade removes redundant detach and keeps custom actions and keys");
         var dischargeBindings=Fs25Bindings.Read(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(
             """<inputBinding><actionBinding action="UNLOAD"><binding device="KB_MOUSE_DEFAULT" input="KEY_j"/></actionBinding><actionBinding action="TOGGLE_TIPSTATE"><binding device="KB_MOUSE_DEFAULT" input="KEY_k"/></actionBinding><actionBinding action="TOGGLE_TIPSTATE_GROUND"><binding device="KB_MOUSE_DEFAULT" input="KEY_lalt KEY_l"/></actionBinding></inputBinding>""")));
         var dischargeProfile=Fs25Profile.Build(dischargeBindings);
@@ -119,6 +119,7 @@ static class ProfileTests
         var path = Path.Combine(directory, "profile-migration"); Directory.CreateDirectory(path);
         File.WriteAllText(Path.Combine(path, "settings.json"), """{"Keys":{"lights":"F10","horn":"H","ignition":"V","reset":"R"},"Devices":[],"TargetProcess":"BeamNG.drive.x64"}""");
         await using var host = new CompanionHost(path);
+        check(host.Backend.Enabled && host.Store.Value.KeyboardInputEnabled,"Keyboard input starts enabled by default with foreground filtering intact");
         var token = PairingGate.NewToken(); host.Store.Trust("test", token);
         check(host.Profile.Actions.Single(a => a.Id == "lights").Key == "F10" && host.Store.Value.Profiles.Count == 8, "Profile migration preserves existing user keys and adds all installed game profiles");
         check(host.Store.Value.Profiles.Select(p => p.Id).ToHashSet().SetEquals(GameProfiles.KnownIds), "Profile catalog migration adds ACC, AMS2, ETS2, SnowRunner and FS25 exactly once");
@@ -127,12 +128,19 @@ static class ProfileTests
         host.SaveProfile(host.Profile with { Actions = [.. host.Profile.Actions.Where(a => a.Id != "camera"), custom] });
         check(host.Profile.Revision == oldRevision + 1 && host.Store.IsTrusted(token), "Profile save increments revision without revoking pairing");
         host.SelectProfile("f1-24");
-        check(host.Backend.TargetProcess == "F1_24" && !host.Backend.Enabled && host.Telemetry.Read().Data is null, "Game switch changes process, disables input and clears telemetry");
+        check(host.Backend.TargetProcess == "F1_24" && host.Backend.Enabled && host.Telemetry.Read().Data is null, "Game switch changes process, preserves enabled preference and clears telemetry");
         host.SetCompatibleInput(true);
         check(host.Backend.UseVirtualKey && host.Store.Value.UseVirtualKeyInput, "Compatible Virtual-Key input mode is applied and saved");
         host.SelectProfile("beamng-default");
         check(host.Profile.Actions.Contains(custom) && host.Profile.Actions.All(a => a.Id != "camera"), "Custom button and deletion survive profile switch");
         var reloaded = new SettingsStore(path);
+        host.Store.Value.KeyboardInputEnabled=false;host.Store.Save();
+        await using var disabledHost=new CompanionHost(path);
+        check(!disabledHost.Backend.Enabled,"An explicitly disabled input preference survives restart");
+        disabledHost.SelectProfile("fs25");
+        check(!disabledHost.Backend.Enabled && disabledHost.Profile.Actions.Any(a=>a.Id=="fs25Back"),"Profile migration adds Back and preserves disabled input");
+        disabledHost.SaveProfile(disabledHost.Profile);
+        check(!disabledHost.Backend.Enabled,"Binding edits preserve disabled input preference");
         check(reloaded.Value.ActiveProfile.Actions.Contains(custom) && reloaded.IsTrusted(token) && reloaded.Value.ActiveProfile.Actions.All(a => a.Id != "camera") && reloaded.Value.UseVirtualKeyInput, "Custom edits, pairing and input compatibility mode survive restart");
         check(reloaded.Value.Profiles.Count == 8 && reloaded.Value.ProfileCatalogVersion == AdditionalProfiles.CatalogVersion, "Additional profile migration is idempotent across restart");
         try { GameProfiles.Validate(host.Profile with { Actions = [custom, custom] }); check(false, "Duplicate actions rejected"); } catch (ArgumentException) { check(true, "Duplicate actions rejected"); }

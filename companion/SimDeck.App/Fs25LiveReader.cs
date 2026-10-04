@@ -17,6 +17,24 @@ public static class Fs25LiveReader
         ("lowered", "fs25Lower"),
         ("turnedOn", "fs25TurnOn"),
         ("motor", "fs25Motor"),
+        ("loweredAll", "fs25LowerAll"),
+        ("turnedOnAll", "fs25TurnOnAll"),
+        ("unfoldedAll", "fs25Fold"),
+        ("lights", "fs25Lights"),
+        ("highBeam", "fs25HighBeam"),
+        ("workLightFront", "fs25WorkLightFront"),
+        ("workLightBack", "fs25WorkLightBack"),
+        ("beacon", "fs25Beacon"),
+        ("turnLeft", "fs25TurnLeft"),
+        ("turnRight", "fs25TurnRight"),
+        ("hazard", "fs25Hazard"),
+        ("cruise", "fs25Cruise"),
+        ("coverOpen", "fs25Cover"),
+        ("pipeOut", "fs25Pipe"),
+        ("chopper", "fs25Chopper"),
+        ("helper", "fs25Helper"),
+        ("paused", "fs25Pause"),
+        ("doubleSpray", "fs25DoubleSpray"),
     ];
 
     public static IReadOnlyDictionary<string, bool>? Read(string userDataDir, DateTime nowUtc) => ReadSnapshot(userDataDir, nowUtc)?.States;
@@ -42,7 +60,7 @@ public static class Fs25LiveReader
             foreach (var (attribute, action) in Mappings)
                 if (bool.TryParse((string?)root.Attribute(attribute), out var value)) states[action] = value;
             if (version == "1") return states.Count == 0 ? null : new(states, null, age, writtenAt);
-            if (Bool(root, "controlled") == false) return new(new Dictionary<string, bool>(), new("", "", "unknown", [], [], false), age, writtenAt);
+            if (Bool(root, "controlled") == false) return new(states.Where(s=>s.Key=="fs25Pause").ToDictionary(), new("", "", "unknown", [], [], false), age, writtenAt);
             var machines = root.Elements("vehicle").Take(33).ToArray();
             if (machines.Length is < 1 or > 32 || Bool(root, "controlled") != true) return null;
             var first = machines[0];

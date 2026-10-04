@@ -41,6 +41,11 @@ internal fun profileShortName(id: String) = when(id) {
         val tabs=sections.map { name->name to if(name=="Обзор") when(state.profileId){"fs25"->"Техника";"beamng-default"->"Машина";"ets2"->"Техника и маршрут";"snowrunner"->"Трансмиссия";else->name} else name }
         DeckHeader(state,tabs,selected,{ model.releaseAll();section=it },connection)
         TelemetryStatus(state)
+        if(state.profileId=="fs25") Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            for((id,label) in listOf("fs25Back" to "← Назад в игре","fs25Pause" to "Пауза времени")) state.controls.firstOrNull { it.id==id }?.let { a ->
+                Control(label,a.key,a.id,false,state,model,Modifier.weight(1f),heightDp=78,tile=true)
+            }
+        }
         if(selected=="Цены" && state.profileId=="fs25") { Fs25PricesPanel(state); return@Column }
         if(selected=="Поля" && state.profileId=="fs25") { Fs25Fields(state); return@Column }
         if(selected!="Обзор") { if(state.profileId=="fs25" && selected=="Хозяйство") Fs25Overview(state);DesignCard { Controls(state,model,selected,showPages=false) }; return@Column }

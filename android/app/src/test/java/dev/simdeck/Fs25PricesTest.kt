@@ -15,4 +15,14 @@ class Fs25PricesTest {
         assertEquals(100,fs25FieldPercent(1,1));assertEquals(0,fs25FieldPercent(0,9))
         assertNull(fs25FieldPercent(null,9));assertNull(fs25FieldPercent(10,9));assertNull(fs25FieldPercent(-1,3))
     }
+    @Test fun productsAndStationsUseRussianAlphabetAndBestPriceNeedNotBeFirst() {
+        val data=Fs25Prices(listOf(
+            Fs25PriceOffer("BARLEY","Ячмень","База",950.0,""),
+            Fs25PriceOffer("WHEAT","Пшеница","Элеватор",1400.0,""),
+            Fs25PriceOffer("HONEY","Мёд","Завод",2000.0,""),
+            Fs25PriceOffer("WHEAT","Пшеница","База",1000.0,"")),0)
+        assertEquals(listOf("Мёд","Пшеница","Пшеница","Ячмень"),fs25Offers(data,null).map { it.cropName })
+        assertEquals(listOf("База","Элеватор"),fs25Offers(data,"WHEAT").map { it.station })
+        assertEquals(1400.0,fs25Offers(data,"WHEAT").maxOf { it.pricePer1000 },0.0)
+    }
 }

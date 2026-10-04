@@ -1,7 +1,7 @@
 -- Optional local bridge. Reads only the player's currently controlled machine.
 -- Missing capabilities are omitted, never guessed from the last button press.
 local SimDeckStatus = { elapsed = 0, sequence = 0, reportedWrite = false }
-print("SimDeckStatus 1.4.0: script loaded")
+print("SimDeckStatus 1.5.0: script loaded")
 
 local function status(object, method)
     if object ~= nil and type(object[method]) == "function" then
@@ -16,6 +16,112 @@ local function value(object, method)
         local ok, result = pcall(object[method], object)
         if ok then return result end
     end
+end
+
+-- GIANTS FS25 Lights/Drivable/Cover/Pipe/Foldable specializations.
+-- No state is inferred from keyboard commands or animation blink phases.
+local function boolAttr(xml, name, state)
+    if type(state) == "boolean" then setXMLBool(xml, "simdeckStatus#" .. name, state) end
+end
+local function paused()
+    local state = status(g_currentMission, "getIsPaused")
+    if state ~= nil then return state end
+    if g_currentMission ~= nil and type(g_currentMission.paused) == "boolean" then return g_currentMission.paused end
+    return nil
+end
+-- The pause notification also runs when simulation updates are suspended.
+-- Only subscribe if this version of the game publishes the event.
+function SimDeckStatus:onPauseGameChange(isPaused)
+    if type(isPaused) ~= "boolean" then return end
+    self.confirmedPause = isPaused
+    self.elapsed = 200
+    self:update(0)
+end
+function SimDeckStatus:loadMap()
+    self.confirmedPause = nil
+    if g_messageCenter ~= nil and MessageType ~= nil and MessageType.PAUSE ~= nil then
+        g_messageCenter:subscribe(MessageType.PAUSE, self.onPauseGameChange, self)
+    end
+end
+function SimDeckStatus:deleteMap()
+    if g_messageCenter ~= nil and type(g_messageCenter.unsubscribeAll) == "function" then g_messageCenter:unsubscribeAll(self) end
+end
+local function writePause(xml)
+    local current = SimDeckStatus.confirmedPause
+    if current == nil then current = paused() end
+    boolAttr(xml, "paused", current)
+end
+local function machines(root)
+    local list, seen = {}, {}
+    local function visit(v, depth)
+        if v == nil or seen[v] or depth > 8 or #list >= 32 then return end
+        seen[v] = true; list[#list + 1] = v
+        for _, entry in ipairs(value(v, "getAttachedImplements") or {}) do visit(entry.object, depth + 1) end
+    end
+    visit(root, 0)
+    return list
+end
+local function uniform(list, read)
+    local result = nil
+    for _, object in ipairs(list) do
+        local state = read(object)
+        if type(state) == "boolean" then
+            if result ~= nil and state ~= result then return nil end
+            result = state
+        end
+    end
+    return result
+end
+local function foldState(v)
+    if v.spec_foldable ~= nil and v.spec_foldable.hasFoldingParts == true then return status(v, "getIsUnfolded") end
+end
+local function extraStates(xml, vehicle, implement)
+    writePause(xml)
+    local all = machines(vehicle)
+    boolAttr(xml, "loweredAll", uniform(all, function(v)
+        if status(v, "getAllowsLowering") == true then return status(v, "getIsLowered") end
+    end))
+    boolAttr(xml, "turnedOnAll", uniform(all, function(v)
+        if v.spec_turnOnVehicle ~= nil then return status(v, "getIsTurnedOn") end
+    end))
+    boolAttr(xml, "unfoldedAll", uniform(all, foldState))
+    if vehicle.spec_lights ~= nil and Lights ~= nil then
+        local mask = value(vehicle, "getLightsTypesMask")
+        if type(mask) == "number" and mask >= 0 and mask == math.floor(mask) then
+            for _, pair in ipairs({{"lights", "LIGHT_TYPE_DEFAULT"}, {"highBeam", "LIGHT_TYPE_HIGHBEAM"},
+                {"workLightFront", "LIGHT_TYPE_WORK_FRONT"}, {"workLightBack", "LIGHT_TYPE_WORK_BACK"}}) do
+                local bit = Lights[pair[2]]
+                if type(bit) == "number" and bit >= 0 and bit <= 30 then
+                    boolAttr(xml, pair[1], math.floor(mask / 2 ^ bit) % 2 == 1)
+                end
+            end
+        end
+        boolAttr(xml, "beacon", status(vehicle, "getBeaconLightsVisibility"))
+        local turn = value(vehicle, "getTurnLightState")
+        if type(turn) == "number" and Lights.TURNLIGHT_LEFT ~= nil and Lights.TURNLIGHT_RIGHT ~= nil and Lights.TURNLIGHT_HAZARD ~= nil then
+            boolAttr(xml, "turnLeft", turn == Lights.TURNLIGHT_LEFT or turn == Lights.TURNLIGHT_HAZARD)
+            boolAttr(xml, "turnRight", turn == Lights.TURNLIGHT_RIGHT or turn == Lights.TURNLIGHT_HAZARD)
+            boolAttr(xml, "hazard", turn == Lights.TURNLIGHT_HAZARD)
+        end
+    end
+    local cruise = value(vehicle, "getCruiseControlState")
+    if type(cruise) == "number" and Drivable ~= nil and Drivable.CRUISECONTROL_STATE_OFF ~= nil then
+        boolAttr(xml, "cruise", cruise ~= Drivable.CRUISECONTROL_STATE_OFF)
+    end
+    local cover = implement.spec_cover
+    if cover ~= nil and cover.hasCovers == true and type(cover.state) == "number" then boolAttr(xml, "coverOpen", cover.state > 0) end
+    local pipeOwner = implement.spec_pipe ~= nil and implement or vehicle
+    local pipe = pipeOwner.spec_pipe
+    if pipe ~= nil and pipe.hasMovablePipe == true then
+        local state = value(pipeOwner, "getCurrentPipeState")
+        -- State 0 means the pipe is moving; do not misreport this as retracted.
+        if type(state) == "number" and state >= 1 then boolAttr(xml, "pipeOut", state ~= 1) end
+    end
+    local combine = (implement.spec_combine ~= nil and implement or vehicle).spec_combine
+    if combine ~= nil and type(combine.isSwathActive) == "boolean" then boolAttr(xml, "chopper", not combine.isSwathActive) end
+    local helper = vehicle.spec_aiFieldWorker
+    if helper ~= nil then boolAttr(xml, "helper", helper.isActive) end
+    if implement.spec_sprayer ~= nil then boolAttr(xml, "doubleSpray", implement.spec_sprayer.doubledAmountIsActive) end
 end
 local function text(s)
     s = tostring(s or ""):gsub("[%z\1-\31]", "")
@@ -168,6 +274,7 @@ function SimDeckStatus:update(dt)
         if xml ~= nil and xml ~= 0 then
             setXMLInt(xml, "simdeckStatus#version", 2)
             setXMLBool(xml, "simdeckStatus#controlled", false)
+            writePause(xml)
             saveXMLFile(xml); delete(xml)
         end
         return
@@ -216,7 +323,7 @@ function SimDeckStatus:update(dt)
         local first = attachmentSpec.attachedImplements[1]
         local joint = first ~= nil and attachmentSpec.attacherJoints ~= nil
             and attachmentSpec.attacherJoints[first.jointDescIndex] or nil
-        print(string.format("SimDeckStatus 1.4.0: lowering unavailable; attached=%s joint=%s moveDown=%s",
+        print(string.format("SimDeckStatus 1.5.0: lowering unavailable; attached=%s joint=%s moveDown=%s",
             tostring(#attachmentSpec.attachedImplements),
             tostring(first ~= nil and first.jointDescIndex or nil),
             tostring(joint ~= nil and joint.moveDown or nil)))
@@ -238,12 +345,13 @@ function SimDeckStatus:update(dt)
     if lowered ~= nil then setXMLBool(xml, "simdeckStatus#lowered", lowered) end
     if turnedOn ~= nil then setXMLBool(xml, "simdeckStatus#turnedOn", turnedOn) end
     if motor ~= nil then setXMLBool(xml, "simdeckStatus#motor", motor) end
+    extraStates(xml, vehicle, implement)
     writeVehicle(xml, "simdeckStatus.vehicle(0)", vehicle, "0", nil, 0, {}, { count = 0, wheelCount = 0 })
     saveXMLFile(xml)
     delete(xml)
     if not self.reportedWrite then
         self.reportedWrite = true
-        print("SimDeckStatus 1.4.0: live state file active")
+        print("SimDeckStatus 1.5.0: live state file active")
     end
 end
 

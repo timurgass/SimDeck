@@ -14,6 +14,7 @@ public sealed class Settings
     public int UdpPort { get; set; } = 4444;
     public string CertificateThumbprint { get; set; } = "";
     public bool UseVirtualKeyInput { get; set; }
+    public bool KeyboardInputEnabled { get; set; } = true;
     public string ConnectionMode { get; set; } = "wifi";
     public Dictionary<string, string> Keys { get; set; } = BeamNgProfile.Actions.ToDictionary(x => x.Id, x => x.Key);
     public List<TrustedDevice> Devices { get; set; } = [];
@@ -91,6 +92,8 @@ public sealed class SettingsStore
                     Value.Profiles[index] = Fs25Profile.UpgradeUnloading(Value.Profiles[index], Fs25Bindings.Empty);
                 }
             }
+            var farmIndex=Value.Profiles.FindIndex(p=>p.Id=="fs25");
+            if(farmIndex>=0 && Value.ProfileCatalogVersion<9) Value.Profiles[farmIndex]=Fs25Profile.UpgradeNavigation(Value.Profiles[farmIndex]);
             Value.ProfileCatalogVersion = AdditionalProfiles.CatalogVersion;
             Save();
         }

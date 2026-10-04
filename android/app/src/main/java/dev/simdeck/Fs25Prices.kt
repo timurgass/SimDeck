@@ -31,30 +31,37 @@ data class Fs25Prices(val offers:List<Fs25PriceOffer>,val ageMs:Long,val receive
         }
     }
 }
-internal fun fs25Offers(prices:Fs25Prices?,crop:String?) = prices?.offers.orEmpty().filter { crop==null || it.crop==crop }.sortedByDescending { it.pricePer1000 }
+internal fun fs25Offers(prices:Fs25Prices?,crop:String?):List<Fs25PriceOffer> {
+    val alphabet=fs25Alphabet()
+    return prices?.offers.orEmpty().filter { crop==null || it.crop==crop }.sortedWith { a,b ->
+        alphabet.compare(a.cropName.ifBlank { a.crop },b.cropName.ifBlank { b.crop }).takeIf { it!=0 }
+            ?: alphabet.compare(a.crop,b.crop).takeIf { it!=0 }
+            ?: alphabet.compare(a.station,b.station).takeIf { it!=0 }
+            ?: b.pricePer1000.compareTo(a.pricePer1000)
+    }
+}
 
 @Composable internal fun Fs25PricesPanel(state:DeckState) {
     val d=LocalProfileDesign.current
     val prices=state.telemetry?.fs25Prices
     var crop by rememberSaveable { mutableStateOf<String?>(null) }
-    val crops=prices?.offers.orEmpty().distinctBy { it.crop }.sortedBy { it.cropName }
+    val alphabet=remember { fs25Alphabet() }
+    val crops=prices?.offers.orEmpty().distinctBy { it.crop }.sortedWith { a,b -> alphabet.compare(a.cropName.ifBlank { a.crop },b.cropName.ifBlank { b.crop }) }
     val selected=crop?.takeIf { id -> crops.any { it.crop==id } }
     DesignCard {
-        Text("ЦЕНЫ НА КУЛЬТУРЫ",fontSize=23.sp,lineHeight=27.sp,fontWeight=FontWeight.Bold,color=d.accent)
+        Text("ЦЕНЫ НА КУЛЬТУРЫ И ТОВАРЫ",fontSize=23.sp,lineHeight=27.sp,fontWeight=FontWeight.Bold,color=d.accent)
         Text("Текущие предложения пунктов продажи · за 1 000 л",color=d.muted)
-        Text(when { prices==null -> "Ждём цены из мода SimDeck FS25 версии 1.4.0.0."
+        Text(when { prices==null -> "Ждём цены из мода SimDeck FS25 версии 1.4.0.0 или новее."
             !state.connected || prices.ageMs+((System.nanoTime()-prices.receivedAtNanos)/1000000).coerceAtLeast(0)>15000 -> "Последние цены · обновление задержалось"
             else -> "Из игры · обновляются каждые 5 секунд" },color=d.muted,fontSize=12.sp,lineHeight=16.sp)
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected=selected==null,onClick={crop=null},label={Text("Все")})
-            crops.forEach { offer -> FilterChip(selected=selected==offer.crop,onClick={crop=offer.crop},label={Text(offer.cropName.ifBlank { offer.crop })}) }
-        }
+        Fs25Selector("Культура или товар",crops.map { it.crop to it.cropName.ifBlank { it.crop } },selected) { crop=it }
         val offers=fs25Offers(prices,selected)
         if(offers.isEmpty()) Text(if(prices==null) "Запустите сохранение с обновлённым модом. Цены не подставляются из справочника." else "В этом сохранении пока нет предложений продажи.",color=d.muted)
-        offers.forEachIndexed { index,offer ->
+        val best=prices?.offers.orEmpty().groupBy { it.crop }.mapValues { (_,rows)-> rows.maxOf { it.pricePer1000 } }
+        offers.forEach { offer ->
             Row(Modifier.fillMaxWidth().padding(vertical=9.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(1f)) { Text(offer.cropName.ifBlank { offer.crop },fontWeight=FontWeight.Bold);Text(offer.station,color=d.muted,fontSize=13.sp,lineHeight=17.sp) }
-                Column { Text(offer.formatted.ifBlank { "%.0f".format(offer.pricePer1000)+" (валюта игры)" },fontWeight=FontWeight.Bold,color=d.accent);if(index==0 && selected!=null) Text("Лучшее предложение",color=d.muted,fontSize=11.sp) }
+                Column { Text(offer.formatted.ifBlank { "%.0f".format(offer.pricePer1000)+" (валюта игры)" },fontWeight=FontWeight.Bold,color=d.accent);if(offer.pricePer1000==best[offer.crop]) Text("Лучшее предложение",color=d.muted,fontSize=11.sp) }
             }
             HorizontalDivider(color=d.line)
         }

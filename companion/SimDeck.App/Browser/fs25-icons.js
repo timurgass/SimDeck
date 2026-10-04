@@ -1,6 +1,7 @@
 'use strict';
 // Compact, original line icons. The same action-to-symbol mapping is used on Android.
 const fs25Symbols = Object.freeze({
+  back: "M20 8 L6 24 L20 40 M6 24 H42",
   implement: 'M6 33 H42 M11 32 L16 19 H32 L37 32 M18 19 V13 H30 V19 M24 13 V7 M17 38 H31',
   lower: 'M8 12 H40 M15 12 V29 H33 V12 M24 20 V40 M17 33 L24 40 L31 33',
   power: 'M24 5 V25 M15 10 C4 20 12 40 24 41 C36 40 44 20 33 10',
@@ -33,7 +34,7 @@ const fs25IconKinds = Object.freeze({
   fs25Lights:'lights',fs25HighBeam:'high',fs25WorkLightFront:'lights',fs25WorkLightBack:'lights',fs25Beacon:'beacon',
   fs25TurnLeft:'left',fs25TurnRight:'right',fs25Hazard:'hazard',fs25Horn:'horn',fs25Camera:'camera',fs25Axle:'axle',
   fs25Helper:'helper',fs25NextVehicle:'direction',fs25PrevVehicle:'direction',fs25Enter:'helper',fs25Seat:'helper',
-  fs25Menu:'mode',fs25Store:'store',fs25Map:'map',fs25Construction:'store',fs25Help:'mode',
+  fs25Menu:'mode',fs25Back:'back',fs25Store:'store',fs25Map:'map',fs25Construction:'store',fs25Help:'mode',
   fs25Pause:'pause',fs25TimeUp:'clock',fs25TimeDown:'clock',fs25Radio:'radio'
 });
 const fs25IconPaths = Object.freeze(Object.fromEntries(Object.entries(fs25IconKinds).map(([id,kind]) => [id,

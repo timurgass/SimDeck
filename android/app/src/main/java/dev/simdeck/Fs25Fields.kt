@@ -22,7 +22,7 @@ internal class Fs25FieldLabels(private val labels: JSONObject) {
 }
 
 internal fun filteredFs25Fields(fields: List<Fs25Field>, query: String, crop: String?, labels: Fs25FieldLabels) =
-    fields.filter { it.id > 0 }.distinctBy { it.id }.sortedBy { it.id }.filter {
+    fields.filter { it.id > 0 }.distinctBy { it.id }.sortedWith { a,b -> fs25Alphabet().compare(labels.crop(a.crop),labels.crop(b.crop)).takeIf { it!=0 } ?: a.id.compareTo(b.id) }.filter {
         (crop == null || it.crop == crop) && (query.isBlank() || "${it.id} ${it.crop} ${labels.crop(it.crop)}".contains(query.trim(),ignoreCase=true))
     }
 
@@ -42,12 +42,9 @@ internal fun filteredFs25Fields(fields: List<Fs25Field>, query: String, crop: St
         Text("Из сохранения: ${data?.savedAt ?: "—"}" + if(data?.stale==true) " · данные устарели" else "",fontSize=12.sp,lineHeight=16.sp,color=if(data?.stale==true) Color(0xFFFFC449) else d.muted)
         Text("Это сетка по номерам, не географическая карта. Цвет обозначает культуру. Принадлежность и площадь участков пока неизвестны. Новые состояния появятся после сохранения FS25.",fontSize=12.sp,lineHeight=16.sp,color=d.muted)
         OutlinedTextField(value=query,onValueChange={query=it},label={Text("Номер поля или культура")},singleLine=true,modifier=Modifier.fillMaxWidth())
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected=crop==null,onClick={crop=null},label={Text("Все")})
-            data?.fields.orEmpty().map { it.crop }.distinct().sorted().forEach { name ->
-                FilterChip(selected=crop==name,onClick={crop=name},label={Text(labels.crop(name))})
-            }
-        }
+        val alphabet=remember { fs25Alphabet() }
+        val crops=data?.fields.orEmpty().map { it.crop }.distinct().sortedWith { a,b -> alphabet.compare(labels.crop(a),labels.crop(b)) }
+        Fs25Selector("Культура",crops.map { it to labels.crop(it) },crop) { crop=it }
         if(fields.isEmpty()) Text(if(data?.fields.isNullOrEmpty()) "В сохранении нет записей fields.xml для отображения. Отсутствие записей не означает, что на карте нет полей." else "По этому фильтру полей нет.",color=d.muted)
         BoxWithConstraints {
             val columns=if(maxWidth>=650.dp) 6 else 3
@@ -72,12 +69,12 @@ internal fun filteredFs25Fields(fields: List<Fs25Field>, query: String, crop: St
             Text(labels.ground(f.ground),fontSize=16.sp,lineHeight=20.sp)
             Text("Рост: ${f.growth?.let { "стадия $it" } ?: "—"} · предыдущая стадия ${f.lastGrowth ?: "—"}",color=d.muted)
             Text("Планируемая культура: ${f.planned?.let { labels.crop(it) } ?: "—"}",color=d.muted,fontSize=12.sp,lineHeight=16.sp)
-            Fs25FieldLevel("Сорняки",f.weeds,9)
-            Fs25FieldLevel("Известь",f.lime,3)
-            Fs25FieldLevel("Удобрение",f.fertilizer,3)
             Fs25FieldLevel("Вспашка",f.plow,1)
-            Fs25FieldLevel("Прикатывание",f.roller,1)
+            Fs25FieldLevel("Известь",f.lime,3)
             Fs25FieldLevel("Мульчирование",f.mulch,1)
+            Fs25FieldLevel("Прикатывание",f.roller,1)
+            Fs25FieldLevel("Сорняки",f.weeds,9)
+            Fs25FieldLevel("Удобрение",f.fertilizer,3)
             Text("Камни: ${f.stones ?: "—"} · вода: ${f.water ?: "—"} · тип удобрения: ${f.sprayType?.takeIf { it.isNotBlank() } ?: "—"}",fontSize=12.sp,lineHeight=16.sp,color=d.muted)
             val alerts=data?.alerts.orEmpty().filter { it.field==f.id }
             Text("СОВЕТНИК",fontWeight=FontWeight.Bold)

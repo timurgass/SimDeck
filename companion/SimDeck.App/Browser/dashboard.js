@@ -36,6 +36,9 @@ function mountProfileDashboard(){
  let details=$('allControls');if(!details){details=node('details','allControls');details.id='allControls';details.append(node('summary','','Все действия и пользовательские кнопки'));$('deck').append(details);}
  let farmDetails=$('farmDetails');if(!farmDetails){farmDetails=node('details','farmDetails');farmDetails.id='farmDetails';farmDetails.open=true;farmDetails.append(node('summary','','Хозяйство · поля · советник · план'));$('deck').append(farmDetails);farmDetails.append($('fs25Overview'));}
  details.hidden=true;farmDetails.hidden=profileId!=='fs25'||page!=='Хозяйство';
+ let gameNav=$('fs25GameNav');if(!gameNav){gameNav=node('div','twoGrid');gameNav.id='fs25GameNav';$('deck').prepend(gameNav);}gameNav.hidden=profileId!=='fs25';clear(gameNav);
+ if(profileId==='fs25')for(const [id,label]of [['fs25Back','← Назад в игре'],['fs25Pause','Пауза времени']]){const a=action(id);if(a)gameNav.append(actionButton(a,label));}
+
  if(isF1()){$('deck').append(document.querySelector('.controls'));return;}
  $('deck').insertBefore(document.querySelector('.controls'),root);
  if(dashboardProfile===profileId&&dashboardRevision===revision)return;

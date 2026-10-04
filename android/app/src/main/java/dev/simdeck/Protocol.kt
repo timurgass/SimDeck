@@ -10,6 +10,34 @@ data class Telemetry(val speedMps: Double, val rpm: Double, val gear: Int, val f
 data class DeckAction(val id: String, val page: String, val label: String, val description: String, val key: String, val gesture: String, val group: String = "")
 data class ControlFeedback(val active: Boolean? = null, val headlights: Int? = null, val description: String? = null)
 
+internal val fs25StateLabels=mapOf(
+    "fs25Lower" to ("Поднято" to "Опущено"),
+    "fs25LowerAll" to ("Все подняты" to "Все опущены"),
+    "fs25TurnOn" to ("Выключено" to "Работает"),
+    "fs25TurnOnAll" to ("Все выключены" to "Все работают"),
+    "fs25Motor" to ("Остановлен" to "Запущен"),
+    "fs25Fold" to ("Сложено" to "Разложено"),
+    "fs25Lights" to ("Выключен" to "Включён"),
+    "fs25HighBeam" to ("Выключен" to "Включён"),
+    "fs25WorkLightFront" to ("Выключен" to "Включён"),
+    "fs25WorkLightBack" to ("Выключен" to "Включён"),
+    "fs25Beacon" to ("Выключен" to "Включён"),
+    "fs25TurnLeft" to ("Выключен" to "Включён"),
+    "fs25TurnRight" to ("Выключен" to "Включён"),
+    "fs25Hazard" to ("Выключена" to "Включена"),
+    "fs25Cruise" to ("Выключен" to "Включён"),
+    "fs25Cover" to ("Закрыто" to "Открыто"),
+    "fs25Pipe" to ("Убрана" to "Выдвинута"),
+    "fs25Chopper" to ("Валок" to "Измельчение"),
+    "fs25Helper" to ("Не работает" to "Работает"),
+    "fs25Pause" to ("Время идёт" to "Время остановлено"),
+    "fs25Radio" to ("Выключено" to "Включено"),
+    "fs25DoubleSpray" to ("Выключена" to "Включена"),
+    "fs25Axle" to ("Опущена" to "Поднята")
+)
+
+internal fun fs25StateDescription(action:String,active:Boolean?)=fs25StateLabels[action]?.let { (off,on) -> when(active) { true->on;false->off;null->"Состояние неизвестно" } }
+
 object Protocol {
     // FS25's file bridge runs every 200 ms and tolerates partial file writes.
     // Match the server's 1500 ms live-state window; racing telemetry stays at 500 ms.
@@ -53,7 +81,7 @@ object Protocol {
         if (data == null || stale) return ControlFeedback()
         if (action == "lights" || action == "etsLights") return data.headlights?.let { ControlFeedback(it > 0, it, when(it) { 1 -> "Ближний свет"; 2 -> "Дальний свет"; else -> "Фары выключены" }) } ?: ControlFeedback()
         if (action == "gearbox") return ControlFeedback(description = when(data.gearboxMode) { "arcade" -> "Аркада"; "realistic" -> "Реализм"; else -> null })
-        val active = data.actionStates[action] ?: return ControlFeedback()
+        val active = data.actionStates[action] ?: return ControlFeedback(description=fs25StateDescription(action,null))
         val description = when(action) {
             "ignition" -> null // Keep the required tap-then-hold instructions visible.
             "fourWheelDrive" -> if (active) "Полный привод включён" else "Полный привод выключен"
@@ -71,7 +99,7 @@ object Protocol {
             "fs25Motor" -> if (active) "Двигатель работает" else "Двигатель выключен"
             else -> if (active) "Включено" else "Выключено"
         }
-        return ControlFeedback(active = active, description = description)
+        return ControlFeedback(active = active, description = fs25StateDescription(action,active) ?: description)
     }
     fun gear(value: Int, mode: String? = null) = when { value < 0 -> "R"; value == 0 -> "N"; mode == "arcade" -> "D"; else -> value.toString() }
 }
