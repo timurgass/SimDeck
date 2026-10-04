@@ -31,9 +31,11 @@ data class Fs25Prices(val offers:List<Fs25PriceOffer>,val ageMs:Long,val receive
         }
     }
 }
-internal fun fs25Offers(prices:Fs25Prices?,crop:String?):List<Fs25PriceOffer> {
+internal fun fs25Offers(prices:Fs25Prices?,crop:String?,query:String=""):List<Fs25PriceOffer> {
     val alphabet=fs25Alphabet()
-    return prices?.offers.orEmpty().filter { crop==null || it.crop==crop }.sortedWith { a,b ->
+    val search=query.trim()
+    return prices?.offers.orEmpty().filter { (crop==null || it.crop==crop) &&
+        (search.isEmpty() || "${it.cropName} ${it.crop} ${it.station}".contains(search,ignoreCase=true)) }.sortedWith { a,b ->
         alphabet.compare(a.cropName.ifBlank { a.crop },b.cropName.ifBlank { b.crop }).takeIf { it!=0 }
             ?: alphabet.compare(a.crop,b.crop).takeIf { it!=0 }
             ?: alphabet.compare(a.station,b.station).takeIf { it!=0 }
@@ -45,6 +47,7 @@ internal fun fs25Offers(prices:Fs25Prices?,crop:String?):List<Fs25PriceOffer> {
     val d=LocalProfileDesign.current
     val prices=state.telemetry?.fs25Prices
     var crop by rememberSaveable { mutableStateOf<String?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
     val alphabet=remember { fs25Alphabet() }
     val crops=prices?.offers.orEmpty().distinctBy { it.crop }.sortedWith { a,b -> alphabet.compare(a.cropName.ifBlank { a.crop },b.cropName.ifBlank { b.crop }) }
     val selected=crop?.takeIf { id -> crops.any { it.crop==id } }
@@ -54,9 +57,14 @@ internal fun fs25Offers(prices:Fs25Prices?,crop:String?):List<Fs25PriceOffer> {
         Text(when { prices==null -> "Ждём цены из мода SimDeck FS25 версии 1.4.0.0 или новее."
             !state.connected || prices.ageMs+((System.nanoTime()-prices.receivedAtNanos)/1000000).coerceAtLeast(0)>15000 -> "Последние цены · обновление задержалось"
             else -> "Из игры · обновляются каждые 5 секунд" },color=d.muted,fontSize=12.sp,lineHeight=16.sp)
+        OutlinedTextField(value=query,onValueChange={query=it.take(80)},label={Text("Культура, товар или пункт продажи")},singleLine=true,modifier=Modifier.fillMaxWidth())
         Fs25Selector("Культура или товар",crops.map { it.crop to it.cropName.ifBlank { it.crop } },selected) { crop=it }
-        val offers=fs25Offers(prices,selected)
-        if(offers.isEmpty()) Text(if(prices==null) "Запустите сохранение с обновлённым модом. Цены не подставляются из справочника." else "В этом сохранении пока нет предложений продажи.",color=d.muted)
+        val offers=fs25Offers(prices,selected,query)
+        if(offers.isEmpty()) Text(when {
+            prices==null -> "Запустите сохранение с обновлённым модом. Цены не подставляются из справочника."
+            prices.offers.isNotEmpty() -> "По этому фильтру предложений нет."
+            else -> "В этом сохранении пока нет предложений продажи."
+        },color=d.muted)
         val best=prices?.offers.orEmpty().groupBy { it.crop }.mapValues { (_,rows)-> rows.maxOf { it.pricePer1000 } }
         offers.forEach { offer ->
             Row(Modifier.fillMaxWidth().padding(vertical=9.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {

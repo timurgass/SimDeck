@@ -97,10 +97,15 @@ const fs=require('fs');const profiles=JSON.parse(fs.readFileSync(process.argv[2]
     await page.locator('#fs25PriceSelect').selectOption('');
     if(!await page.locator('#fs25Prices .fs25PriceRow').first().textContent().then(t=>t.includes('Мёд')))throw Error('Sale goods not included in Russian alphabetical order');
     await page.locator('#fs25PriceSearch').fill('мёд');
-    if(await page.locator('#fs25PriceSelect option').count()!==2)throw Error('Product search did not filter chooser');
+    if(await page.locator('#fs25Prices .fs25PriceRow').count()!==1)throw Error('Visible search did not immediately filter price rows');
+    if(await page.locator('#fs25PriceSelect option').count()!==4)throw Error('Search unexpectedly hid product choices');
     await page.locator('#fs25PriceSelect').selectOption('HONEY');
     if(await page.locator('#fs25Prices .fs25PriceRow').count()!==1)throw Error('Product choice did not filter prices');
     await page.waitForTimeout(600);if(await page.locator('#fs25PriceSearch').inputValue()!=='мёд')throw Error('Telemetry update cleared search');
+    await page.locator('#fs25PriceSearch').fill(' ПОРТ ');
+    if(await page.locator('#fs25Prices .fs25PriceRow').count()!==0||!await page.locator('#fs25PriceRows').textContent().then(t=>t.includes('По этому фильтру')))throw Error('Combined search and product filter or empty state failed');
+    await page.locator('#fs25PriceSelect').selectOption('');
+    if(await page.locator('#fs25Prices .fs25PriceRow').count()!==1||!await page.locator('#fs25Prices .fs25PriceRow').first().textContent().then(t=>t.includes('Порт')))throw Error('Station search failed');
     await page.locator('#fs25PriceSearch').fill('');await page.locator('#fs25PriceSelect').selectOption('WHEAT');
     if(await page.locator('#fs25GameNav [data-action="fs25Back"]').count()!==1)throw Error('Back unavailable on prices page');
     if(await page.evaluate(()=>commands.some(m=>m.type==='control.invoke')))throw Error('Price inspection sent game input');
