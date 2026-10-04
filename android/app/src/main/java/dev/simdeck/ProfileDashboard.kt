@@ -238,6 +238,9 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
 
 @Composable internal fun ProfileActionIcon(id: String, color: Color) {
     val symbol = when {
+        id=="radio" || id=="pushToTalk" -> "M19 6 H29 V27 C29 35 19 35 19 27 Z M12 24 V28 C12 44 36 44 36 28 V24 M24 40 V46 M18 46 H30"
+        id=="menuBack" -> "M21 8 L7 24 L21 40 M7 24 H31 C42 24 42 39 31 39"
+        id=="menu" -> "M8 12 H40 M8 24 H40 M8 36 H40"
         id.contains("Winch") -> "M8 8H40V38H8Z M12 16H36 M12 22H36 M12 28H36 M24 28V42 C24 47 33 47 33 40"
         id=="recoverRoad" || id=="snowRecover" -> "M11 18 C14 7 35 7 39 23 M39 23V11 M39 23H27 M37 31 C33 42 12 42 8 26 M8 26V38 M8 26H20"
         else -> null
@@ -253,12 +256,14 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
         id=="fourWheelDrive" || id=="differentials" || id=="esc" || id.contains("Differential") || id.endsWith("Awd") -> "etsDifferential"
         id=="hazards" -> "etsHazards"
         id.contains("Wipers") -> "etsWipers"
-        id.contains("Camera") -> "etsCamera"
+        id.contains("Camera") || id=="camera" -> "etsCamera"
         id.contains("Horn") || id=="horn" -> "etsHorn"
         id.contains("ParkingBrake") -> "etsParkingBrake"
-        id.contains("Map") || id.contains("Winch") || id=="recoverRoad" || id=="snowRecover" -> "etsMap"
+        id.contains("Map") || id=="map" || id.contains("Winch") || id=="recoverRoad" || id=="snowRecover" -> "etsMap"
         id.contains("Pit") || id.contains("Icm") || id.contains("Cargo") -> "etsRouteAdvisor"
-        else -> return
+        id=="pitLimiter" || id=="overtake" -> "etsCruise"
+        id=="pause" -> "etsPause"
+        else -> "etsDashboard"
     }
     Ets2Icon(equivalent,color)
 }

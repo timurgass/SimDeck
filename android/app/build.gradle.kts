@@ -3,13 +3,32 @@ android {
     namespace = "dev.simdeck"
     compileSdk = 35
     buildToolsVersion = "36.0.0"
-    defaultConfig { applicationId = "dev.simdeck"; minSdk = 29; targetSdk = 35; versionCode = 39; versionName = "0.9.14"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
-    buildFeatures { compose = true }
+    defaultConfig { applicationId = "dev.simdeck"; minSdk = 29; targetSdk = 35; versionCode = 40; versionName = "0.9.15"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    flavorDimensions += "device"
+    productFlavors {
+        create("tablet") {
+            dimension = "device"
+            buildConfigField("boolean", "PHONE_LAYOUT", "false")
+            resValue("string", "app_name", "SimDeck")
+        }
+        create("phone") {
+            dimension = "device"
+            applicationIdSuffix = ".phone"
+            buildConfigField("boolean", "PHONE_LAYOUT", "true")
+            resValue("string", "app_name", "SimDeck Phone")
+        }
+    }
+    buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
     buildTypes { release { isMinifyEnabled = false } }
+    // Optional existing development key; keeps locally distributed APK updates compatible.
+    System.getenv("SIMDECK_DEBUG_KEYSTORE")?.let { existingKey ->
+        signingConfigs.getByName("debug") { storeFile = file(existingKey) }
+    }
     sourceSets["test"].resources.srcDir("../../protocol/fixtures")
     sourceSets["test"].resources.srcDir("src/main/assets")
+    sourceSets["test"].resources.srcDir("src/debug/assets")
     sourceSets["main"].assets.srcDir("../../assets")
 }
 dependencies {

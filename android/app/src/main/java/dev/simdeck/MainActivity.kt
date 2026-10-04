@@ -42,30 +42,53 @@ private val White = Color(0xFFE8ECEE)
 
 class MainActivity : ComponentActivity() {
     private val model: DeckModel by viewModels()
+    private val preview by lazy { phonePreview(this,intent.getStringExtra("preview_profile")) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if(BuildConfig.DEBUG && preview!=null) intent.getStringExtra("preview_capture")?.takeIf {it.matches(Regex("[a-z0-9-]{1,60}"))}?.let {name->
+            window.decorView.postDelayed({
+                val view=window.decorView.findViewById<android.view.View>(android.R.id.content)
+                val position=IntArray(2);view.getLocationInWindow(position)
+                val decor=window.decorView
+                val bars=decor.rootWindowInsets?.let {androidx.core.view.WindowInsetsCompat.toWindowInsetsCompat(it,decor).getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars() or androidx.core.view.WindowInsetsCompat.Type.displayCutout())} ?: androidx.core.graphics.Insets.NONE
+                val area=android.graphics.Rect(maxOf(position[0],bars.left),maxOf(position[1],bars.top),minOf(position[0]+view.width,decor.width-bars.right),minOf(position[1]+view.height,decor.height-bars.bottom))
+                val bitmap=android.graphics.Bitmap.createBitmap(area.width(),area.height(),android.graphics.Bitmap.Config.ARGB_8888)
+                android.util.Log.i("SimDeckPreview","Capturing app content ${area.width()}x${area.height()}")
+                android.view.PixelCopy.request(window,area,bitmap,{result->
+                    android.util.Log.i("SimDeckPreview","PixelCopy result $result")
+                    runCatching {
+                        if(result!=android.view.PixelCopy.SUCCESS) {val canvas=android.graphics.Canvas(bitmap);canvas.translate((position[0]-area.left).toFloat(),(position[1]-area.top).toFloat());view.draw(canvas)}
+                        val folder=java.io.File(getExternalFilesDir(null),"phone-preview");folder.mkdirs()
+                        java.io.File(folder,"$name.png").outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
+                    }.onFailure {android.util.Log.e("SimDeckPreview","Cannot save QA content",it)}
+                    bitmap.recycle()
+                },android.os.Handler(android.os.Looper.getMainLooper()))
+            },2500)
+        }
         setContent {
-            val state by model.state.collectAsState()
-            val design = remember(state.profileId) { profileDesign(state.profileId) }
+            val liveState by model.state.collectAsState()
+            val state=preview ?: liveState
+            val design = remember(state.profileId) { if(BuildConfig.PHONE_LAYOUT) phoneDesign(state.profileId) else profileDesign(state.profileId) }
             CompositionLocalProvider(LocalProfileDesign provides design) {
             MaterialTheme(colorScheme = darkColorScheme(primary = design.accent, onPrimary = design.background, primaryContainer = design.panelAlt, onPrimaryContainer = design.accent, secondary = design.accent, onSecondary = design.background, secondaryContainer = design.panelAlt, onSecondaryContainer = White, background = design.background, surface = design.panel, surfaceVariant = design.panelAlt, onBackground = White, onSurface = White, outline = design.line)) {
                 var connectionTab by rememberSaveable { mutableStateOf(false) }
                 Surface(Modifier.fillMaxSize(), color = design.background) {
-                    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(horizontal = 15.dp, vertical = 10.dp)) {
+                    Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding().padding(horizontal = 15.dp, vertical = 10.dp)) {
                         if(connectionTab || !(state.connected || state.controls.isNotEmpty())) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                             Column(Modifier.weight(1f)) {
                                 Row { Text("SIM", fontSize = 24.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp); Text("DECK", fontSize = 24.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp,color=design.accent)
-                                    Text("  ПРОФИЛЬ: ${profileShortName(state.profileId)}", fontSize = 14.sp, fontWeight = FontWeight.Black, color = design.accent)
+                                    if(!BuildConfig.PHONE_LAYOUT) Text("  ПРОФИЛЬ: ${profileShortName(state.profileId)}", fontSize = 14.sp, fontWeight = FontWeight.Black, color = design.accent)
                                 }
+                                if(BuildConfig.PHONE_LAYOUT) Text(profileShortName(state.profileId),fontSize=12.sp,color=design.accent)
                                 Text(design.tag, color = design.muted, fontSize = 10.sp, letterSpacing = 1.sp)
                             }
                             TextButton(onClick = { model.releaseAll(); connectionTab = !connectionTab }) { Text(if (connectionTab) "ПАНЕЛЬ" else if (state.profileId in setOf("f1-24", "f1-25")) "СВЯЗЬ" else "ПОДКЛЮЧЕНИЕ", fontSize = 11.sp) }
                         }
                         if (connectionTab && state.profileId in setOf("f1-24", "f1-25", "acc")) Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(3.dp).background(design.accent))
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(if(BuildConfig.PHONE_LAYOUT) 2.dp else 12.dp))
                         // Keep the dashboard composed during reconnects so pages and scroll survive.
-                        if ((state.connected || state.controls.isNotEmpty()) && !connectionTab) Dashboard(state, model) { model.releaseAll();connectionTab=true }
+                        if ((state.connected || state.controls.isNotEmpty()) && !connectionTab) Dashboard(state, model,if(BuildConfig.DEBUG && preview!=null) intent.getStringExtra("preview_tab") ?: "drive" else "drive") { model.releaseAll();connectionTab=true }
                         else Connection(state, model) { connectionTab = false }
                     }
                 }
@@ -73,8 +96,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    override fun onStart() { super.onStart(); model.start() }
-    override fun onStop() { model.pause(); super.onStop() }
+    override fun onStart() { super.onStart(); if(preview==null) model.start() }
+    override fun onStop() { if(preview==null) model.pause(); super.onStop() }
 }
 
 @Composable
@@ -108,7 +131,7 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
         }
         TextButton(onClick = { advanced = !advanced }) { Text("Резервное подключение", color = Muted) }
         if(state.selected!=null) {
-            Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick={model.savedTransport(true);showDash()}) { Text("USB · сохранённый ПК") }
                 OutlinedButton(onClick={model.savedTransport(false);showDash()}) { Text("Wi-Fi · сохранённый ПК") }
             }
@@ -124,12 +147,13 @@ private fun Connection(state: DeckState, model: DeckModel, showDash: () -> Unit)
                 if (host.isNotEmpty() && port != null && port in 1024..65535 && fingerprint.matches(Regex("[0-9a-fA-F]{64}"))) model.select(Computer("Companion", host, port, fingerprint.lowercase()))
             }) { Text("Выбрать") }
         }
-        Text("Ранняя сборка 0.9.14 · 8 игровых профилей · ETS2 SCS Telemetry", color = Muted, fontSize = 11.sp)
+        Text("${if(BuildConfig.PHONE_LAYOUT) "SimDeck Phone" else "SimDeck"} ${BuildConfig.VERSION_NAME} · 8 игровых профилей", color = Muted, fontSize = 11.sp)
     }
 }
 
 @Composable
-private fun Dashboard(state: DeckState, model: DeckModel,connection:()->Unit) {
+private fun Dashboard(state: DeckState, model: DeckModel,phoneTab:String="drive",connection:()->Unit) {
+    if(BuildConfig.PHONE_LAYOUT) { PhoneDashboard(state,model,connection,phoneTab);return }
     if (state.profileId in setOf("f1-24", "f1-25")) { F1Dashboard(state, model,connection); return }
     ProfileDashboard(state, model,connection)
 }
@@ -290,7 +314,14 @@ internal fun Fs25Overview(state: DeckState) {
                 } finally { model.release(id); down = false; startingIgnition = false }
             })
         }, contentAlignment = Alignment.Center) {
-        if(tile && heightDp in 48..80) Row(Modifier.fillMaxWidth().padding(8.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+        if(tile && BuildConfig.PHONE_LAYOUT && heightDp>=85) Column(Modifier.fillMaxWidth().padding(10.dp),verticalArrangement=Arrangement.spacedBy(3.dp)) {
+            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                if(ets2) Ets2Icon(action,if(enabled) accent else Muted) else if(fs25) Fs25Icon(action,if(enabled) accent else Muted) else ProfileActionIcon(action,if(enabled) design.accent else Muted)
+                if(feedback.active!=null) Text(feedback.description ?: if(active) "ВКЛ" else "ВЫКЛ",fontSize=9.sp,lineHeight=11.sp,maxLines=2,color=if(active) accent else design.muted,modifier=Modifier.weight(1f))
+            }
+            Text(label,fontSize=15.sp,lineHeight=18.sp,maxLines=2,fontWeight=FontWeight.Bold,color=if(enabled) accent else Muted)
+            if(heightDp>=100 || hold || action=="ignition") Text(if(startingIgnition && down) "Запуск · держите" else displaySubtitle,fontSize=10.sp,lineHeight=12.sp,maxLines=2,color=design.muted)
+        } else if(tile && heightDp in 48..80) Row(Modifier.fillMaxWidth().padding(8.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             if(ets2) Ets2Icon(action,if(enabled) accent else Muted) else if(fs25) Fs25Icon(action,if(enabled) accent else Muted) else ProfileActionIcon(action,if(enabled) accent else Muted)
             Column(Modifier.weight(1f)) { Text(label,fontSize=13.sp,lineHeight=16.sp,maxLines=2,fontWeight=FontWeight.Bold,color=if(enabled) accent else Muted);Text(displaySubtitle,fontSize=10.sp,lineHeight=12.sp,maxLines=1,color=design.muted) }
         } else Column(Modifier.fillMaxWidth().padding(10.dp), horizontalAlignment = if (tile) Alignment.Start else Alignment.CenterHorizontally) {
@@ -300,7 +331,7 @@ internal fun Fs25Overview(state: DeckState) {
                 if (!ets2 && !fs25) ProfileActionIcon(action, if (enabled) { if (primary || feedback.headlights != null) accent else design.accent } else Muted)
             }
             if (active && !tile) Text(when(action) { "fs25Lower" -> "● ОПУЩЕНО"; "fs25TurnOn" -> "● РАБОТАЕТ"; "fs25Motor" -> "● ЗАПУЩЕН"; "fs25Pause" -> "● ВРЕМЯ ОСТАНОВЛЕНО"; else -> "● ВКЛ" }, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = accent)
-            Text(label, fontSize = if (state.profileId in setOf("f1-24","f1-25")) { if (label in listOf("↑", "←", "↓", "→")) 30.sp else 16.sp } else if (tile) 12.sp else 14.sp, maxLines = 2, textAlign = if (tile) TextAlign.Start else TextAlign.Center, fontWeight = FontWeight.Bold, color = if (enabled) accent else Muted)
+            Text(label, fontSize = if (state.profileId in setOf("f1-24","f1-25")) { if (label in listOf("↑", "←", "↓", "→")) 30.sp else 16.sp } else if (BuildConfig.PHONE_LAYOUT) 16.sp else if (tile) 12.sp else 14.sp, lineHeight=20.sp, maxLines = 2, textAlign = if (tile) TextAlign.Start else TextAlign.Center, fontWeight = FontWeight.Bold, color = if (enabled) accent else Muted)
             if (heightDp >= 70) Text(if (startingIgnition && down) "Запуск · держите кнопку" else displaySubtitle, fontSize = if (tile) 10.sp else if (state.profileId in setOf("f1-24","f1-25")) 13.sp else 11.sp, maxLines = if (tile) 2 else 3, textAlign = if (tile) TextAlign.Start else TextAlign.Center, color = if(primary) design.background else design.muted, modifier = Modifier.padding(top = 4.dp))
         }
     }

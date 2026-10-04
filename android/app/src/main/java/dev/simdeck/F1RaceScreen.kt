@@ -25,20 +25,20 @@ private object CircuitAssets { var all: Map<Int,Circuit>? = null }
     val all=remember { CircuitAssets.all ?: Circuit.parseAll(context.assets.open("f1-circuits.json").bufferedReader().use { it.readText() }).also { CircuitAssets.all=it } }
     return all[id]
 }
-private fun teamColor(team: Int): Color = Color(when(team) {
+internal fun teamColor(team: Int): Color = Color(when(team) {
     0 -> 0xFF27F4D2; 1 -> 0xFFE95A62; 2 -> 0xFF7298FF; 3 -> 0xFF64C4FF; 4 -> 0xFF2AB6A0
     5 -> 0xFFFF87BC; 6 -> 0xFF9DA5FF; 7 -> 0xFFDBDEE2; 8 -> 0xFFFFA23D; 9 -> 0xFF75EE58
     else -> longArrayOf(0xFF74CCE0,0xFFFFC869,0xFFB7A3ED,0xFFB6D881)[Math.floorMod(team,4)]
 })
 
-@Composable internal fun F1CircuitMap(race: RaceData?, stale: Boolean, compact: Boolean = false, heightDp: Int? = null) {
+@Composable internal fun F1CircuitMap(race: RaceData?, stale: Boolean, compact: Boolean = false, heightDp: Int? = null,showCaptions:Boolean=true) {
     val track=circuit(race?.trackId)
     if (track == null) {
         Text(if(race == null || race.trackId < 0) "Ожидание названия трассы от игры" else "Для этой конфигурации схема пока не добавлена", fontSize = 15.sp)
         return
     }
     val live=!stale && race?.fresh == true
-    Text(track.name, fontSize = if(compact) 16.sp else 23.sp, fontWeight = FontWeight.Bold)
+    if(showCaptions) Text(track.name, fontSize = if(compact) 16.sp else 23.sp, fontWeight = FontWeight.Bold)
     val markers=if(live) race!!.drivers.filter { it.onTrack } else emptyList()
     Canvas(Modifier.fillMaxWidth().height((heightDp ?: if(compact) 85 else 195).dp)) {
         val points=track.points
@@ -79,8 +79,10 @@ private fun teamColor(team: Int): Color = Color(when(team) {
             }
         }
     }
-    Text(if(!live) "Схема готова · ждём данные пилотов" else if(markers.isEmpty()) "Пилоты в боксах или нет активных машин" else if(compact) "${markers.size} на трассе · вы с белым ободком" else "Вы — белый ободок · цвет команды", fontSize = 12.sp, color = Color(0xFFAEBFC9))
-    if(!compact) Text("Положение по дистанции круга, приблизительно. Пит-лейн не показан отдельно.",fontSize=12.sp,color=Color(0xFFAEBFC9))
+    if(showCaptions) {
+        Text(if(!live) "Схема готова · ждём данные пилотов" else if(markers.isEmpty()) "Пилоты в боксах или нет активных машин" else if(compact) "${markers.size} на трассе · вы с белым ободком" else "Вы — белый ободок · цвет команды", fontSize = 12.sp, color = Color(0xFFAEBFC9))
+        if(!compact) Text("Положение по дистанции круга, приблизительно. Пит-лейн не показан отдельно.",fontSize=12.sp,color=Color(0xFFAEBFC9))
+    }
 }
 
 @Composable internal fun F1RaceScreen(state: DeckState) {

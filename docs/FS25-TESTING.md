@@ -28,7 +28,7 @@
 dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release
 dotnet build companion/SimDeck.App/SimDeck.App.csproj -c Release
 cd android
-./gradlew testDebugUnitTest assembleDebug
+./gradlew testTabletDebugUnitTest testPhoneDebugUnitTest assembleTabletDebug assemblePhoneDebug
 ```
 
 Тесты используют только синтетические сейвы. Игровые XML-файлы GIANTS можно добавить локально для дополнительных интеграционных проверок, но не публиковать.

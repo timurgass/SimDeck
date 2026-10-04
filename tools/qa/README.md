@@ -1,5 +1,17 @@
 # Проверка экранов Android и Safari
 
+## SimDeck Phone (0.9.15)
+
+В `android` выполните `./gradlew testPhoneDebugUnitTest testTabletDebugUnitTest assemblePhoneDebug assembleTabletDebug`. Установите `app/build/outputs/apk/phone/debug/app-phone-debug.apk` на один разрешённый для USB-отладки телефон.
+
+Из корня: `python tools/qa/check-phone-device.py <путь-к-adb> artifacts/phone-0915`. Скрипт получает 32 вертикальных и 8 горизонтальных снимков настоящего Compose-интерфейса, проверяет их целостность/ориентацию, открывает «Ещё» касанием и возвращается кнопкой Android Back в каждом профиле. Настройки поворота восстанавливаются в `finally`. Снимки содержат только область приложения. `--resume` сохраняет уже полученные вертикальные снимки и повторяет горизонтальные/навигацию.
+
+Просмотр включается только явными debug-extras `preview_profile`, `preview_tab`, `preview_capture`. Он использует заводские профили из `android/app/src/debug/assets/phone-preview-profiles.json`, не устанавливает сетевое соединение и не отправляет игровой ввод. Результат `result.json` появляется после успешного завершения всех проверок. Перед новым запуском не считайте оставшийся от прежнего запуска результат доказательством успеха.
+
+При изменении заводских действий обновите фикстуру через `dotnet run --project companion/SimDeck.Tests -c Release -- --export-profiles android/app/src/debug/assets/phone-preview-profiles.json`. Тест `PhoneNavigationTest` сверяет все быстрые кнопки с этими реальными ID и сохраняет пользовательские страницы/жесты.
+
+Для проверки отправки команд используйте записывающий хост ниже. Просмотр и снимки сами по себе не подтверждают бинды установленной игры. [Телефонные экраны и ограничения](../../docs/PHONE-0915.md).
+
 ## Автоматический выбор техники (0.9.3)
 
 `python -m pip install lupa==2.8`, затем `python tools/qa/check-vehicle-mods.py` из корня: выполняются исходники Lua-модов, проверяются FS25-цепочка/смена машины/выход и реальный FFI-пакет BeamNG SMD3. Это тестовые игровые API, не запуск игры.

@@ -3,14 +3,14 @@
 <p align="center"><strong>Your rig. One touch.</strong></p>
 
 <p align="center">
-  <img alt="Release 0.9.14" src="https://img.shields.io/badge/release-0.9.14-7dd3c0?style=flat-square">
+  <img alt="Android release 0.9.15" src="https://img.shields.io/badge/release-0.9.15-7dd3c0?style=flat-square">
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-4f8cc9?style=flat-square&logo=windows11&logoColor=white">
   <img alt="Android" src="https://img.shields.io/badge/Android-10%2B-3ddc84?style=flat-square&logo=android&logoColor=white">
   <img alt="Safari" src="https://img.shields.io/badge/iPhone-Safari-4f8cc9?style=flat-square&logo=safari&logoColor=white">
 </p>
 
 <p align="center">
-  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.9.14"><strong>Скачать SimDeck 0.9.14</strong></a>
+  <a href="https://github.com/timurgass/SimDeck/releases/tag/v0.9.15"><strong>Скачать SimDeck 0.9.15</strong></a>
   · <a href="#быстрый-запуск">Быстрый запуск</a>
   · <a href="TROUBLESHOOTING.md">Решение проблем</a>
 </p>
@@ -24,7 +24,15 @@ SimDeck превращает Android-планшет, телефон или Safar
 
 ## Скачать
 
-Для любой игры сначала скачайте [Windows Companion](https://github.com/timurgass/SimDeck/releases/download/v0.9.14/SimDeck-0.9.14-Windows.zip) и полностью распакуйте архив. Для Android дополнительно установите [APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.14/SimDeck-0.9.14-Android.apk). На iPhone отдельный файл не нужен: откройте локальный Safari-пульт из Companion. Для всех новых экранов обновите Companion и APK до **0.9.14**, а мод FS25 — до **1.5.0.0**. Новый мод нужен для дополнительных состояний переключателей; отправка клавиш работает и без него. [Цены, поля и состояния FS25](docs/UPDATE-0913.md) · [Подключение USB](docs/UPDATE-0911.md) · [Контрольная сумма Windows](https://github.com/timurgass/SimDeck/releases/download/v0.9.14/SimDeck-0.9.14-SHA256SUMS.txt).
+Для любой игры сначала скачайте [Windows Companion 0.9.14](https://github.com/timurgass/SimDeck/releases/download/v0.9.14/SimDeck-0.9.14-Windows.zip) и полностью распакуйте архив. Он совместим с обоими Android-клиентами 0.9.15.
+
+| Устройство | Скачать |
+| --- | --- |
+| Android-телефон | **[SimDeck Phone 0.9.15](https://github.com/timurgass/SimDeck/releases/download/v0.9.15/SimDeck-0.9.15-Phone.apk)** — отдельное приложение, нижняя навигация и крупные кнопки |
+| Android-планшет | [SimDeck 0.9.15](https://github.com/timurgass/SimDeck/releases/download/v0.9.15/SimDeck-0.9.15-Android.apk) — обновление прежнего APK |
+| iPhone | Локальный Safari-пульт из Companion; файл не нужен |
+
+**Phone устанавливается рядом с SimDeck. Первое сопряжение выполняется отдельно.** Рисунки техники и игровые данные общие с планшетом. [Установка и экраны телефона](docs/PHONE-0915.md). Для расширенных состояний FS25 нужен мод **1.5.0.0**; для телефонного выпуска менять мод не требуется. [Цены, поля и состояния FS25](docs/UPDATE-0913.md) · [USB](docs/UPDATE-0911.md) · [Контрольные суммы APK](https://github.com/timurgass/SimDeck/releases/download/v0.9.15/SimDeck-0.9.15-SHA256SUMS.txt).
 
 ### Дополнительные файлы по играм
 
@@ -294,7 +302,7 @@ dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release
 dotnet publish companion/SimDeck.App/SimDeck.App.csproj -c Release -r win-x64 --self-contained true -o artifacts/Companion
 
 cd android
-.\gradlew.bat testDebugUnitTest assembleDebug
+.\gradlew.bat testTabletDebugUnitTest testPhoneDebugUnitTest assembleTabletDebug assemblePhoneDebug
 ```
 
 Android SDK задаётся через `ANDROID_HOME` или локальный `android/local.properties`. Для отдельного тестового профиля используйте `SimDeck.exe --data-dir <папка>`, для демонстрационных приборов — `SimDeck.exe --demo`.
@@ -302,5 +310,7 @@ Android SDK задаётся через `ANDROID_HOME` или локальный
 </details>
 
 ## Текущий статус
+
+Android **0.9.15** разделён на планшетный SimDeck и отдельный SimDeck Phone. [Подробности](docs/PHONE-0915.md).
 
 Companion **0.9.14** использует согласованный графитовый дизайн, навигацию слева, поиск действий и подготовку USB кнопкой на ПК. [Подробнее](docs/UPDATE-0911.md). Версия **0.9.10** добавляет проценты шкал в «Полях», отдельную вкладку текущих цен по культурам и пунктам продажи, заливку повреждённых крыльев/боковин/DRS F1 и переключение сохранённого ПК на USB/ADB. [Подробнее](docs/UPDATE-0910.md). Версия 0.9.9 перенесла крупные схемы и панели согласованного дизайна, добавляет «Поля» FS25 и ускоряет живые состояния. Предыдущие исправления пропорций и отдельная разгрузка на землю (Ctrl+I) сохранены. Сохраняются 92 класса техники и орудий, автоматическое сопоставление 103 категорий магазина и отдельные самоходные/прицепные варианты. Жатка показана с узкого торца и появляется только при подключении. Рисунки и координаты общие для Android и Safari. Все прежние вкладки и пользовательские кнопки сохранены. Для расширенных состояний и частоты живого состояния 5 Гц нужен мод FS25 **1.5.0.0**; в 0.9.10 появилась отдельная вкладка «Поля». [Изменения](RELEASE-NOTES.md) · [Схемы, установка и ограничения](docs/FS25-EQUIPMENT-096.md) · [Две команды разгрузки FS25](docs/FS25-UNLOADING.md).

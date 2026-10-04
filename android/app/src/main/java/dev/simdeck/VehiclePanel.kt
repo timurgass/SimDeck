@@ -105,7 +105,10 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
     if(s==null) { Text("Нет схемы этого класса · без предположений о кузове",color=d.muted);return }
     val formulaZones=if(kind=="formula") rememberF1DamageZones() else emptyList()
     Canvas(Modifier.fillMaxWidth().height(heightOverride ?: if(trailer!=null) 410.dp else 290.dp)) {
-        val cx=size.width/2;val h=if(trailer!=null) size.height*.61f else size.height;val width=h
+        val cx=size.width/2
+        // Narrow phone columns must preserve the sprite ratio within their own bounds.
+        val h=minOf(if(trailer!=null) size.height*.61f else size.height,size.width*s.h/s.w)
+        val width=h
         val bodyWidth=h*s.w/s.h
         sprite(atlas,s,cx-bodyWidth/2,0f,bodyWidth,h)
         fun wheelSet(list:List<VehicleWheel>,from:Float,to:Float,bodyWidth:Float) {

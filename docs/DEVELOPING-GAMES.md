@@ -42,11 +42,11 @@ FS25 теперь служит примером медленного файло�
 - Миграция настроек, обратная совместимость, способ отката и пример обезличенной фикстуры.
 - Для нового адаптера — описание ошибки/отключения и того, когда данные считаются устаревшими.
 
-Команды из корня: `dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release`, `dotnet build companion/SimDeck.App/SimDeck.App.csproj -c Release`, затем в `android` — `./gradlew testDebugUnitTest assembleDebug`. Версия .NET задаётся `global.json`; Android требует SDK/JDK по конфигурации Gradle.
+Команды из корня: `dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release`, `dotnet build companion/SimDeck.App/SimDeck.App.csproj -c Release`, затем в `android` — `./gradlew testTabletDebugUnitTest testPhoneDebugUnitTest assembleTabletDebug assemblePhoneDebug`. Версия .NET задаётся `global.json`; Android требует SDK/JDK по конфигурации Gradle.
 
 ## Экран нового профиля
 
-Согласованный макет нужно перенести в оба клиента: Android — `ProfileDashboard.kt`/`ProfileDesign.kt` (F1 отдельно в `F1Dashboard.kt`), Safari — `Browser/dashboard.js`/`dashboard.css`/`profile-design.css`. Используйте существующие `Control` и `actionButton`, чтобы сохранить блокировки ввода, отпускание удержаний и пользовательские назначения. Не создавайте собственный независимый путь отправки команд.
+Согласованный макет нужно перенести в оба клиента: Android Phone — `PhoneDashboard.kt`/`PhoneNavigation.kt`; Android Tablet — `ProfileDashboard.kt`/`ProfileDesign.kt` (F1 отдельно в `F1Dashboard.kt`), Safari — `Browser/dashboard.js`/`dashboard.css`/`profile-design.css`. Используйте существующие `Control` и `actionButton`, чтобы сохранить блокировки ввода, отпускание удержаний и пользовательские назначения. Не создавайте собственный независимый путь отправки команд.
 
 Проверяйте не только цвета: композицию приборов, размеры и подписи, быстрые действия, полный каталог и пользовательские страницы. Обязательны телефон и планшет в двух ориентациях, отсутствующая/устаревшая телеметрия, выключенный ввод, удержание и смена страницы. [Воспроизводимая проверка](../tools/qa/README.md) · [Снимки и результаты 0.9.2](UI-VERIFICATION.md).
 
