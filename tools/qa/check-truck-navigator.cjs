@@ -41,6 +41,27 @@ const base=process.argv[2]||'http://127.0.0.1:28787',pin=fs.readFileSync(process
   await page.waitForFunction(()=>!etsMapState.navigator.routeBusy,{},{timeout:45000});console.log('Waypoint ready at '+width);
   const waypoint=await page.evaluate(()=>{const n=etsMapState.navigator;return{count:n.plan.stops.length,at:n.plan.stopMetres};});
   if(waypoint.count!==1||waypoint.at.length!==1)throw Error('Waypoint was not routed');
+  // A selected point must be hittable even when its POI layer is hidden.
+  const selectedHit=await page.evaluate(()=>{const n=etsMapState.navigator,p=n.stops[0],layers=n.layers;n.layers=new Set();const screen=n.toScreen(p.x,p.z),hit=n.hitPoi(screen.x,screen.y);n.layers=layers;return hit?.id===p.id;});
+  if(!selectedHit)throw Error('Selected waypoint cannot be opened from the map');
+  // Pause the source and hold an older response while deleting a stop via UI.
+  await page.evaluate(()=>{const n=etsMapState.navigator;n.qaFrame=n.frame;n.qaPlan=n.plan;n.qaRefresh=n.refresh;n.refresh=()=>{};n.update({...n.frame,stale:true});n.qaRequest=n.request;n.request=()=>new Promise(resolve=>{n.qaFinish=resolve;});n.frame={...n.frame,stale:false};n.qaPending=n.calculate();n.frame={...n.frame,stale:true};n.open('place',n.stops[0]);});
+  await page.getByRole('button',{name:'Удалить выбранную точку',exact:true}).click();
+  const removed=await page.evaluate(async()=>{const n=etsMapState.navigator;n.qaFinish(n.qaPlan);await n.qaPending;n.request=n.qaRequest;const saved=JSON.parse(localStorage.getItem('simdeck.navigator.'+n.profile));return !n.plan&&!n.routeBusy&&n.stops.length===0&&!!n.destination&&saved.stops.length===0;});
+  if(!removed)throw Error('Deleted stop or old route returned after delayed calculation');
+  // Deleting the destination retains other stops, and works without telemetry.
+  await page.evaluate(()=>{const n=etsMapState.navigator;n.addStop(n.qaPlan.stops[0]);n.open('place',n.destination);});
+  await page.getByRole('button',{name:'Удалить выбранную точку',exact:true}).click();
+  const destRemoved=await page.evaluate(()=>{const n=etsMapState.navigator;const saved=JSON.parse(localStorage.getItem('simdeck.navigator.'+n.profile));return !n.destination&&!n.plan&&n.stops.length===1&&!saved.destination&&saved.stops.length===1;});
+  if(!destRemoved)throw Error('Destination removal failed or cleared unrelated stops');
+  await page.getByRole('button',{name:'Маршрут и поиск',exact:true}).click();
+  await page.getByRole('button',{name:'Отменить маршрут',exact:true}).click();
+  if(!await page.evaluate(()=>{const n=etsMapState.navigator;return !n.destination&&!n.stops.length&&!n.plan;}))throw Error('Cancel without a built route failed');
+  // GPS data is taken directly from telemetry, independently of local points.
+  const gameGps=await page.evaluate(()=>{const n=etsMapState.navigator;n.update({...n.qaFrame,data:{...n.qaFrame.data,ets2Navigation:{...n.position,remainingKm:160.9344,remainingMinutes:75}}});const present=n.gameGps.textContent.includes('100 mi')&&n.gameGps.textContent.includes('1 ч 15 мин');n.setDestination(n.qaPlan.destination);n.cancel();const retained=n.gameGps.textContent.includes('100 mi');n.update({...n.qaFrame,data:{...n.qaFrame.data,ets2Navigation:{...n.position,remainingKm:null,remainingMinutes:null}}});const cleared=n.gameGps.textContent.includes('маршрут не задан');n.update(n.qaFrame);n.refresh=n.qaRefresh;n.setDestination(n.qaPlan.destination);return present&&retained&&cleared;});
+  if(!gameGps)throw Error('Game GPS metrics confused with the SimDeck route');
+  await page.getByRole('button',{name:'Построить выбранный маршрут',exact:true}).click();
+  await page.waitForFunction(()=>!!etsMapState.navigator.plan&&!etsMapState.navigator.routeBusy);
   // The game stream may pause, while the map and routes remain on screen.
   await page.evaluate(()=>{const n=etsMapState.navigator;n.update({data:n.frame.data,stale:true,connected:true});});
   const retained=await page.evaluate(()=>!!etsMapState.navigator.plan&&!!etsMapState.navigator.map);

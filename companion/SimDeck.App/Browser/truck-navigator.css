@@ -28,3 +28,6 @@
 .sdnav .nav-tools button svg{display:block;width:25px;height:25px;margin:auto}.sdnav .nav-tools button{border-radius:14px}.sdnav .nav-stop-card:empty{display:none}@media(min-width:651px) and (min-height:501px){.sdnav .nav-tools{top:76px;gap:5px}.sdnav .nav-tools button{height:44px;width:48px}.sdnav .nav-stop-card{bottom:158px}}
 
 @media(max-width:650px) and (max-height:600px){.sdnav .nav-tools{display:grid;grid-template-columns:repeat(4,44px);gap:5px;top:135px}.sdnav .nav-stop-card{display:none}.sdnav .nav-maneuver{padding:10px 12px}.sdnav .nav-turn{width:36px}.sdnav .nav-turn svg{height:48px}.sdnav .nav-instruction{font-size:18px}.sdnav .nav-maneuver strong{font-size:17px}}
+
+.sdnav .nav-game-gps{border-top:1px solid var(--nav-line);margin-top:8px;padding-top:7px;font-size:11px;line-height:1.4;color:var(--nav-gold);overflow-wrap:anywhere}
+@media(max-width:650px){.sdnav .nav-game-gps{font-size:10px;max-width:170px}}
