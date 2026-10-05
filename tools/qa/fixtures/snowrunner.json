@@ -1,0 +1,122 @@
+{
+  "speedMps": 0.0003611951880262677,
+  "rpm": 0,
+  "gear": 0,
+  "fuelFraction": 0.7641767859458923,
+  "throttle": 0,
+  "brake": 0,
+  "clutch": 0,
+  "maxRpm": null,
+  "fuelLiters": 275.1036376953125,
+  "gearboxMode": null,
+  "maxGear": null,
+  "headlights": null,
+  "actionStates": {
+    "snowEngine": true
+  },
+  "f1": null,
+  "acc": null,
+  "ets2Navigation": null,
+  "fs25": null,
+  "fs25Advisor": null,
+  "vehicle": {
+    "id": "ws_6900xd_twin",
+    "name": "Western Star 6900 TwinSteer",
+    "kind": "truck",
+    "wheels": [
+      {
+        "x": -1.164,
+        "z": -6.184,
+        "powered": null
+      },
+      {
+        "x": 1.164,
+        "z": -6.184,
+        "powered": null
+      },
+      {
+        "x": -1.164,
+        "z": -4.355,
+        "powered": null
+      },
+      {
+        "x": 1.164,
+        "z": -4.355,
+        "powered": null
+      },
+      {
+        "x": -1.055,
+        "z": 5.334,
+        "powered": null
+      },
+      {
+        "x": 1.055,
+        "z": 5.334,
+        "powered": null
+      },
+      {
+        "x": -1.055,
+        "z": 6.985,
+        "powered": null
+      },
+      {
+        "x": 1.055,
+        "z": 6.985,
+        "powered": null
+      }
+    ],
+    "attachments": [],
+    "controlled": true,
+    "wear": {
+      "transmission": 0,
+      "engine": 0.02857142857142857,
+      "fuelTank": 0,
+      "suspension": 0.057692307692307696
+    },
+    "axleCount": 4
+  },
+  "fs25Prices": null,
+  "beamNg": null,
+  "snowRunner": {
+    "build": "1.886173.SNOW_DLC_18",
+    "fuelCapacity": 360,
+    "components": [
+      {
+        "id": "transmission",
+        "name": "Коробка",
+        "damage": 0,
+        "capacity": 220,
+        "damageFraction": 0,
+        "remaining": 220
+      },
+      {
+        "id": "engine",
+        "name": "Двигатель",
+        "damage": 8,
+        "capacity": 280,
+        "damageFraction": 0.02857142857142857,
+        "remaining": 272
+      },
+      {
+        "id": "fuelTank",
+        "name": "Бак",
+        "damage": 0,
+        "capacity": 100,
+        "damageFraction": 0,
+        "remaining": 100
+      },
+      {
+        "id": "suspension",
+        "name": "Подвеска",
+        "damage": 15,
+        "capacity": 260,
+        "damageFraction": 0.057692307692307696,
+        "remaining": 245
+      }
+    ],
+    "gearLabel": null,
+    "awdAvailable": null,
+    "differentialAvailable": null
+  },
+  "gearDisplay": "N"
+}

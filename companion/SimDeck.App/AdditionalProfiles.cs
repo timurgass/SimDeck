@@ -2,7 +2,7 @@ namespace SimDeck.App;
 
 public static class AdditionalProfiles
 {
-    public const int CatalogVersion = 10;
+    public const int CatalogVersion = 11;
 
     public static IReadOnlyList<GameProfile> All() =>
     [
@@ -159,7 +159,8 @@ public static class AdditionalProfiles
         return current with { Actions = updated, Revision = Math.Max(current.Revision, existing.Revision + 1) };
     }
 
-    public static GameProfile SnowRunner() => new("snowrunner", "SnowRunner", "SnowRunner",
+    public static GameProfile SnowRunner() => SnowRunnerProfile.Default();
+    public static GameProfile LegacySnowRunner() => new("snowrunner", "SnowRunner", "SnowRunner",
     [
         A("snowEngine", "Вождение", "ДВИГАТЕЛЬ", "Start / Stop Engine", "F6", group: "Машина"),
         A("snowParkingBrake", "Вождение", "РУЧНИК", "Parking Brake", "Space", group: "Машина"),

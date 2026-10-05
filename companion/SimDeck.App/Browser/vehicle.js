@@ -83,7 +83,7 @@ function mountRacingClass(root){
 }
 function renderTelemetryStatus(){
  let label=$('telemetryStatus');if(!label){label=node('p','telemetryStatus');label.id='telemetryStatus';label.setAttribute('role','status');$('deck').prepend(label);}
- const fresh=!!currentData(),unsupported=['ams2','snowrunner'].includes(profileId),old=!!displayData();
+ const fresh=!!currentData(),unsupported=['ams2'].includes(profileId),old=!!displayData();
  const value=!session?'Связь с ПК потеряна · последние показания сохранены':unsupported?'Профиль управления · живая телеметрия этой игры пока не подключена':frame?.source==='demo'?'Демонстрационные данные · игровой ввод выключен':fresh?'● ЖИВЫЕ ДАННЫЕ · управление подключено отдельно':old?'Обновление задержалось · показаны последние данные. Обычные кнопки доступны при активной игре.':'Ожидание данных игры · обычные кнопки доступны при активной игре';
  if(label.textContent!==value)label.textContent=value;label.classList.toggle('delayed',!fresh&&!unsupported);document.body.classList.toggle('telemetryDelayed',!fresh&&!unsupported);document.querySelector('.controls')?.classList.toggle('overviewControls',page==='Обзор'&&!isF1());
 }

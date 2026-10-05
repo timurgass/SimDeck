@@ -5,7 +5,7 @@ const profileQuick={
  'beamng-default':['БЫСТРОЕ УПРАВЛЕНИЕ',[['ignition','ЗАЖИГАНИЕ'],['lights','ФАРЫ'],['esc','ESC / TCS'],['fourWheelDrive','ПРИВОД'],['hazards','АВАРИЙКА'],['recoverRoad','НА ДОРОГУ']]],
  ams2:['БЫСТРЫЕ ДЕЙСТВИЯ',[['amsIcmCycle','ICM'],['amsRequestPit','ПИТ-СТОП'],['amsPitLimiter','ЛИМИТЕР'],['amsCamera','КАМЕРА']]],
  ets2:['КАБИНА И ТРАНСМИССИЯ',[['etsLights','ФАРЫ'],['etsHighBeam','ДАЛЬНИЙ'],['etsDifferential','БЛОКИРОВКА'],['etsParkingBrake','РУЧНИК'],['etsHorn','СИГНАЛ'],['etsCamera','КАМЕРА']]],
- snowrunner:['ПОЛЕВЫЕ ДЕЙСТВИЯ',[['snowQuickWinch','ЛЕБЁДКА'],['snowPackCargo','ГРУЗ'],['snowMap','КАРТА'],['snowRecover','ЭВАКУАЦИЯ']]],
+ snowrunner:['ПОЛЕВЫЕ ДЕЙСТВИЯ',[['snowQuickWinch','ЛЕБЁДКА'],['snowPackCargo','ГРУЗ'],['snowMap','КАРТА'],['snowFunctions','ФУНКЦИИ']]],
  fs25:['РАБОТА С ОРУДИЕМ',[['fs25Lower','ОПУСТИТЬ / ПОДНЯТЬ'],['fs25TurnOn','ВКЛ / ВЫКЛ'],['fs25Attach','ПРИЦЕПИТЬ / ОТЦЕПИТЬ'],['fs25Fold','СЛОЖИТЬ / РАЗЛОЖИТЬ']]]
 };
 let dashboardProfile='',dashboardRevision=-1;
@@ -81,7 +81,7 @@ function updateProfileDashboard(data){
  if(isF1())return;const root=$('profileDashboard');if(!root)return;
  const toggle=(id,on='ВКЛ',off='ВЫКЛ')=>typeof data?.actionStates?.[id]==='boolean'?(data.actionStates[id]?on:off):'—';
  const farm=frame?.data?.fs25,advisor=frame?.data?.fs25Advisor,tasks=advisor?.tasks||[],done=tasks.filter(t=>t.status===1).length;
- const values={speed:data?Math.round(data.speedMps*3.6):'—',gear:data?.gearDisplay??'—',rpm:data?Math.round(data.rpm)+' RPM':'— RPM',fuel:data?.fuelFraction!=null?Math.round(data.fuelFraction*100)+'%':'—',fuelBar:data?.fuelFraction??0,
+ const values={speed:data?Math.round(data.speedMps*3.6):'—',gear:profileId==='snowrunner'?data?.snowRunner?.gearLabel??'—':data?.gearDisplay??'—',rpm:data&&profileId!=='snowrunner'?Math.round(data.rpm)+' RPM':'— RPM',fuel:data?.fuelFraction!=null?Math.round(data.fuelFraction*100)+'%':'—',fuelBar:data?.fuelFraction??0,
   live:frame?.source==='demo'?'● ДЕМО':currentData()?'● LIVE':data?'● ПОСЛЕДНИЕ ДАННЫЕ':'● ОЖИДАНИЕ',mode:'МАШИНА · '+({arcade:'АРКАДА',realistic:'РЕАЛИЗМ'}[data?.gearboxMode]||'—'),ignition:toggle('ignition','Работает','Выключен'),etsCruise:toggle('etsCruise'),route:fmt(data?.ets2Navigation?.remainingKm,' км')+' · '+fmt(data?.ets2Navigation?.remainingMinutes,' мин'),limit:fmt(data?.ets2Navigation?.speedLimitKmh,' км/ч'),
   farm:farm?[farm.header?.savegameName,farm.header?.mapTitle,farm.environment?.period?.russianMonth].filter(Boolean).join(' · '):'Сохраните ферму в игре',vehicle:(data?.vehicle||lastKnownVehicle)?.controlled?(data?.vehicle||lastKnownVehicle).name:'Ждём технику',fs25Lower:toggle('fs25Lower','Опущено','Поднято'),fs25TurnOn:toggle('fs25TurnOn','Работает','Выключен'),fs25Motor:toggle('fs25Motor','Запущен','Остановлен'),tasks:tasks.length?done+' / '+tasks.length:'—',tasksBar:tasks.length?done/tasks.length:0,engine:data?.acc?'Двигатель '+fmt(data.acc.waterTemperature,' °C')+' · трасса '+fmt(data.acc.roadTemperature,' °C'):'Двигатель — · трасса —',input:({ready:'● ВВОД ГОТОВ',unfocused:'Открой окно игры на ПК',disabled:'Разреши ввод в Companion',demo:'Демо · ввод отключён'})[availability]||'Ожидание подключения',command:$('command').textContent};
  for(let i=0;i<4;i++){const w=data?.acc?.wheels?.[i];values['tyre'+i]=fmt(w?.coreTemperature,' °C');values['tyreExtra'+i]=fmt(w?.pressure,' PSI',1)+' · тормоз '+fmt(w?.brakeTemperature,' °C');}

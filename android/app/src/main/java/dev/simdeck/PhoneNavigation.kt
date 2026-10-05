@@ -7,7 +7,7 @@ internal fun phoneTabs(profile:String):List<PhoneTab> = when(profile) {
     "ams2" -> listOf(PhoneTab("drive","Езда","amsStarter"),PhoneTab("pit","Пит","amsRequestPit"),PhoneTab("camera","Камера","amsCamera"))
     "ets2", "ats" -> listOf(PhoneTab("drive","Кабина","etsEngine"),PhoneTab("map","Навигатор","etsMap"),PhoneTab("condition","Состояние","etsDifferential"))
     "fs25" -> listOf(PhoneTab("drive","Техника","fs25Motor"),PhoneTab("fields","Поля","fs25Seeds"),PhoneTab("prices","Цены","fs25Store"))
-    "snowrunner" -> listOf(PhoneTab("drive","Езда","snowEngine"),PhoneTab("winch","Лебёдка","snowQuickWinch"),PhoneTab("cargo","Груз","snowPackCargo"))
+    "snowrunner" -> listOf(PhoneTab("drive","Езда","snowEngine"),PhoneTab("condition","Техника","snowAwd"),PhoneTab("winch","Лебёдка","snowQuickWinch"),PhoneTab("cargo","Груз","snowPackCargo"))
     else -> listOf(PhoneTab("drive","Езда","ignition"),PhoneTab("condition","Машина","reset"),PhoneTab("camera","Камера","camera"))
 } + PhoneTab("more","Ещё","menu")
 

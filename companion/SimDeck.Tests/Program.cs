@@ -12,6 +12,18 @@ using System.Text.Json;
 using SimDeck.App;
 using SimDeck.Core;
 
+if(args.Length==3&&args[0]=="--snow-bindings") {
+ File.WriteAllText(args[2],JsonSerializer.Serialize(SnowRunnerProfile.ReadBindings(File.ReadAllText(args[1])),new JsonSerializerOptions(JsonSerializerDefaults.Web)));return;
+}
+if(args.Length==3&&args[0]=="--snow-catalog") {
+ var cat=SnowRunnerCatalog.Load(args[1]);File.WriteAllText(args[2],JsonSerializer.Serialize(cat.Trucks,new JsonSerializerOptions(JsonSerializerDefaults.Web)));Console.WriteLine($"SnowRunner catalog: {cat.Trucks.Count} trucks");return;
+}
+if(args.Length==2&&args[0]=="--snow-read") {
+ using var reader=new SnowRunnerMemoryReader();
+ if(!reader.TryRead(out var frame))throw new InvalidDataException(reader.Status);
+ File.WriteAllText(args[1],JsonSerializer.Serialize(frame,new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+ Console.WriteLine(reader.Status);return;
+}
 if(args.Length==3&&args[0]=="--beam-packet") {
  if(!SimDeckParser.TryParse(File.ReadAllBytes(args[1]),out var packet))throw new InvalidDataException("Invalid BeamNG packet");
  File.WriteAllText(args[2],JsonSerializer.Serialize(packet,new JsonSerializerOptions(JsonSerializerDefaults.Web)));
@@ -211,6 +223,31 @@ if (args.Length >= 2 && args[0] == "--tablet-server")
 }
 var passed = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception("FAIL: " + name); passed++; Console.WriteLine("PASS " + name); }
+Check(SnowRunnerTelemetry.Valid(294,360,0,0,0,8)&&!SnowRunnerTelemetry.Valid(double.NaN,360,0,0,0,8)&&!SnowRunnerTelemetry.Valid(361,360,0,0,0,8)&&!SnowRunnerTelemetry.Valid(1,0,0,0,0,8)&&!SnowRunnerTelemetry.Valid(10,100,0,0,0,7)&&!SnowRunnerTelemetry.Valid(10,100,201,0,0,4),"SnowRunner rejects nonfinite fuel, invalid capacity, wrong wheel counts and implausible velocity");
+Check(SnowRunnerTelemetry.Component("engine","Engine",8,280) is {Remaining:272} snowEngineHealth && Math.Abs(snowEngineHealth.DamageFraction-8.0/280)<.00001 && SnowRunnerTelemetry.Component("x","X",11,10) is null && SnowRunnerTelemetry.Component("x","X",0,0) is null,"SnowRunner damage counts preserve native remaining health and reject invalid components");
+var snowFlags=SnowRunnerTelemetry.ActionStates([0,0x77,0xff,0xff,0,0,0,0],[0,0,0,0,1,1,0,0]);
+Check(snowFlags["snowEngine"]==false && snowFlags["snowDifferential"]==true && snowFlags["snowAwd"]==false,"SnowRunner byte flags ignore native padding and keep independent driveline states");
+Check(SnowRunnerTelemetry.ActionStates([2],[0,0,0,0,1,3,255]).Count==0 && SnowRunnerTelemetry.ActionStates([],[]).Count==0,"SnowRunner invalid and missing flags stay unknown");
+var snowKeys=SnowRunnerProfile.ReadBindings("{\"UserSettings\":{\"bindings\":[{\"device\":\"keyboard\",\"combIndex\":0,\"keyCode\":48,\"toolLink\":\"Truck.Engine\"},{\"device\":\"keyboard\",\"combIndex\":0,\"keyCode\":79,\"toolLink\":\"Exploration.SetGearLow1\"},{\"device\":\"mouse\",\"combIndex\":0,\"keyCode\":1,\"toolLink\":\"Truck.Honk\"}]}}\0");
+Check(snowKeys.GetValueOrDefault("snowEngine")=="B" && snowKeys.GetValueOrDefault("snowGearLowMinus")=="NumPad1" && !snowKeys.ContainsKey("snowHorn"),"SnowRunner imports physical keyboard binds including NumPad and ignores mouse buttons");
+var snowLegacy=AdditionalProfiles.LegacySnowRunner();snowLegacy.Actions.Add(new("customSnow","Функции","МОЁ","Custom binding","F11"));
+var snowUpgraded=SnowRunnerProfile.Upgrade(snowLegacy);GameProfiles.Validate(snowUpgraded);
+Check(snowUpgraded.Actions.Single(a=>a.Id=="snowEngine").Key=="B"&&snowUpgraded.Actions.Single(a=>a.Id=="snowHorn").Key=="G"&&snowUpgraded.Actions.Single(a=>a.Id=="snowCamera").Key=="D1"&&snowUpgraded.Actions.Any(a=>a.Id=="customSnow")&&!snowUpgraded.Actions.Any(a=>a.Id=="snowRecover"),"SnowRunner migration fixes shipped keys, removes fictitious direct menu actions and preserves custom actions");
+var snowCatalogDir=Path.Combine(Path.GetTempPath(),"simdeck-snow-catalog-"+Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(Path.Combine(snowCatalogDir,"preload","paks","client"));
+try {
+ var pak=Path.Combine(snowCatalogDir,"preload","paks","client","initial.pak");
+ using(var zip=System.IO.Compression.ZipFile.Open(pak,System.IO.Compression.ZipArchiveMode.Create)) {
+  void Entry(string name,string content){using var writer=new StreamWriter(zip.CreateEntry(name).Open());writer.Write(content);}
+  Entry("[strings]\\strings_english.str","UI_TEST_NAME \"Test truck\"\n");
+  const string xml="<Truck><TruckData TruckType='HEAVY'><SuspensionSocket Type='unique'/><Wheels><Wheel Pos='(3;0;1)'/><Wheel Pos='(3;0;1)' RightSide='true'/><Wheel Pos='(-2;0;1)'/><Wheel Pos='(-2;0;1)' RightSide='true'/></Wheels></TruckData><GameData><UiDesc UiName='UI_TEST_NAME'/></GameData></Truck>";
+  Entry("[media]\\classes\\trucks\\test.xml",xml);
+  Entry("[media]/classes/trucks/variant1.xml",xml.Replace("unique","ambiguous"));
+  Entry("[media]/classes/trucks/variant2.xml",xml.Replace("unique","ambiguous"));
+ }
+ var cat=SnowRunnerCatalog.Load(snowCatalogDir);var match=cat.Resolve("unique",4);
+ Check(match?.Name=="Test truck"&&match.Wheels[0].X==-1&&match.Wheels[1].X==1&&match.Wheels[0].Z==-3&&cat.Resolve("unique",6)==null&&cat.Resolve("ambiguous",4)==null,"SnowRunner reads Windows ZIP paths and axle geometry, and refuses ambiguous identities");
+} finally {Directory.Delete(snowCatalogDir,true);}
 Check(UsbBridge.ParseDevices("List of devices attached\nusb-tablet\tdevice product:test\nnet:5555\tdevice\n").SequenceEqual(new[] { new UsbDevice("usb-tablet", "device") }), "USB discovery excludes network debugging endpoints");
 Check(UsbBridge.ParseDevices("first\tunauthorized\nsecond\toffline\n* daemon started successfully *\n").Select(d => d.State).SequenceEqual(new[] { "unauthorized", "offline" }), "USB discovery preserves authorization and offline status without daemon chatter");
 Check(UsbBridge.ParseDevices("List of devices attached\r\n").Count == 0 && UsbBridge.ParseDevices("one\tdevice\ntwo\tdevice\n").Count == 2, "USB discovery distinguishes absent and multiple devices");

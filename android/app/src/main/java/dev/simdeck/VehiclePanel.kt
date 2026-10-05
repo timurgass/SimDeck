@@ -34,11 +34,11 @@ private fun roadSprite(kind:String):VehicleSprite? {
         else -> null
     }
 }
-@Composable private fun vehicleAtlas(name:String):ImageBitmap {
+@Composable internal fun vehicleAtlas(name:String):ImageBitmap {
     val context=LocalContext.current
     return remember(name) { context.assets.open("vehicles/$name.png").use { BitmapFactory.decodeStream(it).asImageBitmap() } }
 }
-private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,w:Float,h:Float,alpha:Float=1f) {
+internal fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,w:Float,h:Float,alpha:Float=1f) {
     drawImage(bitmap,IntOffset(s.x,s.y),IntSize(s.w,s.h),IntOffset(x.toInt(),y.toInt()),IntSize(w.toInt().coerceAtLeast(1),h.toInt().coerceAtLeast(1)),alpha=alpha,filterQuality=FilterQuality.High)
 }
 @Composable internal fun VehiclePanel(state:DeckState) {

@@ -12,7 +12,8 @@ public sealed record Telemetry(double SpeedMps, double Rpm, int Gear, double? Fu
     string? GearboxMode = null, int? MaxGear = null, int? Headlights = null,
     IReadOnlyDictionary<string, bool>? ActionStates = null, F1Details? F1 = null, AccDetails? Acc = null,
     Ets2Navigation? Ets2Navigation = null, Fs25Details? Fs25 = null,
-    Fs25AdvisorReport? Fs25Advisor = null, VehicleInfo? Vehicle = null, Fs25Prices? Fs25Prices = null, BeamNgDiagnostics? BeamNg = null)
+    Fs25AdvisorReport? Fs25Advisor = null, VehicleInfo? Vehicle = null, Fs25Prices? Fs25Prices = null, BeamNgDiagnostics? BeamNg = null,
+    SnowRunnerDetails? SnowRunner = null)
 {
     public string GearDisplay => Gear < 0 ? "R" : Gear == 0 ? "N" : GearboxMode == "arcade" ? "D" : Gear.ToString();
 }

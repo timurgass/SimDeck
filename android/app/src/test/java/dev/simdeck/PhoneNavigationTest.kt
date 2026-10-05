@@ -15,8 +15,8 @@ class PhoneNavigationTest {
             val actions=Protocol.controls(JSONObject().put("controls",p.getJSONArray("actions")))
             val ids=actions.map {it.id}.toSet()
             for((shortcut,_) in phoneShortcuts(id)) assertTrue("$id shortcut $shortcut missing",shortcut in ids)
-            assertEquals(4,phoneTabs(id).size)
-            assertEquals(4,phoneTabs(id).map {it.id}.distinct().size)
+            assertEquals(if(id=="snowrunner")5 else 4,phoneTabs(id).size)
+            assertEquals(if(id=="snowrunner")5 else 4,phoneTabs(id).map {it.id}.distinct().size)
             assertEquals("more",phoneTabs(id).last().id)
             // The runtime must keep received bindings/hold gestures; navigation does not manufacture them.
             val all=phonePages(actions).flatMap {phonePageActions(actions,it)}

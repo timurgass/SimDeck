@@ -53,7 +53,7 @@ public static class GameProfiles
         "ams2" => "Automobilista 2: назначьте клавиши SimDeck в Controls. Для будущей телеметрии включите Shared Memory → Project CARS 2.",
         "ats" => "ATS: установите Install-ATS-Preset.cmd после закрытия игры. 29 кнопок, включая F8/F9 для круиза. Телеметрия: Install-ATS.cmd. Пневмосигнал требует аксессуар на грузовике.",
         "ets2" => "ETS2: основные клавиши сверены с controls.sii. Для круиза +/− установите F8/F9 через tools/ets2-preset после закрытия игры. Пневмосигнал требует аксессуар на грузовике. Используйте ввод Scan Code.",
-        "snowrunner" => "SnowRunner: сверьте назначения в Settings → Controls. Этот профиль пока работает как button box без телеметрии.",
+        "snowrunner" => "SnowRunner: прочитайте клавиши из user_settings.cfg. Телеметрия проверена для 1.886173.SNOW_DLC_18; неизвестные состояния не подменяются нажатиями.",
         "fs25" => "Farming Simulator 25: нажмите «Прочитать клавиши FS25», чтобы применить вашу раскладку из inputBinding.xml. Пресет в игре не нужен. Одна клавиша может делать разное в зависимости от машины и орудия.",
         _ => profile.Name
     };

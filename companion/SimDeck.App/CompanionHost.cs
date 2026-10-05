@@ -49,6 +49,7 @@ public sealed class CompanionHost : IAsyncDisposable
     bool IsAcc => Profile.Id == "acc";
     bool IsEts2 => Profile.Id is "ets2" or "ats";
     bool IsFs25 => Profile.Id == "fs25";
+    bool IsSnowRunner => Profile.Id == "snowrunner";
     string GameId => IsBeamNg ? "beamng" : Profile.Id;
     public string TelemetryDiagnostic => IsF1
         ? f1Udp is null ? "UDP 20777 занят. Закройте другую программу телеметрии на этом порту."
@@ -58,6 +59,7 @@ public sealed class CompanionHost : IAsyncDisposable
         : IsAcc ? accDiagnostic
         : IsEts2 ? scsDiagnostic
         : IsFs25 ? fs25Diagnostic
+        : IsSnowRunner ? snowReader.Status
         : !IsBeamNg ? "Профиль управления готов. Телеметрия для этой игры пока не подключена."
         : udp is null ? "UDP-порт занят: закройте другой экземпляр Companion."
         : ReceivedPackets == 0 ? "Нет пакетов от игры. Установите мод SimDeck и перезагрузите машину (Ctrl+R)."
@@ -77,6 +79,8 @@ public sealed class CompanionHost : IAsyncDisposable
     readonly AccSharedMemoryReader accReader = new();
     readonly AccBroadcastClient accBroadcast = new();
     readonly ScsSharedMemoryReader scsReader = new();
+    readonly SnowRunnerMemoryReader snowReader = new();
+    long lastSnowSample;
     ulong lastScsTimestamp;
     long lastScsPacketAt;
     string scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите выбранную игру ETS2/ATS.";
@@ -164,6 +168,7 @@ public sealed class CompanionHost : IAsyncDisposable
             accBroadcast.Reset();
             accDiagnostic = "Ожидание ACC Shared Memory. Запустите заезд и выйдите на трассу.";
             scsReader.Reset(); lastScsTimestamp = 0; lastScsPacketAt = 0;
+            snowReader.Reset(); lastSnowSample = 0;
             scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите выбранную игру ETS2/ATS.";
             fs25Watcher = null; fs25SavePath = null; fs25Crops = null;
             fs25Diagnostic = "Ожидание сохранения Farming Simulator 25.";
@@ -453,6 +458,11 @@ public sealed class CompanionHost : IAsyncDisposable
                             }
                             else accDiagnostic = error;
                         }
+                        else if (IsSnowRunner && readGameMemory && Environment.TickCount64-lastSnowSample>=200)
+                        {
+                            lastSnowSample=Environment.TickCount64;
+                            if(snowReader.TryRead(out var frame)) { Interlocked.Increment(ref ReceivedPackets); Telemetry.Publish(frame!); }
+                        }
                         else if (IsEts2)
                         {
                             Ets2Map.Ensure();
@@ -633,6 +643,7 @@ public sealed class CompanionHost : IAsyncDisposable
         accReader.Dispose();
         accBroadcast.Dispose();
         scsReader.Dispose();
+        snowReader.Dispose();
         discovery?.Dispose();
         if (app is not null) { await app.StopAsync(); await app.DisposeAsync(); }
         await Task.WhenAll(loops);

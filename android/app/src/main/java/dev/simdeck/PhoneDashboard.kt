@@ -66,10 +66,11 @@ internal fun phoneDesign(id:String):ProfileDesign {
                     for((id,label) in listOf("fs25Back" to "Назад в игре","fs25Pause" to "Пауза времени")) state.controls.firstOrNull {it.id==id}?.let {a->Control(label,a.key,a.id,false,state,model,Modifier.weight(1f),heightDp=64,tile=true)}
                 }
                 when(selected) {
-                    "drive" -> {PhoneReadout(state);PhoneVehicle(state);PhoneGrid(state,model,phoneShortcuts(state.profileId),height=86)
+                    "drive" -> {PhoneReadout(state);PhoneVehicle(state);if(state.profileId=="snowrunner")SnowRunnerStates(state,model);PhoneGrid(state,model,phoneShortcuts(state.profileId),height=86)
                         if(state.profileId.startsWith("f1-")) OutlinedButton(onClick={navigate("pit")},modifier=Modifier.fillMaxWidth().heightIn(min=52.dp)) {Text("Выбор шин и настройка пит-стопа")}
                         if(isScsTruck(state.profileId)) PhoneGrid(state,model,listOf("etsCruiseDown" to "Круиз −","etsCruiseUp" to "Круиз +")) }
                     "condition" -> when(state.profileId) {
+                        "snowrunner" -> {SnowRunnerScene(state);SnowRunnerCondition(state)}
                         "f1-24","f1-25" -> PhoneF1Condition(state)
                         "acc" -> {PhoneAccCondition(state);PhoneGrid(state,model,listOf("accTcDown" to "TC −","accTcUp" to "TC +","accAbsDown" to "ABS −","accAbsUp" to "ABS +"))}
                         else -> {PhoneVehicle(state,detail=true);PhoneWear(state)}
@@ -84,7 +85,7 @@ internal fun phoneDesign(id:String):ProfileDesign {
                     }
                     "camera" -> PhoneGrid(state,model,state.controls.filter { it.group=="Обзор" || it.id.contains("camera",true) || it.id.contains("look",true) }.map {it.id to it.label})
                     "winch" -> {DesignCard {Text("ЛЕБЁДКА",fontWeight=FontWeight.Bold);Text("Подключение и отпускание — через штатные действия игры. Выбор точки крепления остаётся в игре.",color=d.muted)};PhoneGrid(state,model,state.controls.filter {it.group=="Лебёдка"}.map {it.id to it.label})}
-                    "cargo" -> PhoneGrid(state,model,state.controls.filter {it.group in setOf("Груз","Прицеп","Оборудование")}.map {it.id to it.label})
+                    "cargo" -> {DesignCard{Text("Груз, кран, прицеп, ремонт и эвакуация выбираются в меню функций машины.",color=d.muted)};PhoneGrid(state,model,listOf("snowFunctions" to "Функции машины","snowPackCargo" to "Управление грузом","snowBack" to "Назад в игре"))}
                     "more" -> if(page==null) {
                         Text("ВСЕ РАЗДЕЛЫ",fontWeight=FontWeight.Bold)
                         if(state.profileId=="acc") OutlinedButton(onClick={navigate("pit")},modifier=Modifier.fillMaxWidth()) {Text("Пит-стоп и MFD")}
@@ -122,7 +123,7 @@ internal fun phoneDesign(id:String):ProfileDesign {
 
 @Composable private fun PhoneStatus(state:DeckState) {
     val d=LocalProfileDesign.current
-    val text=when {state.demo->"ДЕМО · тестовые данные · ввод отключён";!state.connected->"Связь потеряна · подключаемся…";state.profileId in setOf("ams2","snowrunner")->"Управление · телеметрия пока недоступна";state.stale->"Ожидаем данные · кнопки доступны отдельно";else->"● Живые данные"}
+    val text=when {state.demo->"ДЕМО · тестовые данные · ввод отключён";!state.connected->"Связь потеряна · подключаемся…";state.profileId in setOf("ams2")->"Управление · телеметрия пока недоступна";state.stale->"Ожидаем данные · кнопки доступны отдельно";else->"● Живые данные"}
     Text(text,color=d.muted,fontSize=11.sp,lineHeight=15.sp)
     if(!state.demo && state.connected && !controlsAvailable(state)) Text(when(state.inputAvailability){"unfocused"->"Откройте игру на ПК";"disabled"->"Разрешите ввод в Companion";else->"Проверка готовности ввода…"},color=d.accent,fontSize=12.sp)
 }
@@ -132,8 +133,8 @@ internal fun phoneNumber(value:Double?,unit:String="",dec:Int=0)=value?.let {Str
     DesignCard(4,10) {
         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1.4f)) {Text(phoneNumber(t?.speedMps?.times(3.6)),fontSize=36.sp,lineHeight=40.sp,fontWeight=FontWeight.Black);Text("КМ/Ч",color=d.muted,fontSize=10.sp)}
-            Column(Modifier.weight(.8f)) {Text(t?.let {Protocol.gear(it.gear,it.gearboxMode)} ?: "—",fontSize=36.sp,lineHeight=40.sp,fontWeight=FontWeight.Black,color=d.accent);Text("ПЕРЕДАЧА",color=d.muted,fontSize=10.sp)}
-            Column(Modifier.weight(1f),horizontalAlignment=Alignment.End) {Text(phoneNumber(t?.rpm),fontSize=20.sp,fontWeight=FontWeight.Bold);Text("RPM",color=d.muted,fontSize=10.sp);Text("Топливо ${phoneNumber(t?.fuelFraction?.times(100),"%")}",fontSize=11.sp,color=d.muted)}
+            Column(Modifier.weight(.8f)) {Text(t?.let {if(state.profileId=="snowrunner")it.snowRunner?.gearLabel ?: "—" else Protocol.gear(it.gear,it.gearboxMode)} ?: "—",fontSize=36.sp,lineHeight=40.sp,fontWeight=FontWeight.Black,color=d.accent);Text("ПЕРЕДАЧА",color=d.muted,fontSize=10.sp)}
+            Column(Modifier.weight(1f),horizontalAlignment=Alignment.End) {Text(phoneNumber(t?.rpm?.takeIf{state.profileId!="snowrunner"}),fontSize=20.sp,fontWeight=FontWeight.Bold);Text("RPM",color=d.muted,fontSize=10.sp);Text("Топливо ${phoneNumber(t?.fuelFraction?.times(100),"%")}",fontSize=11.sp,color=d.muted)}
         }
         if(state.profileId in setOf("f1-24","f1-25","acc","ams2")) Row(horizontalArrangement=Arrangement.spacedBy(4.dp)) {
             repeat(12) {i->Box(Modifier.weight(1f).height(5.dp).background(if(t!=null && i<t.rpm/(t.maxRpm?:12000.0)*12) d.accent else d.line,RoundedCornerShape(3.dp)))}
@@ -170,12 +171,7 @@ internal fun phoneNumber(value:Double?,unit:String="",dec:Int=0)=value?.let {Str
                 v.attachments.filter {it.id!=linked?.id}.forEach {Text(it.name,fontSize=12.sp,color=d.muted);FarmDrawing(it.kind,null,small=true)}
             } else Text("Состояние поступит из мода FS25",color=d.muted,fontSize=12.sp)
         }
-        "snowrunner" -> DesignCard(4,10) {
-            var wheels by rememberSaveable {mutableIntStateOf(4)}
-            Text("СХЕМА ТЕХНИКИ · РУЧНОЙ ВЫБОР",fontSize=10.sp,color=d.muted)
-            Row(horizontalArrangement=Arrangement.spacedBy(5.dp)) {listOf(4,6,8,10).forEach {n->FilterChip(selected=wheels==n,onClick={wheels=n},label={Text("$n",fontSize=12.sp)})}}
-            RoadDrawing(if(wheels==4) "suv" else "truck",List(wheels){i->VehicleWheel(if(i%2==0)-1.0 else 1.0,(i/2).toDouble(),null)},heightOverride=155.dp)
-        }
+        "snowrunner" -> SnowRunnerScene(state)
         else -> DesignCard(5,10) {
             Text(v?.name?:"Ждём сведения о машине",fontSize=17.sp,fontWeight=FontWeight.Bold,color=d.accent)
             if(v!=null) RoadDrawing(v.kind,v.wheels,v.attachments.firstOrNull {it.kind=="trailer"}.takeIf {isScsTruck(state.profileId)},heightOverride=if(detail) 300.dp else 185.dp,wear=if(detail)v.wear else emptyMap())

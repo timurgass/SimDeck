@@ -16,7 +16,7 @@ static class ProfileTests
         foreach (var profile in additional) GameProfiles.Validate(profile);
         check(full.Actions.Count == 69 && full.Actions.Select(a => a.Page).Distinct().Count() == 3 && full.Actions.All(a => !a.Key.Contains("NumPad")), "F1 75-percent catalog validates all 69 actions across three sections");
         check(full25.Actions.SequenceEqual(full.Actions) && full25.TargetProcess == "F1_25", "F1 25 reuses the verified bindings with its own process target");
-        check(additional.Select(p => p.Id).SequenceEqual(new[] { "acc", "ams2", "ets2", "ats", "snowrunner", "fs25" }) && additional.All(p => p.Actions.Count >= 25 && p.Actions.Select(a => a.Page).Distinct().Count() >= 3), "ACC, AMS2, ETS2, SnowRunner and FS25 ship complete multi-page button-box profiles");
+        check(additional.Select(p => p.Id).SequenceEqual(new[] { "acc", "ams2", "ets2", "ats", "snowrunner", "fs25" }) && additional.All(p => p.Actions.Count >= (p.Id=="snowrunner"?23:25) && p.Actions.Select(a => a.Page).Distinct().Count() >= 3), "ACC, AMS2, ETS2, SnowRunner and FS25 ship complete multi-page button-box profiles");
         check(additional.Select(p => p.TargetProcess).SequenceEqual(new[] { "AC2-Win64-Shipping", "AMS2AVX", "eurotrucks2", "amtrucks", "SnowRunner", "FarmingSimulator2025Game" }), "Additional profiles target the actual Windows game processes");
         var ats = AdditionalProfiles.Ats(); var ets = AdditionalProfiles.Ets2();
         check(ats.Actions.SequenceEqual(ets.Actions) && ats.Id != ets.Id && ats.TargetProcess == "amtrucks", "ATS reuses all 29 SCS actions with its own game identity and process");

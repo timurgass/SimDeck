@@ -80,8 +80,8 @@ public partial class MainWindow : Window
         // Preserve the last received readings during brief source gaps; freshness is
         // explicit and never controls permission to send keyboard commands.
         SpeedLabel.Text = host.Profile.Id == "fs25" ? "—" : t.Data is not null ? (t.Data.SpeedMps * 3.6).ToString("0") : "—";
-        RpmLabel.Text = host.Profile.Id == "fs25" ? "—" : t.Data?.Rpm.ToString("0") ?? "—";
-        GearLabel.Text = host.Profile.Id == "fs25" ? "—" : t.Data?.GearDisplay ?? "—";
+        RpmLabel.Text = host.Profile.Id is "fs25" or "snowrunner" ? "—" : t.Data?.Rpm.ToString("0") ?? "—";
+        GearLabel.Text = host.Profile.Id == "fs25" ? "—" : host.Profile.Id == "snowrunner" ? t.Data?.SnowRunner?.GearLabel ?? "—" : t.Data?.GearDisplay ?? "—";
         TelemetryAge.Text = t.Data is null ? "Пакетов пока нет" : $"Возраст кадра: {t.Age:0} мс" + (fresh ? "" : " · данные задерживаются");
         UpdateTransport();
         TelemetryHelp.Text = host.Profile.Id == "fs25" ? host.TelemetryDiagnostic : fresh ? host.Profile.Id is "f1-24" or "f1-25" ? $"UDP F1 · принято {host.ReceivedPackets}, отклонено {host.InvalidPackets}" : host.Profile.Id == "beamng-default" && t.Data!.Headlights is null
@@ -89,7 +89,7 @@ public partial class MainWindow : Window
             : host.Profile.Id == "beamng-default" ? "Состояния кнопок поступают · " + (t.Data!.Headlights == 2 ? "дальний свет" : t.Data.Headlights == 1 ? "ближний свет" : "фары выключены")
             : host.Profile.Id == "acc" ? $"ACC Shared Memory · принято {host.ReceivedPackets} кадров · шины и тормоза доступны на пульте"
             : host.Profile.Id is "ets2" or "ats" ? $"SCS Telemetry · принято {host.ReceivedPackets} кадров · {host.Ets2Map.Status}"
-            : "Демонстрационные данные" : host.TelemetryDiagnostic;
+            : host.Profile.Id == "snowrunner" ? host.TelemetryDiagnostic : "Демонстрационные данные" : host.TelemetryDiagnostic;
         var foreground = host.Backend.ForegroundProcessName;
         GameStatus.Text = string.Equals(foreground, host.Profile.TargetProcess, StringComparison.OrdinalIgnoreCase) ? "●  Игра активна" : "○  Ожидание игры";
         InputStatus.Text = host.Backend.Demo ? "Демонстрация · ввод отключён" : !host.Backend.Enabled ? "Выключен · установите галочку ниже" : host.Backend.CanInject
@@ -203,6 +203,7 @@ public partial class MainWindow : Window
         rows.Clear(); foreach (var a in host.Profile.Actions) rows.Add(new(a));
         ProcessName.Text = host.Profile.TargetProcess;
         ProfileHelp.Text = GameProfiles.Help(host.Profile);
+        ImportSnowRunnerButton.Visibility = host.Profile.Id == "snowrunner" ? Visibility.Visible : Visibility.Collapsed;
         ImportFs25Button.Visibility = host.Profile.Id == "fs25" ? Visibility.Visible : Visibility.Collapsed;
         LoadFs25PlanButton.Visibility = host.Profile.Id == "fs25" ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -218,6 +219,22 @@ public partial class MainWindow : Window
         try { ErrorLabel.Text = "План FS25 загружен: " + host.LoadFs25Plan(picker.FileName) + ". План появится на пульте после чтения сохранения."; }
         catch (Exception ex) when (ex is Fs25PlanException or UnauthorizedAccessException)
         { ErrorLabel.Text = "План FS25: " + ex.Message; }
+    }
+    void ImportSnowRunnerBindings(object sender,RoutedEventArgs e)
+    {
+        if(host?.Profile.Id!="snowrunner")return;
+        try {
+            ButtonGrid.CommitEdit(DataGridEditingUnit.Cell,true);ButtonGrid.CommitEdit(DataGridEditingUnit.Row,true);
+            if(!rows.Select(r=>r.ToAction()).SequenceEqual(host.Profile.Actions))throw new InvalidOperationException("Сначала сохраните изменения профиля.");
+            var suggested=SnowRunnerProfile.FindBindings();
+            var picker=new OpenFileDialog{Title="Выберите user_settings.cfg SnowRunner",Filter="Настройки SnowRunner|user_settings.cfg;user_settings.dat|Все файлы|*.*",FileName=suggested??"user_settings.cfg"};
+            if(picker.ShowDialog(this)!=true)return;
+            var bindings=SnowRunnerProfile.ReadBindings(File.ReadAllText(picker.FileName));
+            if(bindings.Count==0)throw new InvalidDataException("В файле не найдены клавиатурные назначения SnowRunner.");
+            var updated=host.Profile with{Actions=host.Profile.Actions.Select(a=>bindings.TryGetValue(a.Id,out var key)?a with{Key=key}:a).ToList()};
+            host.Store.Backup("before-snowrunner-import");host.SaveProfile(updated);LoadEditor();
+            ErrorLabel.Text=$"Прочитано назначений SnowRunner: {bindings.Count}. Игра и сохранения не изменены.";
+        } catch(Exception ex){ErrorLabel.Text="Импорт SnowRunner: "+ex.Message;}
     }
     void ImportFs25Bindings(object sender, RoutedEventArgs e)
     {

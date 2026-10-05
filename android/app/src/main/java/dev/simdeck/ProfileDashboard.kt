@@ -207,13 +207,13 @@ private fun switchValue(state: DeckState, id: String, on: String = "ВКЛ", off
     val d=LocalProfileDesign.current
     val text=when {
         !state.connected -> "Связь с ПК потеряна · последние показания сохранены"
-        state.profileId in setOf("ams2","snowrunner") -> "Профиль управления · живая телеметрия этой игры пока не подключена"
+        state.profileId in setOf("ams2") -> "Профиль управления · живая телеметрия этой игры пока не подключена"
         state.demo -> "Демонстрационные данные · игровой ввод выключен"
         state.stale && state.telemetry!=null -> "Обновление задержалось · показаны последние данные. Обычные кнопки доступны при активной игре."
         state.stale -> "Ожидание данных игры · обычные кнопки доступны при активной игре"
         else -> "● ЖИВЫЕ ДАННЫЕ · управление подключено отдельно"
     }
-    Text(text,fontSize=12.sp,lineHeight=16.sp,color=if(state.stale && state.profileId !in setOf("ams2","snowrunner")) Color(0xFFFFC449) else d.muted,
+    Text(text,fontSize=12.sp,lineHeight=16.sp,color=if(state.stale && state.profileId !in setOf("ams2")) Color(0xFFFFC449) else d.muted,
         minLines=if(LocalConfiguration.current.screenWidthDp>=650) 1 else 2,
         maxLines=if(LocalConfiguration.current.screenWidthDp>=650) 1 else 2,modifier=Modifier.fillMaxWidth())
 }

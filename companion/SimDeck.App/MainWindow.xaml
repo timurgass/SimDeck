@@ -306,6 +306,7 @@
                   <Button Content="Удалить" Click="DeleteButton" />
                   <Button Content="↑" Click="MoveUp" ToolTip="Переместить выбранное действие вверх" />
                   <Button Content="↓" Click="MoveDown" ToolTip="Переместить выбранное действие вниз" />
+                  <Button x:Name="ImportSnowRunnerButton" Content="Прочитать клавиши SnowRunner" Click="ImportSnowRunnerBindings" Visibility="Collapsed" />
                   <Button x:Name="ImportFs25Button" Content="Прочитать клавиши FS25" Click="ImportFs25Bindings" Visibility="Collapsed" />
                   <Button x:Name="LoadFs25PlanButton" Content="Загрузить план FS25" Click="LoadFs25Plan" Visibility="Collapsed" />
                 </WrapPanel>
