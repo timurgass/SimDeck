@@ -30,9 +30,10 @@ public sealed class TruckGameGpsReader : IDisposable
         return b;
     }
     ulong Ptr(ulong address)=>BinaryPrimitives.ReadUInt64LittleEndian(Read(address,8));
-    public bool TryRead(string profile,out TruckGpsNode[] nodes)
+    public bool TryRead(string profile,out TruckGpsNode[] nodes)=>TryRead(profile,out nodes,out _);
+    public bool TryRead(string profile,out TruckGpsNode[] nodes,out TruckGpsWaypoint[] waypoints)
     {
-        nodes=[];
+        nodes=[];waypoints=[];
         if(profile is not ("ats" or "ets2")){Status="Неизвестная игра";return false;}
         try
         {
@@ -68,6 +69,21 @@ public sealed class TruckGameGpsReader : IDisposable
             {Status="GPS доступен после загрузки заезда";return false;}
             var route=Ptr(controller+gpsOffset+0x28);
             if(route==0){Status="В игровом GPS маршрут не задан";return true;}
+            var waypointAddress=controller+gpsOffset+0x1f8;
+            var waypointHeader=Read(waypointAddress,24);
+            var waypointItems=BinaryPrimitives.ReadUInt64LittleEndian(waypointHeader.AsSpan(8));
+            var waypointCount=BinaryPrimitives.ReadUInt64LittleEndian(waypointHeader.AsSpan(16));
+            if(waypointCount>64||waypointCount>0&&!Pointer(waypointItems))throw new InvalidDataException("Invalid GPS waypoint count");
+            var waypointData=waypointCount==0?Array.Empty<byte>():Read(waypointItems,checked((int)waypointCount*24));
+            var targets=new List<TruckGpsWaypoint>();
+            for(var i=0;i<(int)waypointCount;i++)
+            {
+                var node=BinaryPrimitives.ReadUInt64LittleEndian(waypointData.AsSpan(i*24+8));var n=Read(node,56);
+                var uid=BinaryPrimitives.ReadUInt64LittleEndian(n.AsSpan(48));
+                var x=BinaryPrimitives.ReadInt32LittleEndian(n)/256f;var z=BinaryPrimitives.ReadInt32LittleEndian(n.AsSpan(8))/256f;
+                if(uid==0||Math.Abs(x)>1000000||Math.Abs(z)>1000000)throw new InvalidDataException("Invalid GPS waypoint");
+                targets.Add(new(uid.ToString(),x,z));
+            }
             var header=Read(route+0x50,24);var items=BinaryPrimitives.ReadUInt64LittleEndian(header.AsSpan(8));var count=BinaryPrimitives.ReadUInt64LittleEndian(header.AsSpan(16));
             if(count>6000||count>0&&!Pointer(items))throw new InvalidDataException("Invalid GPS node count");
             if(count==0){Status="В игровом GPS маршрут не задан";return true;}
@@ -82,9 +98,10 @@ public sealed class TruckGameGpsReader : IDisposable
                     throw new InvalidDataException("Invalid GPS node");
                 list.Add(new(uid.ToString(),x,z,distance,seconds));
             }
-            if(Ptr(controller+gpsOffset+0x28)!=route||!Read(route+0x50,24).SequenceEqual(header)||!Read(items,data.Length).SequenceEqual(data))
+            if(Ptr(controller+gpsOffset+0x28)!=route||!Read(route+0x50,24).SequenceEqual(header)||!Read(items,data.Length).SequenceEqual(data)||
+                !Read(waypointAddress,24).SequenceEqual(waypointHeader)||(waypointData.Length>0&&!Read(waypointItems,waypointData.Length).SequenceEqual(waypointData)))
             {Status="Игра перестраивает маршрут";return false;}
-            nodes=list.ToArray();Status="Узлы маршрута прочитаны из GPS игры";return true;
+            nodes=list.ToArray();waypoints=targets.ToArray();Status="Узлы маршрута прочитаны из GPS игры";return true;
         }
         catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception or ArgumentException or OverflowException)
         {Status="Чтение GPS недоступно: "+ex.Message;return false;}

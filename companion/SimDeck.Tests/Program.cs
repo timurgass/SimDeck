@@ -14,15 +14,15 @@ using SimDeck.Core;
 
 if(args.Length==3&&args[0]=="--truck-gps-read"){
     using var reader=new TruckGameGpsReader();
-    var available=reader.TryRead(args[1],out var nodes);
-    File.WriteAllText(args[2],JsonSerializer.Serialize(new{available,reader.Status,nodes},new JsonSerializerOptions(JsonSerializerDefaults.Web)));
-    Console.WriteLine($"GPS available={available}, nodes={nodes.Length}, status={reader.Status}");return;
+    var available=reader.TryRead(args[1],out var nodes,out var waypoints);
+    File.WriteAllText(args[2],JsonSerializer.Serialize(new{available,reader.Status,nodes,waypoints},new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    Console.WriteLine($"GPS available={available}, nodes={nodes.Length}, waypoints={waypoints.Length}, status={reader.Status}");return;
 }
 if(args.Length==4&&args[0]=="--truck-gps-plan"){
     var opt=new JsonSerializerOptions(JsonSerializerDefaults.Web);
     var map=JsonSerializer.Deserialize<Ets2RoadMap>(File.ReadAllText(args[1]),opt)!;
-    using var reader=new TruckGameGpsReader();if(!reader.TryRead(args[2],out var nodes))throw new Exception(reader.Status);
-    var plan=new TruckRouting(map).GameRoute(nodes);
+    using var reader=new TruckGameGpsReader();if(!reader.TryRead(args[2],out var nodes,out var waypoints))throw new Exception(reader.Status);
+    var plan=new TruckRouting(map).GameRoute(nodes,waypoints);
     File.WriteAllText(args[3],JsonSerializer.Serialize(plan,opt));Console.WriteLine($"GPS nodes={nodes.Length}, points={plan.Points.Length/2}, source={plan.Source}");return;
 }
 
@@ -66,9 +66,10 @@ if(args.Length is 3 or 4 && args[0]=="--ets2-map-preview")
     preview.Store.Value.Port=29443;preview.Store.Value.UdpPort=24444;preview.SelectProfile(args.Length==4?args[3]:"ets2");
     var gpsFixture=Environment.GetEnvironmentVariable("SIMDECK_GPS_QA_FIXTURE");
     preview.Ets2Map.GpsCapture=()=>{
-        if(string.IsNullOrEmpty(gpsFixture))return(false,"GPS в изолированной проверке отключён",Array.Empty<TruckGpsNode>());
+        if(string.IsNullOrEmpty(gpsFixture))return(false,"GPS в изолированной проверке отключён",Array.Empty<TruckGpsNode>(),Array.Empty<TruckGpsWaypoint>());
         using var json=JsonDocument.Parse(File.ReadAllText(gpsFixture));
-        return(true,"Проверочный снимок GPS игры",json.RootElement.GetProperty("nodes").Deserialize<TruckGpsNode[]>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!);
+        var opt=new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        return(true,"Проверочный снимок GPS игры",json.RootElement.GetProperty("nodes").Deserialize<TruckGpsNode[]>(opt)!,json.RootElement.TryGetProperty("waypoints",out var targets)?targets.Deserialize<TruckGpsWaypoint[]>(opt)!:Array.Empty<TruckGpsWaypoint>());
     };
     await preview.StartAsync(localOnly:true,pollGameMemory:false);await preview.StartBrowserAsync(28787,true);
     File.WriteAllText(Path.Combine(args[1],"browser-pin.txt"),preview.Browser!.Pairing.Open());

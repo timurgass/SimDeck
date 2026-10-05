@@ -18,6 +18,17 @@ const base=process.argv[2]||'http://127.0.0.1:28787',pin=fs.readFileSync(process
    await page.waitForFunction(()=>etsMapState.navigator?.plan?.source==='game-gps');
    const gps=await page.evaluate(()=>{const n=etsMapState.navigator;return{points:n.plan.points.length,revision:n.gameRevision,source:n.source.textContent};});
    if(gps.points<10||!gps.revision||!gps.source.includes('Путь: GPS игры'))throw Error('Actual GPS snapshot did not become the displayed route');
+   if(process.env.SIMDECK_GPS_MARKER_QA==='1'){
+    const hit=await page.evaluate(()=>{const n=etsMapState.navigator,p=n.plan.stops[0];if(!p)return false;n.focusPoint(p);const s=n.toScreen(p.x,p.z);return n.hitPoi(s.x,s.y)?.id===p.id;});
+    if(!hit)throw Error('Game waypoint marker missing or cannot be opened');
+    await page.getByRole('button',{name:'Маршрут и поиск',exact:true}).click();
+    await page.getByRole('button',{name:'На карте GPS-точка 1',exact:true}).click();
+    if(await page.locator('.nav-panel').isVisible())throw Error('Focus marker did not close the route panel');
+    await page.evaluate(()=>etsMapState.navigator.open('place',etsMapState.navigator.plan.stops[0]));
+    if(!await page.locator('.nav-panel').textContent().then(s=>s.includes('Эта цель прочитана из игры')))throw Error('Game marker not identified as read-only');
+    await page.getByRole('button',{name:'Закрыть панель',exact:true}).click();
+    await page.evaluate(()=>{const n=etsMapState.navigator;n.follow=true;n.center=null;n.draw();});
+   }
    await page.locator('.sdnav').screenshot({path:`${out}/navigator-game-gps-${width}.png`});
    const transitions=await page.evaluate(async()=>{
     const n=etsMapState.navigator,request=n.request,refresh=n.refresh,plan=n.plan;n.refresh=()=>{};

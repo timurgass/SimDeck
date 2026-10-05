@@ -3,10 +3,13 @@ namespace SimDeck.Core;
 public sealed partial class TruckRouting
 {
     Dictionary<string,int[]>? gameNodeIds;
-    public TruckRoutePlan GameRoute(TruckGpsNode[] route,CancellationToken cancel=default)
+    public TruckRoutePlan GameRoute(TruckGpsNode[] route,CancellationToken cancel=default)=>GameRoute(route,[],cancel);
+    public TruckRoutePlan GameRoute(TruckGpsNode[] route,TruckGpsWaypoint[] waypoints,CancellationToken cancel=default)
     {
         if(route.Length is <2 or >6000||route.Any(n=>n is null||!ulong.TryParse(n.Uid,out var uid)||uid==0||!Valid(n.X,n.Z)||!float.IsFinite(n.DistanceToEnd)||n.DistanceToEnd<0||!float.IsFinite(n.SecondsToEnd)||n.SecondsToEnd<0))
             throw new ArgumentException("Invalid game route");
+        if(waypoints.Length>64||waypoints.Any(p=>p is null||!ulong.TryParse(p.Uid,out var uid)||uid==0||!Valid(p.X,p.Z)))
+            throw new ArgumentException("Invalid game waypoints");
         var ids=gameNodeIds??=nodes.Select((n,i)=>(n.GameUid,i)).Where(v=>v.GameUid is not null).GroupBy(v=>v.GameUid!).ToDictionary(g=>g.Key,g=>g.Select(v=>v.i).ToArray());
         var points=new List<float>();
         for(var i=1;i<route.Length;i++)
@@ -37,6 +40,9 @@ public sealed partial class TruckRouting
             chain.Reverse();foreach(var id in chain)points.AddRange(edges[id].P);
         }
         if(points.Count<4)throw new InvalidOperationException("В GPS недостаточно узлов для линии пути");
-        var last=route[^1];return MakePlan(points,0,[],new("gps:"+last.Uid,"custom","GPS игры",last.X,last.Z),[],"game-gps");
+        var target=waypoints.Length>0?waypoints[^1]:new TruckGpsWaypoint(route[^1].Uid,route[^1].X,route[^1].Z);
+        var stops=waypoints.SkipLast(1).Select((p,i)=>new Ets2Poi($"gps:waypoint:{i}:{p.Uid}","custom",$"GPS-точка {i+1}",p.X,p.Z)).ToArray();
+        var plan=MakePlan(points,0,stops,new("gps:"+target.Uid,"custom","Пункт назначения GPS",target.X,target.Z),[],"game-gps");
+        return plan with{StopMetres=stops.Select(p=>Project(plan.Points,p.X,p.Z).Along).ToArray()};
     }
 }

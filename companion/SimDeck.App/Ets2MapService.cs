@@ -29,7 +29,7 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
     readonly SemaphoreSlim gpsGate=new(1,1);
     string gpsRevision="";
     TruckRoutePlan? gpsPlan;
-    public Func<(bool Available,string Status,TruckGpsNode[] Nodes)>? GpsCapture { private get; set; }
+    public Func<(bool Available,string Status,TruckGpsNode[] Nodes,TruckGpsWaypoint[] Waypoints)>? GpsCapture { private get; set; }
     public string Status { get; private set; } = $"Запустите {(profileId == "ats" ? "ATS" : "ETS2")}: карта подготовится из файлов игры.";
     public void Ensure()
     {
@@ -124,13 +124,13 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
             return await Task.Run<IResult>(()=>
             {
                 var capture=GpsCapture?.Invoke();
-                TruckGpsNode[] nodes;bool available;string message;
-                if(capture.HasValue){(available,message,nodes)=capture.Value;}
-                else{available=gpsReader.TryRead(ProfileId,out nodes);message=gpsReader.Status;}
+                TruckGpsNode[] nodes;TruckGpsWaypoint[] waypoints;bool available;string message;
+                if(capture.HasValue){(available,message,nodes,waypoints)=capture.Value;}
+                else{available=gpsReader.TryRead(ProfileId,out nodes,out waypoints);message=gpsReader.Status;}
                 if(!available)return Results.Json(new{available=false,pending=false,message});
                 if(nodes.Length<2){gpsRevision="";gpsPlan=null;return Results.Json(new{available=true,empty=true,message});}
-                var signature=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(mapRevision+"\n"+string.Join('\n',nodes.Select(n=>$"{n.Uid}:{n.X.ToString("R",CultureInfo.InvariantCulture)}:{n.Z.ToString("R",CultureInfo.InvariantCulture)}")))));
-                if(gpsRevision!=signature||gpsPlan is null){gpsPlan=router.GameRoute(nodes,timeout.Token) with{Revision=signature};gpsRevision=signature;}
+                var signature=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(mapRevision+"\n"+string.Join('\n',nodes.Select(n=>$"{n.Uid}:{n.X.ToString("R",CultureInfo.InvariantCulture)}:{n.Z.ToString("R",CultureInfo.InvariantCulture)}"))+"\nwaypoints\n"+string.Join('\n',waypoints.Select(n=>$"{n.Uid}:{n.X.ToString("R",CultureInfo.InvariantCulture)}:{n.Z.ToString("R",CultureInfo.InvariantCulture)}")))));
+                if(gpsRevision!=signature||gpsPlan is null){gpsPlan=router.GameRoute(nodes,waypoints,timeout.Token) with{Revision=signature};gpsRevision=signature;}
                 return Results.Json(new{available=true,empty=false,revision=signature,plan=gpsPlan,message="Маршрут из GPS игры"});
             },timeout.Token);
         }
