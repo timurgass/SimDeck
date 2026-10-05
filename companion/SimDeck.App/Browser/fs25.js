@@ -7,9 +7,9 @@ function renderFs25(profileId, frame) {
   document.querySelector('.gauges').hidden = active;
   card.hidden = !active;
   if (!active) { fs25RenderKey = ''; return; }
-  const details = frame?.data?.fs25, report = frame?.data?.fs25Advisor;
+  const details = displayData()?.fs25, report = displayData()?.fs25Advisor;
   const liveFresh = Number.isFinite(frame?.ageMs) && frame.ageMs + performance.now() - frameAt < 1500;
-  const key = String(frame?.sequence) + '|' + fs25Expanded + '|' + Boolean(details) + '|' + liveFresh;
+  const key = String(details?.timestamp)+'|'+Boolean(details?.isStale)+'|'+JSON.stringify(report)+'|'+JSON.stringify(frame?.data?.actionStates) + '|' + fs25Expanded + '|' + Boolean(details) + '|' + liveFresh;
   if (fs25RenderKey === key) return;
   fs25RenderKey = key;
   card.replaceChildren();
@@ -34,9 +34,9 @@ function renderFs25(profileId, frame) {
   const saved = details.timestamp ? new Date(details.timestamp).toLocaleString('ru-RU') : '—';
   add('p', details.isStale ? 'warning' : 'hint', 'Сохранено: ' + saved + (details.isStale ? ' · данные устарели' : ''));
   const farm = details.playerFarm || details.farms?.[0];
-  if (farm) add('p', '', 'Деньги: ' + Number(farm.money || 0).toLocaleString('ru-RU') + ' € · кредит ' + Number(farm.loan || 0).toLocaleString('ru-RU') + ' €');
+
   const fields = fs25FieldRows(details);
-  add('h3', 'settingTitle', 'Поля · ' + fields.length);
+  add('h3', 'settingTitle', 'Все поля карты · ' + fields.length);
   for (const f of fs25Expanded ? fields : fields.slice(0, 6))
     add('p', 'fs25Row', `№${f.id} · ${fs25CropName(f.fruitType)} · ${f.groundType || 'состояние неизвестно'} · сорняки ${fs25FieldPercent(f.weedState,9)??'—'}${fs25FieldPercent(f.weedState,9)===null?'':'%'} · известь ${fs25FieldPercent(f.limeLevel,3)??'—'}${fs25FieldPercent(f.limeLevel,3)===null?'':'%'} · удобрение ${fs25FieldPercent(f.sprayLevel,3)??'—'}${fs25FieldPercent(f.sprayLevel,3)===null?'':'%'}`);
   if (fields.length > 6) {
@@ -45,6 +45,7 @@ function renderFs25(profileId, frame) {
   }
   if (report?.alerts?.length) {
     add('h3', 'settingTitle', 'Советник · ' + report.alerts.length + ' уведомлений');
+    add('p','hint','Все поля карты; финансовые предупреждения — для первого хозяйства сохранения.');
     for (const alert of report.alerts.slice(0, 6)) add('p', alert.severity >= 2 ? 'warning' : 'fs25Row', alert.message);
   }
   if (report?.planName) {

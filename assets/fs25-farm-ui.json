@@ -1,0 +1,6 @@
+{
+  "finance": {
+    "newVehiclesCost":"Покупка техники","soldVehicles":"Продажа техники","newHandtoolsCost":"Покупка инструментов","soldHandtools":"Продажа инструментов","newAnimalsCost":"Покупка животных","soldAnimals":"Продажа животных","constructionCost":"Строительство","soldBuildings":"Продажа зданий","fieldPurchase":"Покупка земли","fieldSelling":"Продажа земли","vehicleRunningCost":"Содержание техники","vehicleLeasingCost":"Аренда техники","propertyMaintenance":"Содержание зданий","propertyIncome":"Доход зданий","productionCosts":"Затраты производства","soldWood":"Продажа древесины","soldBales":"Продажа тюков","soldWool":"Продажа шерсти","soldMilk":"Продажа молока","soldProducts":"Продажа товаров","purchaseFuel":"Покупка топлива","purchaseSeeds":"Покупка семян","purchaseFertilizer":"Покупка удобрений","purchaseSaplings":"Покупка саженцев","purchaseWater":"Покупка воды","purchaseBales":"Покупка тюков","purchasePallets":"Покупка паллет","harvestIncome":"Продажа урожая","incomeBga":"Биогазовая установка","missionIncome":"Доход контрактов","wagePayment":"Зарплата работников","other":"Прочее","loanInterest":"Проценты по кредиту"
+  },
+  "property":{"OWNED":"Собственная","LEASED":"Арендованная","MISSION":"Контрактная"}
+}

@@ -93,7 +93,8 @@ public sealed record Fs25Details(
     IReadOnlyList<Fs25FarmState> Farms,
     IReadOnlyList<Fs25FieldState> Fields,
     DateTime Timestamp,
-    bool IsStale)
+    bool IsStale,
+    Fs25Operations? Operations = null)
 {
     public Fs25FarmState? PlayerFarm => Farms.FirstOrDefault();
     public Period Period => Environment.Period;
@@ -201,6 +202,6 @@ public static class Fs25SaveReader
 
         var timestamp = dir.LastSaved;
         var stale = now - timestamp > FreshnessWindow;
-        return new Fs25Details(header, env, farms, fields, timestamp, stale);
+        return new Fs25Details(header, env, farms, fields, timestamp, stale, Fs25OperationsReader.Read(dir));
     }
 }

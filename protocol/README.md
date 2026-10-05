@@ -88,3 +88,10 @@ Optional attachment `mount` is `front`, `rear` or `unknown` (default for older d
 ## FS25 classes (0.9.6)
 
 Optional `kind` uses the lowercase keys in [the equipment registry](../assets/fs25-equipment.json). FS25 mod 1.3.0.0 resolves shop categories and capabilities to those keys; held hand tools can also be the controlled root. Unknown keys remain unknown on older clients, so upgrade Companion and Android together. `id`, attachments and action IDs retain their existing semantics.
+
+
+### FS25 saved farm operations (0.9.25)
+
+Optional `data.fs25.operations` accompanies the saved snapshot independently of live equipment and price freshness. It contains `ledgers` (farmId, days with day/entries/category/amount/income/expenses/net), `stocks` (farmId/crop/litres/location/source), `fleet` (farmId/model/property/hours/damage), and `productions` (farmId/building/recipe/enabled). Availability flags distinguish absent optional files from empty collections; unknown numeric/state values are null. `truncated` warns that details have been shortened. Saved finance day indices are zero-based. Expenses are positive aggregate totals; individual transactions retain their sign. `timestamp` identifies the last save, not a live update.
+
+Locations and machine models contain display basenames only. Air/electric charge are excluded. Operations are bounded to 256 KiB serialized UTF-8, at most 64 farms, 31 financial days per farm, 2048 stock/fleet records and 1024 recipes. When details are shortened, retained days' aggregate totals remain complete. Consumers must not infer active production from a saved enabled flag, or use stale prices for stock valuation.

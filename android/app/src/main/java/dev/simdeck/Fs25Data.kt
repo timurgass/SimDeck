@@ -17,7 +17,8 @@ internal fun fs25Int(value: JSONObject, key: String): Int? = (value.opt(key) as?
 data class Fs25Data(
     val saveName: String, val mapName: String, val period: String, val savedAt: String,
     val stale: Boolean, val money: Double?, val loan: Double?, val fields: List<Fs25Field>,
-    val alerts: List<Fs25Alert>, val tasks: List<Fs25Task>, val planName: String?
+    val alerts: List<Fs25Alert>, val tasks: List<Fs25Task>, val planName: String?,
+    val farms:List<Fs25FarmAccount> = emptyList(), val operations:Fs25OperationsData? = null
 ) {
     companion object {
         fun parse(details: JSONObject?, advisor: JSONObject?): Fs25Data? {
@@ -55,7 +56,9 @@ data class Fs25Data(
                 header.optString("savegameName"), header.optString("mapTitle"),
                 environment.optJSONObject("period")?.optString("russianMonth") ?: "—", localTime,
                 details.optBoolean("isStale"), farm?.optDouble("money")?.takeIf { it.isFinite() }, farm?.optDouble("loan")?.takeIf { it.isFinite() },
-                fields, alerts, tasks, advisor?.optString("planName")?.takeIf(String::isNotBlank)
+                fields, alerts, tasks, advisor?.optString("planName")?.takeIf(String::isNotBlank),
+                (0 until (farms?.length()?:0).coerceAtMost(64)).mapNotNull{i->farms?.optJSONObject(i)?.let{f->Fs25FarmAccount(f.optInt("farmId"),f.optString("name").take(160),f.optDouble("money").takeIf{it.isFinite()},f.optDouble("loan").takeIf{it.isFinite()})}},
+                Fs25OperationsData.parse(details.optJSONObject("operations"))
             )
         }
     }

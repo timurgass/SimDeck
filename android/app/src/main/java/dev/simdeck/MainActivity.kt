@@ -160,6 +160,7 @@ private fun Dashboard(state: DeckState, model: DeckModel,phoneTab:String="drive"
 
 @Composable
 internal fun Fs25Overview(state: DeckState) {
+    Fs25FarmPanel(state)
     val context=androidx.compose.ui.platform.LocalContext.current
     val labels=remember { Fs25FieldLabels(org.json.JSONObject(context.assets.open("fs25-field-ui.json").bufferedReader().use { it.readText() })) }
     val data = state.telemetry?.fs25
@@ -175,9 +176,6 @@ internal fun Fs25Overview(state: DeckState) {
             Text(data.saveName.ifBlank { "Без названия" }, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text(listOf(data.mapName, data.period).filter(String::isNotBlank).joinToString(" · "), color = design.muted)
             Text("Сохранено: ${data.savedAt}" + if (data.stale) " · ДАННЫЕ УСТАРЕЛИ" else "", color = if (data.stale) Amber else design.accent, fontSize = 12.sp)
-            data.money?.let { money ->
-                Text("Деньги: ${"%,.0f".format(money)} €" + (data.loan?.let { " · кредит ${"%,.0f".format(it)} €" } ?: ""), fontSize = 15.sp)
-            }
             val states = state.telemetry?.actionStates.orEmpty()
             if (!state.stale && listOf("fs25Lower", "fs25TurnOn", "fs25Motor").any { it in states }) {
                 HorizontalDivider(color = design.line)
@@ -194,7 +192,7 @@ internal fun Fs25Overview(state: DeckState) {
                 }
             }
             HorizontalDivider(color = design.line)
-            Text("ПОЛЯ · ${data.fields.size}", fontWeight = FontWeight.Bold)
+            Text("ВСЕ ПОЛЯ КАРТЫ · ${data.fields.size}", fontWeight = FontWeight.Bold)
             val fields=filteredFs25Fields(data.fields,"",null,labels)
             (if (allFields) fields else fields.take(6)).forEach { field ->
                 Text("№${field.id} · ${labels.crop(field.crop)} · ${field.ground.ifBlank { "состояние неизвестно" }} · сорняки ${fs25FieldPercent(field.weeds,9)?.let { "$it%" } ?: "—"} · известь ${fs25FieldPercent(field.lime,3)?.let { "$it%" } ?: "—"} · удобрение ${fs25FieldPercent(field.fertilizer,3)?.let { "$it%" } ?: "—"}", fontSize = 12.sp)
@@ -205,6 +203,7 @@ internal fun Fs25Overview(state: DeckState) {
             if (data.alerts.isNotEmpty()) {
                 HorizontalDivider(color = design.line)
                 Text("СОВЕТНИК · ${data.alerts.size} уведомлений", fontWeight = FontWeight.Bold)
+                Text("Все поля карты; финансовые предупреждения — для первого хозяйства сохранения.", color=design.muted,fontSize=12.sp)
                 data.alerts.take(6).forEach { alert ->
                     Text(alert.message, color = if (alert.severity >= 2) Color(0xFFFF7770) else Amber, fontSize = 12.sp)
                 }
@@ -338,4 +337,3 @@ internal fun Fs25Overview(state: DeckState) {
 }
 
 @Composable private fun StatusFootnote(state: DeckState) { Text(state.status, color = LocalProfileDesign.current.muted, fontSize = 10.sp, modifier = Modifier.padding(vertical = 14.dp)) }
-

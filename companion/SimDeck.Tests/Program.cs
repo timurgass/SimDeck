@@ -12,6 +12,12 @@ using System.Text.Json;
 using SimDeck.App;
 using SimDeck.Core;
 
+if(args.Length==3&&args[0]=="--fs25-save") {
+    var saved=Fs25SaveReader.Read(new Fs25SavegameDir(args[1]));
+    File.WriteAllText(args[2],JsonSerializer.Serialize(saved,new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    Console.WriteLine($"FS25 farms={saved.Farms.Count} stocks={saved.Operations?.Stocks.Length??0} vehicles={saved.Operations?.Fleet.Length??0} recipes={saved.Operations?.Productions.Length??0}");
+    return;
+}
 if(args.Length==2&&args[0]=="--acc-live") {
     Directory.CreateDirectory(args[1]);
     await using var probe=new CompanionHost(args[1],new RecordingInput(Path.Combine(args[1],"input-events.json")));
@@ -218,6 +224,7 @@ await TruckGpsEditingTests.Run(Check);
 TruckLandscapeTests.Run(Check);
 Fs25CatalogTests.Run(Check);
 Fs25SaveTests.Run(Check);
+Fs25OperationsTests.Run(Check);
 Fs25LiveTests.Run(Check);
 Fs25PricesTests.Run(Check);
 VehicleTests.Run(Check);

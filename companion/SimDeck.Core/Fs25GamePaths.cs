@@ -30,8 +30,8 @@ public sealed record Fs25SavegameDir(string Path)
     public string File(string fileName) => System.IO.Path.Combine(Path, fileName);
     public bool LooksValid => System.IO.File.Exists(File("careerSavegame.xml"));
 
-    /// <summary>Newest write time across the four XML files used by the reader.</summary>
-    public DateTime LastSaved => new[] { "careerSavegame.xml", "environment.xml", "farms.xml", "fields.xml" }
+    /// <summary>Newest write time across the six XML files used by the reader.</summary>
+    public DateTime LastSaved => new[] { "careerSavegame.xml", "environment.xml", "farms.xml", "fields.xml", "placeables.xml", "vehicles.xml" }
         .Select(file => System.IO.File.GetLastWriteTimeUtc(File(file)))
         .Max();
 }
