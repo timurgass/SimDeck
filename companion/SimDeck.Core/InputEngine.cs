@@ -22,6 +22,7 @@ public sealed class InputEngine
     readonly object gate = new();
     string? session;
     bool ignitionReady;
+    bool exclusive;
     long stateRevision;
     sealed record Held(ushort[] Keys, long ExpiresAt, bool Renewable, bool ArmsIgnition = false);
 
@@ -30,6 +31,12 @@ public sealed class InputEngine
     public int HeldCount { get { lock (gate) return held.Count; } }
     public (bool IgnitionReady, long Revision) ControlState { get { lock (gate) return (ignitionReady, stateRevision); } }
     public string LastFault { get; private set; } = "";
+    public IDisposable? TryExclusive()
+    {
+        lock(gate){if(exclusive||held.Count>0||LastFault.Length>0)return null;exclusive=true;return new Exclusive(this);}
+    }
+    sealed class Exclusive(InputEngine owner):IDisposable
+    {public void Dispose(){lock(owner.gate)owner.exclusive=false;}}
     public void Configure(IEnumerable<Binding> settings)
     {
         lock (gate) { ReleaseAllLocked(); bindings.Clear(); foreach (var b in settings) bindings.Add(b.ActionId, b); }
@@ -55,6 +62,7 @@ public sealed class InputEngine
             commands.Add(commandId);
             if (phase == "up") { Release(pressId); usedPresses.Add(pressId); return new(true, "released"); }
             if (phase != "down" && phase != "press") return new(false, "invalid_phase");
+            if(exclusive)return new(false,"input_busy");
             if (LastFault.Length > 0) return new(false, "input_fault_restart_required");
             var allowed = binding.Gesture switch
             {

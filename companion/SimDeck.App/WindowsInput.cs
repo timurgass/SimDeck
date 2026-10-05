@@ -88,6 +88,43 @@ public sealed class WindowsInput : IInputBackend
         if (modifiers.Contains(main)) throw new ArgumentException("Основная клавиша не должна повторять модификатор.");
         return new(action, main, gesture, modifiers);
     }
+    public bool ClickMapPin(TruckMapView view,TruckGpsWaypoint point,Func<bool> unchanged,Func<bool> allowed)
+    {
+        bool MouseFree()=>new[]{1,16,17,18,91,92}.All(key=>GetAsyncKeyState(key)>=0);
+        if(!CanInject||!allowed()||!MouseFree())return false;
+        var window=GetForegroundWindow();var origin=new POINT();if(!GetClientRect(window,out var rect)||!ClientToScreen(window,ref origin))return false;
+        var width=rect.Right-rect.Left;var height=rect.Bottom-rect.Top;
+        var p=view.Project(point.X,point.Y,point.Z,width,height);if(p is null||!unchanged())return false;
+        var virtualX=GetSystemMetrics(76);var virtualY=GetSystemMetrics(77);var virtualWidth=GetSystemMetrics(78);var virtualHeight=GetSystemMetrics(79);
+        if(virtualWidth<=1||virtualHeight<=1)return false;
+        var mouse=new MOUSEINPUT{dx=(int)Math.Round((origin.X+p.Value.X-virtualX)*65535/(virtualWidth-1)),dy=(int)Math.Round((origin.Y+p.Value.Y-virtualY)*65535/(virtualHeight-1)),flags=0x0001|0x8000|0x4000};
+        if(SendInput(1,[new INPUT{type=0,data=new InputUnion{mouse=mouse}}],Marshal.SizeOf<INPUT>())!=1)return false;
+        Thread.Sleep(180); // SCS's in-game cursor follows Windows on a rendered frame.
+        var currentOrigin=new POINT();
+        if(GetForegroundWindow()!=window||!CanInject||!allowed()||!unchanged()||!MouseFree()||
+            !GetClientRect(window,out var current)||current!=rect||!ClientToScreen(window,ref currentOrigin)||currentOrigin.X!=origin.X||currentOrigin.Y!=origin.Y)return false;
+        var sent=false;var released=false;
+        try
+        {
+            mouse=new(){flags=0x0002};sent=SendInput(1,[new INPUT{type=0,data=new InputUnion{mouse=mouse}}],Marshal.SizeOf<INPUT>())==1;
+            if(sent)Thread.Sleep(120);
+        }
+        finally
+        {
+            // Release even if the game lost focus after mouse-down.
+            mouse=new(){flags=0x0004};
+            for(var i=0;i<3&&!released;i++){released=SendInput(1,[new INPUT{type=0,data=new InputUnion{mouse=mouse}}],Marshal.SizeOf<INPUT>())==1;if(!released)Thread.Sleep(20);}
+            if(!released)Enabled=false;
+        }
+        LastSendStatus=sent&&released?"GPS: левый клик отправлен, ждём проверки":"GPS: Windows отклонила ввод мыши";
+        return sent&&released;
+    }
+    [StructLayout(LayoutKind.Sequential)]record struct RECT(int Left,int Top,int Right,int Bottom);
+    [StructLayout(LayoutKind.Sequential)]struct POINT{public int X,Y;}
+    [DllImport("user32.dll")]static extern bool GetClientRect(nint window,out RECT rect);
+    [DllImport("user32.dll")]static extern bool ClientToScreen(nint window,ref POINT point);
+    [DllImport("user32.dll")]static extern int GetSystemMetrics(int index);
+    [DllImport("user32.dll")]static extern short GetAsyncKeyState(int key);
     [StructLayout(LayoutKind.Sequential)] struct INPUT { public uint type; public InputUnion data; }
     [StructLayout(LayoutKind.Explicit)] struct InputUnion
     { [FieldOffset(0)] public KEYBDINPUT keyboard; [FieldOffset(0)] public MOUSEINPUT mouse; }

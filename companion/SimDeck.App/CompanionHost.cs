@@ -223,6 +223,7 @@ public sealed class CompanionHost : IAsyncDisposable
         app.MapGet("/truck-nav/landscape",(HttpContext c)=>NavigationAuthorized(c)?Ets2Map.LandscapeResponse(c):Results.StatusCode(401));
         app.MapGet("/truck-nav/game-route",async(HttpContext c)=>NavigationAuthorized(c)?await Ets2Map.GameGpsResponse(c):Results.StatusCode(401));
         app.MapPost("/truck-nav/route",async(HttpContext c)=>NavigationAuthorized(c)?await Ets2Map.RouteResponse(c):Results.StatusCode(401));
+        app.MapPost("/truck-nav/game-waypoint/delete",async(HttpContext c)=>NavigationAuthorized(c)?await DeleteGameWaypoint(c,()=>NavigationAuthorized(c)):Results.StatusCode(401));
         app.MapPost("/pair", async (HttpContext context) =>
         {
             try
@@ -470,6 +471,21 @@ public sealed class CompanionHost : IAsyncDisposable
             }
         }
         catch (OperationCanceledException) { }
+    }
+    public async Task<IResult> DeleteGameWaypoint(HttpContext context,Func<bool> authorized)
+    {
+        var profile=Profile.Id;var service=Ets2Map;
+        var authorization=context.Request.Headers.Authorization.ToString();
+        var key=authorization.StartsWith("Bearer ",StringComparison.Ordinal)?"android:"+PairingGate.Hash(authorization[7..]):
+            context.Request.Cookies.TryGetValue("simdeck_browser",out var cookie)?"browser:"+PairingGate.Hash(cookie):"";
+        CancellationTokenSource? owner;
+        lock(controllerGate){owner=clientStop;if(owner is null||owner.IsCancellationRequested||activeControllerKey!=key)return Results.Json(new{deleted=false,message="Подключите этот пульт к Companion перед изменением GPS"});}
+        using var lease=Input.TryExclusive();
+        if(lease is null)return Results.Json(new{deleted=false,message="Отпустите кнопки пульта: ввод занят"});
+        bool Allowed(){lock(controllerGate)if(clientStop!=owner||owner.IsCancellationRequested||activeControllerKey!=key)return false;
+            lock(profileGate)return !context.RequestAborted.IsCancellationRequested&&!stop.IsCancellationRequested&&authorized()&&Profile.Id==profile&&inputBackend==Backend&&!Demo&&Backend.CanInject&&ScsSharedMemoryReader.MapEditingAllowed(profile=="ats"?2u:1u);}
+        var result=await service.DeleteGameWaypoint(context,Backend,Allowed);
+        LastCommand="GPS · проверка удаления точки";return result;
     }
     async Task HandleSocket(HttpContext context)
     {

@@ -33,6 +33,7 @@ static class BrowserTests
         check((await http.GetStringAsync(origin+"/truck-navigator.css")).Contains("nav-maneuver"),"Responsive navigator design bundled offline");
         check((await http.GetAsync(origin+"/truck-nav/places?profile=ets2")).StatusCode==HttpStatusCode.Unauthorized,"Navigator search requires pairing");
         check((await http.PostAsJsonAsync(origin+"/truck-nav/route?profile=ets2",new{})).StatusCode==HttpStatusCode.Unauthorized,"Route calculation requires pairing");
+        check((await http.PostAsJsonAsync(origin+"/truck-nav/game-waypoint/delete?profile=ets2",new{})).StatusCode==HttpStatusCode.Unauthorized,"Game waypoint deletion requires pairing");
         var fs25Icons = await http.GetStringAsync(origin + "/fs25-icons.js");
         check(fs25Icons.Contains("fs25Attach") && fs25Icons.Contains("fs25Lower") && fs25Icons.Contains("fs25TurnOn"), "Browser serves FS25 action icons to Safari");
         check((await http.GetStringAsync(origin + "/fs25.js")).Contains("ДАННЫЕ СОХРАНЕНИЯ"), "Browser serves the FS25 save dashboard to Safari");
@@ -52,6 +53,12 @@ static class BrowserTests
         check((await Pair(pin,origin)).StatusCode==HttpStatusCode.Forbidden,"Browser PIN cannot be replayed");
         var cookie=cookies.GetCookies(new Uri(origin))["simdeck_browser"]!;
         check(cookie.HttpOnly && !host.Store.IsTrusted(cookie.Value),"HTTP test credential is HttpOnly and isolated from native trust");
+        var originalProfile=host.Profile.Id;host.SelectProfile("ats");
+        using(var request=new HttpRequestMessage(HttpMethod.Post,origin+"/truck-nav/game-waypoint/delete?profile=ats"){Content=JsonContent.Create(new{commandId=Guid.NewGuid().ToString(),revision=new string('A',64),pointId="gps:waypoint:0:10"})}){
+            request.Headers.Add("Origin","http://foreign.example");check((await http.SendAsync(request)).StatusCode==HttpStatusCode.Unauthorized,"Game waypoint mutation rejects a foreign origin even with paired cookies");}
+        using(var request=new HttpRequestMessage(HttpMethod.Post,origin+"/truck-nav/game-waypoint/delete?profile=ats"){Content=JsonContent.Create(new{commandId=Guid.NewGuid().ToString(),revision=new string('A',64),pointId="gps:waypoint:0:10"})}){
+            request.Headers.Add("Origin",origin);using var response=await http.SendAsync(request);var json=JsonDocument.Parse(await response.Content.ReadAsStringAsync());check(response.IsSuccessStatusCode&&!json.RootElement.GetProperty("deleted").GetBoolean()&&json.RootElement.GetProperty("message").GetString()!.Contains("Подключите"),"Paired but inactive browser cannot edit another controller's game GPS");}
+        host.SelectProfile(originalProfile);
         using var bad=new ClientWebSocket();bad.Options.Cookies=cookies;bad.Options.SetRequestHeader("Origin","http://foreign.example");bad.Options.Proxy=new WebProxy();
         try {await bad.ConnectAsync(new Uri(origin.Replace("http:","ws:")+"/ws"),CancellationToken.None);check(false,"Foreign websocket denied");}catch(WebSocketException){check(true,"Foreign websocket denied");}
         using var socket=new ClientWebSocket();socket.Options.Cookies=cookies;socket.Options.SetRequestHeader("Origin",origin);socket.Options.Proxy=new WebProxy();

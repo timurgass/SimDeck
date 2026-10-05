@@ -1,7 +1,7 @@
 'use strict';
 const etsMapState={slice:null,position:null,attempt:0,status:'Подготовка карты игры…',navigator:null};
 async function navigatorRequest(path,body){
- const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),15000);
+ const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),path.startsWith('/truck-nav/game-waypoint/delete?')?40000:15000);
  try{const r=await fetch(path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,signal:abort.signal,cache:'no-store'});const text=await r.text();if(text.length>12000000)throw Error('Ответ карты слишком большой');let j;try{j=JSON.parse(text);}catch{throw Error('Не удалось получить карту');}if(!r.ok)throw Error(j.error||'Карта пока недоступна');return j;}finally{clearTimeout(timer);}
 }
 function mountEtsMap(parent){

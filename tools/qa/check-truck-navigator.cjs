@@ -26,6 +26,15 @@ const base=process.argv[2]||'http://127.0.0.1:28787',pin=fs.readFileSync(process
     if(await page.locator('.nav-panel').isVisible())throw Error('Focus marker did not close the route panel');
     await page.evaluate(()=>etsMapState.navigator.open('place',etsMapState.navigator.plan.stops[0]));
     if(!await page.locator('.nav-panel').textContent().then(s=>s.includes('Эта цель прочитана из игры')))throw Error('Game marker not identified as read-only');
+    const deletion=await page.evaluate(async()=>{
+     const n=etsMapState.navigator,request=n.request,refresh=n.refresh,old=n.plan,revision=n.gameRevision,available=n.gameAvailable;let finish,calls=0,body;
+     n.refresh=()=>{};n.request=async(path,payload)=>{if(payload){calls++;body=payload;return new Promise(resolve=>finish=resolve);}return{available:true,revision,plan:old};};
+     try{const pending=n.deleteGamePoint(old.stops[0]);await n.deleteGamePoint(old.stops[0]);const retained=n.plan===old&&calls===1&&n.root.querySelector('[data-gps-delete]').disabled;finish({deleted:false,message:'Карта не открыта'});await pending;const rejected=n.plan.stops.length===old.stops.length&&n.message==='Карта не открыта';
+      const next={...old,stops:old.stops.slice(1)};n.request=async(path,payload)=>payload?{deleted:true,message:'Точка удалена из GPS игры'}:{available:true,revision:'verified-test-removal',plan:next};await n.deleteGamePoint(old.stops[0]);const removed=n.plan.stops.length===next.stops.length&&n.plan.destination.id===old.destination.id;
+      n.open('place',old.destination);const goalProtected=!n.panel.querySelector('[data-gps-delete]');return retained&&rejected&&removed&&goalProtected&&body.pointId===old.stops[0].id&&body.revision===revision&&/^[0-9a-f-]{36}$/i.test(body.commandId);
+     }finally{n.request=request;n.refresh=refresh;n.plan=old;n.gameRevision=revision;n.gameAvailable=available;}
+    });
+    if(!deletion)throw Error('Game delete request, pending state, rejection retention or goal guard failed');
     await page.getByRole('button',{name:'Закрыть панель',exact:true}).click();
     await page.evaluate(()=>{const n=etsMapState.navigator;n.follow=true;n.center=null;n.draw();});
    }

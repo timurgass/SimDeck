@@ -68,9 +68,9 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
     private var mapLoadedAt=0L
     private val navigatorCalls=java.util.concurrent.atomic.AtomicInteger()
     internal fun navigatorRequest(requestedProfile:String,path:String,body:String,complete:(String?,String?)->Unit) {
-        if(path.length>2000 || body.length>12000 || !path.matches(Regex("/(ets2-map|truck-nav/(places|route|landscape|game-route))\\?.*")) ||
+        if(path.length>2000 || body.length>12000 || !path.matches(Regex("/(ets2-map|truck-nav/(places|route|landscape|game-route|game-waypoint/delete))\\?.*")) ||
             !isScsTruck(requestedProfile) || requestedProfile!=profileId ||
-            (body.isNotEmpty() != path.startsWith("/truck-nav/route?"))) { complete(null,"Недопустимый запрос навигатора");return }
+            (body.isNotEmpty() != (path.startsWith("/truck-nav/route?") || path.startsWith("/truck-nav/game-waypoint/delete?")))) { complete(null,"Недопустимый запрос навигатора");return }
         val pc=state.value.selected;val http=client;val token=vault.read();val current=generation;val requestedSession=session
         if(pc==null || http==null || token==null || requestedSession==null) {complete(null,"Нет соединения с ПК");return}
         if(navigatorCalls.incrementAndGet()>6){navigatorCalls.decrementAndGet();complete(null,"Карта занята");return}
@@ -79,7 +79,7 @@ class DeckModel(app: Application) : AndroidViewModel(app) {
                 val result=withContext(Dispatchers.IO) {
                     val builder=Request.Builder().url("https://${pc.host}:${pc.port}$path").header("Authorization","Bearer $token")
                     if(body.isNotEmpty())builder.post(body.toRequestBody("application/json".toMediaType()))
-                    val call=http.newCall(builder.build());call.timeout().timeout(15,TimeUnit.SECONDS)
+                    val call=http.newCall(builder.build());call.timeout().timeout(if(path.startsWith("/truck-nav/game-waypoint/delete?")) 40 else 15,TimeUnit.SECONDS)
                     call.execute().use { response->
                         require((response.body?.contentLength() ?: 0)<=12000000)
                         val text=response.body?.string() ?: error("Пустой ответ карты");require(text.length<=12000000)

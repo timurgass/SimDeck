@@ -12,6 +12,11 @@ using System.Text.Json;
 using SimDeck.App;
 using SimDeck.Core;
 
+if(args.Length==2&&args[0]=="--truck-map-view"){
+    using var reader=new TruckGameGpsReader();
+    var gps=reader.TryRead(args[1],out _,out var points);var available=reader.TryMapView(out var view,out var unchanged);
+    Console.WriteLine(JsonSerializer.Serialize(new{gps,available,unchanged=unchanged(),points=points.Select(p=>new{p.Uid,p.Y,screen=view?.Project(p.X,p.Y,p.Z,1920,1080) is {} s?new[]{s.X,s.Y}:null})},new JsonSerializerOptions(JsonSerializerDefaults.Web)));return;
+}
 if(args.Length==3&&args[0]=="--truck-gps-read"){
     using var reader=new TruckGameGpsReader();
     var available=reader.TryRead(args[1],out var nodes,out var waypoints);
@@ -194,6 +199,7 @@ ScsTelemetryTests.Run(Check);
 Ets2MapTests.Run(Check);
 TruckRoutingTests.Run(Check);
 TruckGameGpsTests.Run(Check);
+await TruckGpsEditingTests.Run(Check);
 TruckLandscapeTests.Run(Check);
 Fs25CatalogTests.Run(Check);
 Fs25SaveTests.Run(Check);

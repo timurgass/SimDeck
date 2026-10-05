@@ -29,6 +29,7 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
     readonly SemaphoreSlim gpsGate=new(1,1);
     string gpsRevision="";
     TruckRoutePlan? gpsPlan;
+    readonly TruckGpsEditor gpsEditor=new();
     public Func<(bool Available,string Status,TruckGpsNode[] Nodes,TruckGpsWaypoint[] Waypoints)>? GpsCapture { private get; set; }
     public string Status { get; private set; } = $"Запустите {(profileId == "ats" ? "ATS" : "ETS2")}: карта подготовится из файлов игры.";
     public void Ensure()
@@ -129,13 +130,39 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
                 else{available=gpsReader.TryRead(ProfileId,out nodes,out waypoints);message=gpsReader.Status;}
                 if(!available)return Results.Json(new{available=false,pending=false,message});
                 if(nodes.Length<2){gpsRevision="";gpsPlan=null;return Results.Json(new{available=true,empty=true,message});}
-                var signature=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(mapRevision+"\n"+string.Join('\n',nodes.Select(n=>$"{n.Uid}:{n.X.ToString("R",CultureInfo.InvariantCulture)}:{n.Z.ToString("R",CultureInfo.InvariantCulture)}"))+"\nwaypoints\n"+string.Join('\n',waypoints.Select(n=>$"{n.Uid}:{n.X.ToString("R",CultureInfo.InvariantCulture)}:{n.Z.ToString("R",CultureInfo.InvariantCulture)}")))));
+                var signature=GpsSignature(mapRevision,nodes,waypoints);
                 if(gpsRevision!=signature||gpsPlan is null){gpsPlan=router.GameRoute(nodes,waypoints,timeout.Token) with{Revision=signature};gpsRevision=signature;}
                 return Results.Json(new{available=true,empty=false,revision=signature,plan=gpsPlan,message="Маршрут из GPS игры"});
             },timeout.Token);
         }
         catch(Exception e) when(e is InvalidOperationException or ArgumentException){return Results.Json(new{available=false,pending=false,message=e.Message});}
         catch(OperationCanceledException){return Results.Json(new{available=false,pending=true,message="Чтение GPS прервано"});}
+        finally{gpsGate.Release();}
+    }
+    static string GpsSignature(string mapRevision,TruckGpsNode[] nodes,TruckGpsWaypoint[] waypoints)=>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(mapRevision+"\n"+string.Join('\n',nodes.Select(n=>$"{n.Uid}:{n.X.ToString("R",CultureInfo.InvariantCulture)}:{n.Z.ToString("R",CultureInfo.InvariantCulture)}"))+"\nwaypoints\n"+string.Join('\n',waypoints.Select(n=>$"{n.Uid}:{n.X.ToString("R",CultureInfo.InvariantCulture)}:{n.Z.ToString("R",CultureInfo.InvariantCulture)}")))));
+    public async Task<IResult> DeleteGameWaypoint(HttpContext c,WindowsInput backend,Func<bool> allowed)
+    {
+        if(c.Request.Query["profile"]!=ProfileId)return Results.Conflict(new{error="Профиль игры изменился"});
+        if(c.Request.ContentLength is null or >4096)return Results.BadRequest();
+        TruckGpsDeleteRequest? request;
+        try{request=await JsonSerializer.DeserializeAsync<TruckGpsDeleteRequest>(c.Request.Body,new JsonSerializerOptions(JsonSerializerDefaults.Web){MaxDepth=4},c.RequestAborted);}
+        catch(JsonException){return Results.BadRequest();}
+        if(request is null)return Results.BadRequest();
+        if(!await gpsGate.WaitAsync(0,c.RequestAborted))return Results.Json(new{deleted=false,message="GPS занят: повторите после обновления маршрута"});
+        try
+        {
+            using var timeout=CancellationTokenSource.CreateLinkedTokenSource(c.RequestAborted,stop.Token);timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            var result=await Task.Run(async()=>await gpsEditor.DeleteAsync(request,
+                ()=>gpsReader.TryRead(ProfileId,out var nodes,out var waypoints)?new TruckGpsSnapshot(GpsSignature(revision,nodes,waypoints),waypoints):null,
+                point=>GpsCapture is null&&gpsReader.TryMapView(out var view,out var unchanged)&&view is not null&&backend.ClickMapPin(view,point,unchanged,
+                    ()=>allowed()&&gpsReader.TryRead(ProfileId,out var currentNodes,out var currentPoints)&&GpsSignature(revision,currentNodes,currentPoints)==request.Revision),
+                allowed,timeout.Token),timeout.Token);
+            if(result.Deleted){gpsRevision="";gpsPlan=null;}
+            return Results.Json(result);
+        }
+        catch(OperationCanceledException){return Results.Json(new{deleted=false,message="Ответ прерван: обновите список GPS-точек перед повторением"});}
+        catch(Exception e) when(e is IOException or InvalidOperationException or ArgumentException){return Results.Json(new{deleted=false,message="Редактирование GPS недоступно. Проверьте игровую карту"});}
         finally{gpsGate.Release();}
     }
     public IResult PlacesResponse(HttpContext context)

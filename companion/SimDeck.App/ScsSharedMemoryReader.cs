@@ -6,6 +6,19 @@ namespace SimDeck.App;
 
 internal sealed class ScsSharedMemoryReader : IDisposable
 {
+    public static bool MapEditingAllowed(uint game)
+    {
+        try
+        {
+            using var memory=MemoryMappedFile.OpenExisting("Local\\SCSTelemetry",MemoryMappedFileRights.Read);
+            using var snapshot=memory.CreateViewAccessor(0,ScsTelemetryParser.SnapshotSize,MemoryMappedFileAccess.Read);
+            var b=new byte[ScsTelemetryParser.SnapshotSize];snapshot.ReadArray(0,b,0,b.Length);
+            if(b[4]==0)return false; // The world map pauses single-player driving.
+            b[4]=0; // Inspect paused speed/game identity locally; never publish as live data.
+            return ScsTelemetryParser.TryParse(b,out _,out var frame,game)&&frame is not null&&frame.SpeedMps<.1;
+        }
+        catch(Exception e) when(e is IOException or UnauthorizedAccessException or InvalidOperationException){return false;}
+    }
     MemoryMappedFile? map;
     MemoryMappedViewAccessor? view;
     readonly byte[] buffer = new byte[ScsTelemetryParser.SnapshotSize];

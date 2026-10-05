@@ -31,3 +31,5 @@
 
 .sdnav .nav-game-gps{border-top:1px solid var(--nav-line);margin-top:8px;padding-top:7px;font-size:11px;line-height:1.4;color:var(--nav-gold);overflow-wrap:anywhere}
 @media(max-width:650px){.sdnav .nav-game-gps{font-size:10px;max-width:170px}}
+
+.sdnav .nav-place:has([data-gps-delete]){flex-wrap:wrap}.sdnav .nav-place [data-gps-delete]{flex-basis:calc(100% - 42px);margin-left:42px;color:#ff938b}

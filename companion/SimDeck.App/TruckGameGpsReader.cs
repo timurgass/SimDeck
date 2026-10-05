@@ -12,7 +12,7 @@ namespace SimDeck.App;
 // Read-only Prism layouts/signatures researched from ETS2LA/ets2la_plugin,
 // MIT Copyright (c) 2024 Dario Wouters. See tools/truck-gps/NOTICE.md.
 // Never calls game functions, loads a DLL, or writes process memory.
-public sealed class TruckGameGpsReader : IDisposable
+public sealed partial class TruckGameGpsReader : IDisposable
 {
     SafeProcessHandle? handle;
     int pid;
@@ -51,7 +51,7 @@ public sealed class TruckGameGpsReader : IDisposable
                 if(v.FileMajorPart!=1||v.FileMinorPart is <59 or >61){Status="Чтение GPS для этой версии игры ещё не проверено";return false;}
                 var resolved=Resolve(File.ReadAllBytes(module.FileName),v.FileMinorPart);
                 instanceAddress=(ulong)module.BaseAddress+resolved.InstanceRva;gpsOffset=resolved.GpsOffset;
-                handle=OpenProcess(0x1010,false,process.Id); // QUERY_LIMITED_INFORMATION | VM_READ
+                handle=OpenProcess(0x410,false,process.Id); // QUERY_INFORMATION | VM_READ (map-region discovery is also read only)
                 if(handle.IsInvalid)throw new InvalidDataException("Read access unavailable");
                 pid=process.Id;
             }
@@ -82,7 +82,9 @@ public sealed class TruckGameGpsReader : IDisposable
                 var uid=BinaryPrimitives.ReadUInt64LittleEndian(n.AsSpan(48));
                 var x=BinaryPrimitives.ReadInt32LittleEndian(n)/256f;var z=BinaryPrimitives.ReadInt32LittleEndian(n.AsSpan(8))/256f;
                 if(uid==0||Math.Abs(x)>1000000||Math.Abs(z)>1000000)throw new InvalidDataException("Invalid GPS waypoint");
-                targets.Add(new(uid.ToString(),x,z));
+                var y=BinaryPrimitives.ReadInt32LittleEndian(n.AsSpan(4))/256f;
+                if(Math.Abs(y)>100000)throw new InvalidDataException("Invalid GPS waypoint height");
+                targets.Add(new(uid.ToString(),x,z,y));
             }
             var header=Read(route+0x50,24);var items=BinaryPrimitives.ReadUInt64LittleEndian(header.AsSpan(8));var count=BinaryPrimitives.ReadUInt64LittleEndian(header.AsSpan(16));
             if(count>6000||count>0&&!Pointer(items))throw new InvalidDataException("Invalid GPS node count");
@@ -125,7 +127,7 @@ public sealed class TruckGameGpsReader : IDisposable
         for(var i=0;i<=data.Length-p.Length;i++){var match=true;for(var j=0;j<p.Length;j++)if(p[j]>=0&&data[i+j]!=p[j]){match=false;break;}if(match)found.Add(i);}
         return found.ToArray();
     }
-    void Reset(){handle?.Dispose();handle=null;pid=0;instanceAddress=0;gpsOffset=0;}
+    void Reset(){handle?.Dispose();handle=null;pid=0;instanceAddress=0;gpsOffset=0;mapObject=0;mapVtable=0;}
     public void Dispose()=>Reset();
     [DllImport("kernel32.dll",SetLastError=true)]static extern SafeProcessHandle OpenProcess(uint access,bool inherit,int id);
     [DllImport("kernel32.dll",SetLastError=true)]static extern bool ReadProcessMemory(SafeProcessHandle process,ulong address,[Out]byte[] buffer,nuint size,out nuint read);
