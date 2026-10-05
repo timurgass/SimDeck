@@ -3,6 +3,7 @@
 function mountReferenceDashboard(root){
  if(!['fs25','ets2','ats','beamng-default','snowrunner'].includes(profileId))return false;
  root.classList.add('referenceDashboard');
+ if(profileId==='beamng-default')return mountBeamNgDamage(root);
  const layout=node('div','referenceLayout'),left=node('div','referenceScene'),right=dashboardCard();layout.append(left,right);root.append(layout);
  if(profileId!=='snowrunner')mountVehiclePanel(left);
  if(profileId==='fs25'){
@@ -30,6 +31,7 @@ function mountReferenceDashboard(root){
 function referenceStatusRow(label,key,id){const row=node('div','referenceStatusRow'),icon=actionIcon(id);if(icon)row.append(icon);const text=node('div');text.append(node('span','',label));const state=node('strong','','НЕТ ДАННЫХ');state.dataset.metric=key;text.append(state);row.append(text);return row;}
 function updateReferenceDashboard(data){
  const root=$('profileDashboard');if(!root?.classList.contains('referenceDashboard'))return;
+ if(profileId==='beamng-default'){updateBeamNgDamage(data);return;}
  updateEtsMap(data);
  const v=data?.vehicle||lastKnownVehicle;
  for(const el of root.querySelectorAll('[data-metric="frontAttachment"],[data-metric="rearAttachment"],[data-metric="fold"],[data-metric^="damage:"]')){

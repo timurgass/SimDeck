@@ -1,0 +1,27 @@
+{
+  "zones": {
+    "FL": "Спереди слева",
+    "FR": "Спереди справа",
+    "ML": "Слева по центру",
+    "MR": "Справа по центру",
+    "RL": "Сзади слева",
+    "RR": "Сзади справа"
+  },
+  "faults": {
+    "engineDisabled": "Двигатель отключён",
+    "engineLockedUp": "Двигатель заклинил",
+    "engineReducedTorque": "Снижена мощность",
+    "catastrophicOverrevDamage": "Разрушение от перекрутки",
+    "mildOverrevDamage": "Повреждение от перекрутки",
+    "engineHydrolocked": "Гидроудар",
+    "impactDamage": "Удар по двигателю",
+    "radiatorLeak": "Утечка радиатора",
+    "oilpanLeak": "Утечка масла",
+    "headGasketDamaged": "Прокладка ГБЦ",
+    "pistonRingsDamaged": "Поршневые кольца",
+    "rodBearingsDamaged": "Вкладыши шатунов",
+    "coolantOverheating": "Перегрев охлаждения",
+    "oilOverheating": "Перегрев масла",
+    "transmissionBroken": "Поломка коробки"
+  }
+}

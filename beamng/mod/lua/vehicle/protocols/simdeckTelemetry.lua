@@ -1,4 +1,4 @@
--- SimDeck telemetry v3. Local UDP only; no vehicle control or game-file overrides.
+-- SimDeck telemetry v4. Local UDP only; no vehicle control or game-file overrides.
 local M = {}
 local metadata
 function M.getAddress() return "127.0.0.1" end
@@ -27,6 +27,15 @@ function M.getStructDefinition()
     char category[32];
     unsigned int wheelCount;
     struct { float x; float z; unsigned int flags; } wheels[16];
+    float bodyDamage[6];
+    unsigned int faultKnown;
+    unsigned int faultActive;
+    float coolantTemperature;
+    float oilTemperature;
+    struct { char name[24]; unsigned int known; unsigned int active; float brakeTemperature; } wheelDamage[16];
+    unsigned int partCount;
+    int totalDamagedParts;
+    struct { char name[64]; float damage; } parts[8];
   ]]
 end
 local function fraction(value) return math.min(1, math.max(0, tonumber(value) or 0)) end
@@ -66,12 +75,65 @@ local function couplingState()
   if extensions.couplings and extensions.couplings.isCouplerAttached then return extensions.couplings.isCouplerAttached() end
   return false
 end
+
+local diagnostic, diagnosticTimer = nil, .2
+local faults = {"engineDisabled", "engineLockedUp", "engineReducedTorque", "catastrophicOverrevDamage", "mildOverrevDamage",
+  "engineHydrolocked", "impactDamage", "radiatorLeak", "oilpanLeak", "headGasketDamaged", "pistonRingsDamaged",
+  "rodBearingsDamaged", "coolantOverheating", "oilOverheating", "transmissionBroken"}
+local function readDamage(group, key)
+  if not damageTracker or type(damageTracker.getDamage) ~= "function" then return nil end
+  return isOn(damageTracker.getDamage(group, key))
+end
+local function diagnostics()
+  local result = {body={}, known=0, active=0, coolant=-1, oil=-1, parts={}, total=-1}
+  for i, key in ipairs({"FL", "FR", "ML", "MR", "RL", "RR"}) do
+    local value = damageTracker and type(damageTracker.getDamage)=="function" and damageTracker.getDamage("body", key)
+    result.body[i] = type(value)=="number" and value==value and fraction(value) or -1
+  end
+  local engines = powertrain.getDevicesByType("combustionEngine") or {}
+  local engine = next(engines) and select(2,next(engines))
+  local thermals = engine and engine.thermals
+  local engineData = engine and v.data[engine.name] or {}
+  if thermals then
+    result.coolant = tonumber(thermals.coolantTemperature) or -1
+    result.oil = tonumber(thermals.oilTemperature) or -1
+  end
+  local hasRadiator = thermals and result.coolant>=0 and (not tonumber(engineData.radiatorArea) or engineData.radiatorArea>0)
+  for i, key in ipairs(faults) do
+    local value
+    if i==15 then
+      if type(powertrain.getDevicesByCategory)=="function" then
+        for _, device in pairs(powertrain.getDevicesByCategory("gearbox") or {}) do
+          if type(device.isBroken)=="boolean" then value=(value or false) or device.isBroken end
+        end
+      end
+    elseif engine and (i<8 or thermals and (i~=8 and i~=13 or hasRadiator)) then value=readDamage("engine",key) end
+    if value~=nil then
+      local bit=2^(i-1); result.known=result.known+bit
+      if value then result.active=result.active+bit end
+    end
+  end
+  if beamstate and type(beamstate.getPartDamageData)=="function" then
+    result.total=0
+    for _, part in pairs(beamstate.getPartDamageData() or {}) do
+      local score=tonumber(part.damage)
+      if score and score==score and score>0 then
+        result.total=result.total+1
+        result.parts[#result.parts+1]={name=utf8Bound(tostring(part.name or "Detail"),63), damage=fraction(score)}
+      end
+    end
+    table.sort(result.parts,function(a,b) return a.damage==b.damage and a.name<b.name or a.damage>b.damage end)
+    while #result.parts>8 do table.remove(result.parts) end
+  end
+  return result
+end
+
 function M.fillStruct(packet, dt)
   local e = electrics.values
   -- Zeroed packets before the controller initializes intentionally have no signature.
   if e.gearIndex == nil or e.rpm == nil then return end
-  packet.magic = "SMD3"
-  packet.version = 3
+  packet.magic = "SMD4"
+  packet.version = 4
   packet.speed = math.abs(e.wheelspeed or e.airspeed or 0)
   packet.rpm = math.max(0, e.rpm)
   packet.gear = e.gearIndex
@@ -127,10 +189,36 @@ function M.fillStruct(packet, dt)
     local pos = node and node.pos
     if pos and type(pos.x) == "number" and type(pos.y) == "number" and pos.x == pos.x and pos.y == pos.y then
       local item = packet.wheels[packet.wheelCount]
-      item.x, item.z = pos.x, pos.y
+      item.x, item.z = -pos.x, pos.y
       item.flags = type(wheel.isPropulsed) == "boolean" and (wheel.isPropulsed and 3 or 1) or 0
+      local detail = packet.wheelDamage[packet.wheelCount]
+      detail.name = utf8Bound(tostring(wheel.name or ""),23)
+      detail.known, detail.active = 0, 0
+      local brakeDamage
+      if (tonumber(wheel.initialBrakeTorque or wheel.brakeTorque) or 0)>0 then brakeDamage=readDamage("wheels","brake"..tostring(wheel.name)) end
+      local values={wheel.isBroken, wheel.isTireDeflated, brakeDamage}
+      -- Do not iterate with ipairs: unknown fields may leave holes.
+      for index=1,3 do
+        local value=values[index]
+        if type(value)=="boolean" then
+          local bit=2^(index-1);detail.known=detail.known+bit
+          if value then detail.active=detail.active+bit end
+        end
+      end
+      detail.brakeTemperature=tonumber(wheel.brakeSurfaceTemperature) or -1
       packet.wheelCount = packet.wheelCount + 1
     end
   end
+  diagnosticTimer=diagnosticTimer+(tonumber(dt) or 0)
+  if not diagnostic or diagnosticTimer>=.2 then
+    diagnosticTimer=0
+    local ok, value=pcall(diagnostics)
+    diagnostic=ok and value or {body={-1,-1,-1,-1,-1,-1},known=0,active=0,coolant=-1,oil=-1,parts={},total=-1}
+  end
+  for i=0,5 do packet.bodyDamage[i]=diagnostic.body[i+1] end
+  packet.faultKnown,packet.faultActive=diagnostic.known,diagnostic.active
+  packet.coolantTemperature,packet.oilTemperature=diagnostic.coolant,diagnostic.oil
+  packet.partCount,packet.totalDamagedParts=#diagnostic.parts,diagnostic.total
+  for i,part in ipairs(diagnostic.parts) do packet.parts[i-1].name=part.name;packet.parts[i-1].damage=part.damage end
 end
 return M

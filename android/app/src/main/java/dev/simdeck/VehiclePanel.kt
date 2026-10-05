@@ -100,7 +100,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
         }
     }
 }
-@Composable internal fun RoadDrawing(kind:String,wheels:List<VehicleWheel> = emptyList(),trailer:VehicleAttachment?=null,values:Map<String,Double> = emptyMap(),drive:Boolean?=null,heightOverride:Dp?=null,wear:Map<String,Double> = emptyMap()) {
+@Composable internal fun RoadDrawing(kind:String,wheels:List<VehicleWheel> = emptyList(),trailer:VehicleAttachment?=null,values:Map<String,Double> = emptyMap(),drive:Boolean?=null,heightOverride:Dp?=null,wear:Map<String,Double> = emptyMap(),beam:BeamNgDamage?=null) {
     val atlas=vehicleAtlas(if(kind=="gt") "gt" else "road");val d=LocalProfileDesign.current;val s=roadSprite(kind)
     if(s==null) { Text("Нет схемы этого класса · без предположений о кузове",color=d.muted);return }
     val formulaZones=if(kind=="formula") rememberF1DamageZones() else emptyList()
@@ -137,6 +137,25 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
                     drawRoundRect(color.copy(alpha=.23f),offset,bounds,androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
                     drawRoundRect(color,offset,bounds,androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()),style=Stroke(1.dp.toPx()))
                 }
+            }
+        }
+        if(beam!=null) {
+            listOf("FL","FR","ML","MR","RL","RR").forEachIndexed { i,key -> beam.body[key]?.let { value->
+                val row=i/2;val x=cx+bodyWidth*(if(i%2==0) -.32f else .01f);val y=h*(.08f+row*.28f)
+                val color=damageColor(value*100)
+                clipRect(x,y,x+bodyWidth*.31f,y+h*.25f) {
+                    // Repaint only the illustration's alpha silhouette, not boxes over it.
+                    drawImage(atlas,IntOffset(s.x,s.y),IntSize(s.w,s.h),IntOffset((cx-bodyWidth/2).toInt(),0),IntSize(bodyWidth.toInt().coerceAtLeast(1),h.toInt().coerceAtLeast(1)),alpha=if(value>.05) .55f else .12f,colorFilter=ColorFilter.tint(color),filterQuality=FilterQuality.High)
+                }
+            } }
+            if(wheels.isNotEmpty()) {
+                val min=wheels.minOf{it.z};val span=(wheels.maxOf{it.z}-min).coerceAtLeast(1.0);val half=wheels.maxOf{kotlin.math.abs(it.x)}.coerceAtLeast(.5)
+                beam.wheels.forEach { wd->wheels.getOrNull(wd.index)?.let { w->
+                    val color=when{wd.broken==true||wd.brakeDamaged==true->damageColor(100.0);wd.flat==true->damageColor(20.0);wd.broken==false->damageColor(0.0);else->d.muted}
+                    val wx=cx+(w.x/half*bodyWidth*.41).toFloat();val wy=h*.18f+((w.z-min)/span*h*.67f).toFloat();val tw=bodyWidth*.18f;val th=tw*1.7f
+                    drawRoundRect(color.copy(alpha=.35f),Offset(wx-tw/2,wy-th/2),Size(tw,th),androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
+                    drawRoundRect(color,Offset(wx-tw/2,wy-th/2),Size(tw,th),androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()),style=Stroke(2.dp.toPx()))
+                } }
             }
         }
         if(kind=="formula") {

@@ -116,17 +116,37 @@ function jsonReadFile(path) return {Name=v.data.model=='semi' and 'T-Series' or 
 module=lua.execute((root / 'beamng/mod/lua/vehicle/protocols/simdeckTelemetry.lua').read_bytes())
 lua.globals().bridge=module
 lua.execute(b"ffi=require('ffi');ffi.cdef('struct SimDeckPacket {'..bridge.getStructDefinition()..'};');packet=ffi.new('struct SimDeckPacket');bridge.fillStruct(packet, .033)")
-size=lua.eval(b'ffi.sizeof(packet)'); assert size==448, size
+size=lua.eval(b'ffi.sizeof(packet)'); assert size==1616, size
 raw=lua.eval(b'ffi.string(packet,ffi.sizeof(packet))')
-assert raw[:4]==b'SMD3' and struct.unpack_from('<I',raw,252)[0]==6
+assert raw[:4]==b'SMD4' and struct.unpack_from('<I',raw,252)[0]==6
 assert raw[220:252].split(b'\0')[0]==b'truck'
-assert struct.unpack_from('<ffI',raw,256)==(-1,-2,1)
+assert struct.unpack_from('<ffI',raw,256)==(1,-2,1)
 assert struct.unpack_from('<I',raw,264+2*12)[0]==3
 lua.execute(b"v.data.model='custom';v.vehicleDirectory='/vehicles/custom/';wheels.wheels={};bridge.fillStruct(packet,.033)")
 raw=lua.eval(b'ffi.string(packet,ffi.sizeof(packet))')
 assert raw[60:124].split(b'\0')[0]==b'custom'
 assert struct.unpack_from('<I',raw,252)[0]==0
-print('PASS BeamNG: actual FFI 448-byte packet, truck wheel geometry, drive flags, identity refresh')
+print('PASS BeamNG: actual FFI 1616-byte packet, truck wheel geometry, drive flags, identity refresh')
+
+
+lua.execute(b"""
+damageTracker={getDamage=function(group,key) if group=='body' then return key=='FL' and .25 or 0 end;if key=='radiatorLeak' then return true end;return false end}
+engine={name='mainEngine',thermals={coolantTemperature=105,oilTemperature=92}}
+powertrain.getDevicesByType=function(kind) return kind=='combustionEngine' and {engine} or {} end
+powertrain.getDevicesByCategory=function(kind)return {{isBroken=true}} end
+beamstate.getPartDamageData=function() local p={};for i=1,12 do p[i]={name='Detail '..i,damage=i/12} end;return p end
+v.data.nodes[0]={pos={x=1,y=-2}};wheels.wheels={[0]={name='FL',node1=0,isBroken=false,isTireDeflated=true,initialBrakeTorque=1000,brakeSurfaceTemperature=350}}
+bridge.fillStruct(packet,.2)
+""")
+raw=lua.eval(b'ffi.string(packet,ffi.sizeof(packet))')
+assert struct.unpack_from('<f',raw,448)[0]==.25
+known,active=struct.unpack_from('<II',raw,472);assert known&(1<<7) and active&(1<<7) and active&(1<<14)
+assert struct.unpack_from('<II',raw,512)==(7,2) # false brake state stays known, not nil
+assert struct.unpack_from('<II',raw,1064)==(8,12)
+assert raw[1072:1136].split(b'\0')[0]==b'Detail 12'
+lua.execute(b"powertrain.getDevicesByType=function()return {} end;powertrain.getDevicesByCategory=function()return {} end;beamstate.getPartDamageData=function()return {} end;bridge.fillStruct(packet,.2)")
+raw=lua.eval(b'ffi.string(packet,ffi.sizeof(packet))');assert struct.unpack_from('<II',raw,472)==(0,0) and struct.unpack_from('<II',raw,1064)==(0,0)
+print('PASS BeamNG: body damage, engine fault, gearbox break, flat tyre, intact brake, top eight parts and clearing after reset')
 
 # Market prices use the game's selling-station API and do not require a vehicle.
 market=LuaRuntime(unpack_returned_tuples=True,encoding=None)

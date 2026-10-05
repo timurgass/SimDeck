@@ -53,10 +53,11 @@ const fs=require('fs');const profiles=JSON.parse(fs.readFileSync(process.argv[2]
    const held=p.actions.find(a=>a.gesture==='hold');if(held){await page.evaluate(a=>setPage(a.page,a.group||'Общие'),held);const btn=page.locator(`.action[data-action="${held.id}"]:visible`).last();await btn.scrollIntoViewIfNeeded();const box=await btn.boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.waitForTimeout(250);await page.mouse.up();const phases=await page.evaluate(id=>commands.filter(m=>m.actionId===id).map(m=>m.phase),held.id);if(!phases.includes('down')||!phases.includes('up'))throw Error('Hold lost '+p.id);}
    await page.evaluate(()=>window.inputAvailability='disabled');await page.waitForTimeout(220);if(await page.locator('.action:enabled').count()>0)throw Error('Input disabled but action enabled '+p.id);await page.evaluate(()=>{window.inputAvailability='ready';if(isF1())goF1('race');else setPage('Обзор');});await page.waitForTimeout(220);
    if(['fs25','ets2','ats','beamng-default'].includes(p.id)){
+    const vehiclePanel=page.locator(p.id==='beamng-default'?'#beamNgDamage':'#vehiclePanel');
     await page.evaluate(()=>{window.fixtureVehicle={id:'truck',name:'Test truck',kind:'truck',controlled:true,wheels:Array.from({length:6},(_,i)=>({x:i%2===0?-1:1,z:Math.floor(i/2)*2-2,powered:i>1})),attachments:[{id:'trailer',parentId:'truck',name:'Trailer',kind:'trailer',wheels:[{x:-1,z:1},{x:1,z:1}],lowered:true,turnedOn:false}]};});await page.waitForTimeout(220);
-    if(!await page.locator('#vehiclePanel').textContent().then(t=>t.includes('Test truck')&&t.includes('3 оси')))throw Error('Automatic truck selection failed');
+    if(!await vehiclePanel.textContent().then(t=>t.includes('Test truck')&&t.includes('3 оси')))throw Error('Automatic truck selection failed');
     if(['ets2','ats'].includes(p.id))await page.locator('.navTruckDetails').evaluate(el=>el.open=true);
-    if(width===390||width===1340)await page.locator('#vehiclePanel').screenshot({path:`${process.argv[4] || '.'}/vehicle-${p.id}-${width}.png`});
+    if(width===390||width===1340)await vehiclePanel.screenshot({path:`${process.argv[4] || '.'}/vehicle-${p.id}-${width}.png`});
     if(['ets2','ats'].includes(p.id)&&await page.locator('#vehiclePanel .vehicleGhost').count()!==1)throw Error('Transparent trailer missing');
     if(p.id==='fs25'){await page.evaluate(()=>{window.fixtureVehicle={id:'tractor',name:'MT635',kind:'tractor',controlled:true,wheels:[{x:-1,z:-1},{x:1,z:-1},{x:-1,z:1},{x:1,z:1}],attachments:[{id:'implement',parentId:'tractor',name:'980',kind:'cultivator',mount:'rear',lowered:true,fold:1}]};});await page.waitForTimeout(250);await page.evaluate(()=>window.savedImplement=document.querySelector('.vehicleImplement'));await page.evaluate(()=>window.fixtureVehicle.attachments[0].lowered=false);await page.waitForTimeout(500);if(!await page.evaluate(()=>savedImplement===document.querySelector('.vehicleImplement')&&savedImplement.style.transform.includes('-13.8px')))throw Error('Farm lift animation rebuilt or absent');if(width===390||width===1340)await page.locator('#vehiclePanel').screenshot({path:`${process.argv[4] || '.'}/farm-implement-${width}.png`});}
 
@@ -75,9 +76,9 @@ const fs=require('fs');const profiles=JSON.parse(fs.readFileSync(process.argv[2]
     }
 
     await page.evaluate(()=>{window.fixtureVehicle={id:'custom',name:'New vehicle',kind:'unknown',controlled:true,wheels:[],attachments:[]};});await page.waitForTimeout(220);
-    if(await page.locator('#vehiclePanel .vehicleWheel').count()!==0||await page.locator('#vehiclePanel .vehicleGhost').count()!==0)throw Error('Previous vehicle geometry survived switch');
+    if(await vehiclePanel.locator('.vehicleWheel').count()!==0||await vehiclePanel.locator('.vehicleGhost').count()!==0)throw Error('Previous vehicle geometry survived switch');
     await page.evaluate(()=>{window.fixtureVehicle={id:'',name:'',kind:'unknown',controlled:false,wheels:[],attachments:[]};});await page.waitForTimeout(220);
-    if(!await page.locator('#vehiclePanel').textContent().then(t=>t.includes('Вы не в технике')))throw Error('Dismount did not clear diagram');
+    if(!await vehiclePanel.textContent().then(t=>t.includes('Вы не в технике')))throw Error('Dismount did not clear diagram');
     await page.evaluate(()=>window.fixtureVehicle=null);
    }
    if(p.id==='fs25'){

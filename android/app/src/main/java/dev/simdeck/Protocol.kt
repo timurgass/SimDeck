@@ -7,7 +7,7 @@ data class Ets2Navigation(val remainingKm: Double?, val remainingMinutes: Double
     val scale:Double?=null,val restMinutes:Double?=null,val gameMinutes:Double?=null,val destinationCity:String?=null)
 data class Telemetry(val speedMps: Double, val rpm: Double, val gear: Int, val fuelFraction: Double?, val maxRpm: Double?, val gearboxMode: String? = null, val maxGear: Int? = null,
     val headlights: Int? = null, val actionStates: Map<String, Boolean> = emptyMap(), val f1: F1Data? = null, val acc: AccData? = null,
-    val ets2Navigation: Ets2Navigation? = null, val fs25: Fs25Data? = null, val vehicle: VehicleInfo? = null, val fs25Prices: Fs25Prices? = null, val fuelLiters:Double?=null)
+    val ets2Navigation: Ets2Navigation? = null, val fs25: Fs25Data? = null, val vehicle: VehicleInfo? = null, val fs25Prices: Fs25Prices? = null, val fuelLiters:Double?=null,val beamNg:BeamNgDamage?=null)
 data class DeckAction(val id: String, val page: String, val label: String, val description: String, val key: String, val gesture: String, val group: String = "")
 data class ControlFeedback(val active: Boolean? = null, val headlights: Int? = null, val description: String? = null)
 
@@ -78,7 +78,7 @@ object Protocol {
         }
         return Telemetry(speed, rpm, d.getInt("gear"), fuel, maximum, mode, maxGear, lights, states,
             F1Data.parse(d.optJSONObject("f1")), AccData.parse(d.optJSONObject("acc")), nav,
-            Fs25Data.parse(d.optJSONObject("fs25"), d.optJSONObject("fs25Advisor")), VehicleInfo.parse(d.optJSONObject("vehicle")), Fs25Prices.parse(d.optJSONObject("fs25Prices")),d.optDouble("fuelLiters",Double.NaN).takeIf{it.isFinite() && it in 0.0..5500.0})
+            Fs25Data.parse(d.optJSONObject("fs25"), d.optJSONObject("fs25Advisor")), VehicleInfo.parse(d.optJSONObject("vehicle")), Fs25Prices.parse(d.optJSONObject("fs25Prices")),d.optDouble("fuelLiters",Double.NaN).takeIf{it.isFinite() && it in 0.0..5500.0},BeamNgDamage.parse(d.optJSONObject("beamNg")))
     }
     fun feedback(action: String, data: Telemetry?, stale: Boolean): ControlFeedback {
         if (data == null || stale) return ControlFeedback()

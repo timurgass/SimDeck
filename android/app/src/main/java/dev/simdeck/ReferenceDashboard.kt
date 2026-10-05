@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 
 /** Live counterparts of the approved compositions; missing sources remain explicitly unknown. */
 @Composable internal fun ReferenceDashboard(state:DeckState,model:DeckModel) {
+    if(state.profileId=="beamng-default"){BeamNgDamagePanel(state,model);return}
     val d=LocalProfileDesign.current
     val v=(state.telemetry?.vehicle ?: state.lastVehicle)?.takeIf { it.controlled }
     val farm=state.profileId=="fs25"

@@ -12,6 +12,11 @@ using System.Text.Json;
 using SimDeck.App;
 using SimDeck.Core;
 
+if(args.Length==3&&args[0]=="--beam-packet") {
+ if(!SimDeckParser.TryParse(File.ReadAllBytes(args[1]),out var packet))throw new InvalidDataException("Invalid BeamNG packet");
+ File.WriteAllText(args[2],JsonSerializer.Serialize(packet,new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+ Console.WriteLine($"BeamNG {packet!.Vehicle?.Name}: wheels={packet.Vehicle?.Wheels.Count}, diagnosticZones={packet.BeamNg?.Body.Count??0}, faults={packet.BeamNg?.Faults.Count??0}, damagedParts={packet.BeamNg?.TotalDamagedParts}");return;
+}
 if(args.Length==3&&args[0]=="--fs25-save") {
     var saved=Fs25SaveReader.Read(new Fs25SavegameDir(args[1]));
     File.WriteAllText(args[2],JsonSerializer.Serialize(saved,new JsonSerializerOptions(JsonSerializerDefaults.Web)));
@@ -228,6 +233,7 @@ Fs25OperationsTests.Run(Check);
 Fs25LiveTests.Run(Check);
 Fs25PricesTests.Run(Check);
 VehicleTests.Run(Check);
+BeamNgDamageTests.Run(Check);
 Fs25PlanTests.Run(Check);
 Fs25RulesTests.Run(Check);
 Fs25SaveWatcherTests.Run(Check);
@@ -435,6 +441,9 @@ pin = pairing.Open(); for (var i = 0; i < 5; i++) pairing.Consume("bad"); Check(
 
 var dataDir = args.Length > 0 ? args[0] : Path.Combine(Path.GetTempPath(), "simdeck-tests-" + Guid.NewGuid().ToString("N"));
 await using var host = new CompanionHost(dataDir);
+// The live game may be focused during this suite; disabled-input tests must disable input explicitly.
+host.Store.Value.KeyboardInputEnabled = false;
+host.Backend.Enabled = false;
 int FreePort() { var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start(); var port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop(); return port; }
 host.Store.Value.Port = FreePort(); host.Store.Value.UdpPort = FreePort();
 using var rsa = RSA.Create(2048);

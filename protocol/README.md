@@ -2,7 +2,7 @@
 
 ## Vehicle identity (0.9.3, optional)
 
-Optional `data.vehicle` preserves protocol major 1. See [fields and limits](../docs/AUTO-VEHICLE.md). Local positions are metres, negative Z forward. Unknown capabilities stay absent/null. Clear diagrams on stale telemetry, controlled=false or profile change; never infer equipment state from command acknowledgements.
+Optional `data.vehicle` preserves protocol major 1. See [fields and limits](../docs/AUTO-VEHICLE.md). Local positions are metres, negative Z forward. Unknown capabilities stay absent/null. Keep last diagrams explicitly stale on delayed telemetry; clear on controlled=false or profile change; never infer equipment state from command acknowledgements.
 
 BeamNG SMD3 is exactly 448 bytes, little-endian: offsets 0–59 retain SMD2 fields with magic SMD3 and version 3. Offset 60: UTF-8 model[64]; 124: name[96]; 220: category[32]; 252: uint32 wheel count (0–16); 256: 16 wheel slots (float X, float Z, uint32 flags), 12 bytes each. Strings are NUL-terminated. Flags: 0 unknown, 1 known non-driven, 3 known driven; other values invalid. SMD1/SMD2 remain supported.
 
@@ -58,6 +58,26 @@ Android and browser clients share one controller semaphore. A successful new Saf
 `input.state.availability` is `ready`, `disabled`, `unfocused` or `demo`. Browser action buttons are disabled unless the session exists, availability is `ready`, and no composite menu sequence is running. Telemetry can remain live while input buttons are disabled. The UI instructs the user to enable input in Companion and focus the selected game process.
 
 The Windows backend supports `Scan Code` and opt-in `Virtual-Key` injection. This is a local Companion setting and does not change the wire protocol. Scan Code remains the default. Virtual-Key exists for hosts where `SendInput` accepts the scan-code event but the game does not consume it.
+
+
+## BeamNG diagnostics (0.9.26, optional)
+
+Mod 0.4.0 sends SMD4, exactly **1616 bytes**, little-endian. The first 448 bytes retain the SMD3 layout with magic `SMD4`, version 4. SMD1–SMD3 and OutGauge are still accepted; they do not fabricate diagnostics. Wheel geometry uses negative X left and negative Z forward; slots and diagnostics share the same index.
+
+| Offset | Data |
+| --- | --- |
+| 448 | Six float32 body scores: FL, FR, ML, MR, RL, RR |
+| 472 / 476 | uint32 fault-known / fault-active masks, 15 bits |
+| 480 / 484 | float32 coolant / oil temperatures, °C |
+| 488 | 16 wheel slots, 36 bytes each: UTF-8 name[24], known mask, active mask, float32 brake temperature |
+| 1064 / 1068 | uint32 emitted part count (0–8), int32 total damaged parts (-1 unknown) |
+| 1072 | Eight part slots, 68 bytes each: UTF-8 name[64], float32 damage score |
+
+Body score: 0–1, -1 unknown. Temperatures: 0–2500 °C, -1 unknown. Wheel mask bits: broken, flat tyre, brake damaged. Active bits must be a subset of known bits. Part scores: >0–1; the top eight are sent, sorted by damage, together with the total count. String buffers are NUL-terminated bounded UTF-8. Invalid sizes, counts, masks and nonfinite/out-of-range numbers are rejected.
+
+Fault bits, in order: `engineDisabled`, `engineLockedUp`, `engineReducedTorque`, `catastrophicOverrevDamage`, `mildOverrevDamage`, `engineHydrolocked`, `impactDamage`, `radiatorLeak`, `oilpanLeak`, `headGasketDamaged`, `pistonRingsDamaged`, `rodBearingsDamaged`, `coolantOverheating`, `oilOverheating`, `transmissionBroken`.
+
+Optional JSON `data.beamNg` contains `body` (score by zone), `faults` (bool by key), `wheels` (index, name, nullable broken/flat/brakeDamaged/brakeTemperature), `parts` (name, damage), `totalDamagedParts`, `coolantTemperature`, `oilTemperature`. Missing equipment stays absent/null. Body and part scores are BeamNG beam deformation/breakage estimates, not repair-cost percentages. Diagnostic aggregates refresh up to 5 Hz; base instruments and wheel state up to 30 Hz. Protocol major remains 1.
 
 ## Extended BeamNG UDP (SimDeck 0.1.2)
 

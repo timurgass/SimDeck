@@ -12,7 +12,7 @@ public sealed record Telemetry(double SpeedMps, double Rpm, int Gear, double? Fu
     string? GearboxMode = null, int? MaxGear = null, int? Headlights = null,
     IReadOnlyDictionary<string, bool>? ActionStates = null, F1Details? F1 = null, AccDetails? Acc = null,
     Ets2Navigation? Ets2Navigation = null, Fs25Details? Fs25 = null,
-    Fs25AdvisorReport? Fs25Advisor = null, VehicleInfo? Vehicle = null, Fs25Prices? Fs25Prices = null)
+    Fs25AdvisorReport? Fs25Advisor = null, VehicleInfo? Vehicle = null, Fs25Prices? Fs25Prices = null, BeamNgDiagnostics? BeamNg = null)
 {
     public string GearDisplay => Gear < 0 ? "R" : Gear == 0 ? "N" : GearboxMode == "arcade" ? "D" : Gear.ToString();
 }
@@ -22,10 +22,11 @@ public static class SimDeckParser
     public static bool TryParse(ReadOnlySpan<byte> b, out Telemetry? result)
     {
         result = null;
+        var v4 = b.Length == 1616 && b[..4].SequenceEqual("SMD4"u8) && BinaryPrimitives.ReadUInt32LittleEndian(b[4..]) == 4;
         var v3 = b.Length == 448 && b[..4].SequenceEqual("SMD3"u8) && BinaryPrimitives.ReadUInt32LittleEndian(b[4..]) == 3;
         var v2 = b.Length == 60 && b[..4].SequenceEqual("SMD2"u8) && BinaryPrimitives.ReadUInt32LittleEndian(b[4..]) == 2;
         var v1 = b.Length == 48 && b[..4].SequenceEqual("SMD1"u8) && BinaryPrimitives.ReadUInt32LittleEndian(b[4..]) == 1;
-        if (!v1 && !v2 && !v3) return false;
+        if (!v1 && !v2 && !v3 && !v4) return false;
         var speed = BinaryPrimitives.ReadSingleLittleEndian(b[8..]);
         var rpm = BinaryPrimitives.ReadSingleLittleEndian(b[12..]);
         var gear = BinaryPrimitives.ReadInt32LittleEndian(b[16..]);
@@ -41,7 +42,7 @@ public static class SimDeckParser
             !float.IsFinite(maxRpm) || maxRpm is < 0 or > 100000 || maxGear is < 0 or > 128) return false;
         int? headlights = null;
         Dictionary<string, bool>? states = null;
-        if (v2 || v3)
+        if (v2 || v3 || v4)
         {
             var known = BinaryPrimitives.ReadUInt32LittleEndian(b[48..]);
             var active = BinaryPrimitives.ReadUInt32LittleEndian(b[52..]);
@@ -54,7 +55,7 @@ public static class SimDeckParser
                 if ((known & (1u << i)) != 0) states[actions[i]] = (active & (1u << i)) != 0;
         }
         VehicleInfo? vehicle = null;
-        if (v3)
+        if (v3 || v4)
         {
             var count = BinaryPrimitives.ReadUInt32LittleEndian(b[252..]);
             if (count > 16) return false;
@@ -68,10 +69,18 @@ public static class SimDeckParser
                 wheelList.Add(new(x, z, (flags & 1) != 0 ? (flags & 2) != 0 : null));
             }
             var id = VehicleKinds.Text(b.Slice(60, 64));
-            vehicle = new(id, VehicleKinds.Text(b.Slice(124, 96)), VehicleKinds.Resolve(VehicleKinds.Text(b.Slice(220, 32))), wheelList, []);
+            var name = VehicleKinds.Text(b.Slice(124, 96));
+            // Some stock info.json files expose a localization key in the vehicle VM.
+            // Use the supplied model ID instead of displaying that internal key.
+            var keyAt = name.IndexOf("vehiclesData.", StringComparison.Ordinal);
+            if (keyAt >= 0 && name.EndsWith(".Name", StringComparison.Ordinal))
+                name = name[..keyAt] + id.Replace('_', ' ');
+            vehicle = new(id, name, VehicleKinds.Resolve(VehicleKinds.Text(b.Slice(220, 32))), wheelList, []);
         }
+        BeamNgDiagnostics? beamNg=null;
+        if(v4 && !BeamNgDiagnostics.TryParse(b,vehicle!.Wheels.Count,out beamNg))return false;
         result = new(speed, rpm, gear, fuel, throttle, brake, clutch, maxRpm > 0 ? maxRpm : null, null,
-            mode == 1 ? "arcade" : mode == 2 ? "realistic" : null, maxGear > 0 ? maxGear : null, headlights, states, Vehicle: vehicle);
+            mode == 1 ? "arcade" : mode == 2 ? "realistic" : null, maxGear > 0 ? maxGear : null, headlights, states, Vehicle: vehicle, BeamNg: beamNg);
         return true;
     }
     static bool Fraction(float x) => float.IsFinite(x) && x is >= 0 and <= 1;
