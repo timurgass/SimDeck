@@ -94,6 +94,7 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
         app.MapGet("/ets2-map", (HttpContext c) => Trusted(c) ? host.Ets2Map.Response(c) : Results.StatusCode(401));
         app.MapGet("/truck-nav/places",(HttpContext c)=>Trusted(c)&&host.Profile.Id is "ets2" or "ats"?host.Ets2Map.PlacesResponse(c):Results.StatusCode(401));
         app.MapGet("/truck-nav/landscape",(HttpContext c)=>Trusted(c)&&host.Profile.Id is "ets2" or "ats"?host.Ets2Map.LandscapeResponse(c):Results.StatusCode(401));
+        app.MapGet("/truck-nav/game-route",async(HttpContext c)=>Trusted(c)&&host.Profile.Id is "ets2" or "ats"?await host.Ets2Map.GameGpsResponse(c):Results.StatusCode(401));
         app.MapPost("/truck-nav/route",async(HttpContext c)=>Trusted(c)&&SameOrigin(c)&&host.Profile.Id is "ets2" or "ats"?await host.Ets2Map.RouteResponse(c):Results.StatusCode(401));
         app.Map("/ws", async c => {
             CancellationTokenSource lifetime;

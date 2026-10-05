@@ -25,6 +25,11 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
     string revision="";
     long checkedAt;
     bool busy;
+    readonly TruckGameGpsReader gpsReader=new();
+    readonly SemaphoreSlim gpsGate=new(1,1);
+    string gpsRevision="";
+    TruckRoutePlan? gpsPlan;
+    public Func<(bool Available,string Status,TruckGpsNode[] Nodes)>? GpsCapture { private get; set; }
     public string Status { get; private set; } = $"Запустите {(profileId == "ats" ? "ATS" : "ETS2")}: карта подготовится из файлов игры.";
     public void Ensure()
     {
@@ -42,7 +47,7 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
             var game=FindGame();
             if(game is null) return;
             var files=Directory.GetFiles(game,"*.scs").OrderBy(Path.GetFileName,StringComparer.Ordinal).Select(p=>new FileInfo(p));
-            var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("navigator-v6\n"+string.Join('\n',files.Select(f=>$"{f.Name}:{f.Length}:{f.LastWriteTimeUtc.Ticks}"))))).ToLowerInvariant();
+            var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("navigator-v7\n"+string.Join('\n',files.Select(f=>$"{f.Name}:{f.Length}:{f.LastWriteTimeUtc.Ticks}"))))).ToLowerInvariant();
             lock(gate) { if(index is not null && revision==hash) return; }
             var cache=Path.Combine(CacheDirectory,"roads-"+hash+".json");
             if(!File.Exists(cache))
@@ -106,7 +111,33 @@ public sealed class Ets2MapService(string dataDirectory, string profileId = "ets
             catch(ArgumentException) { return Results.BadRequest(); }
         }
     }
-    public void Dispose() { stop.Cancel();landscape?.Dispose(); }
+    public void Dispose() { stop.Cancel();landscape?.Dispose();gpsReader.Dispose(); }
+    public async Task<IResult> GameGpsResponse(HttpContext c)
+    {
+        if(c.Request.Query["profile"]!=ProfileId)return Results.Conflict(new{error="Профиль игры изменился"});
+        Ensure();TruckRouting? router;string mapRevision;lock(gate){router=routing;mapRevision=revision;}
+        if(router is null)return Results.Json(new{available=false,pending=true,message=Status});
+        if(!await gpsGate.WaitAsync(TimeSpan.FromSeconds(1),c.RequestAborted))return Results.Json(new{available=false,pending=true,message="Чтение GPS занято"});
+        try
+        {
+            using var timeout=CancellationTokenSource.CreateLinkedTokenSource(c.RequestAborted,stop.Token);timeout.CancelAfter(TimeSpan.FromSeconds(10));
+            return await Task.Run<IResult>(()=>
+            {
+                var capture=GpsCapture?.Invoke();
+                TruckGpsNode[] nodes;bool available;string message;
+                if(capture.HasValue){(available,message,nodes)=capture.Value;}
+                else{available=gpsReader.TryRead(ProfileId,out nodes);message=gpsReader.Status;}
+                if(!available)return Results.Json(new{available=false,pending=false,message});
+                if(nodes.Length<2){gpsRevision="";gpsPlan=null;return Results.Json(new{available=true,empty=true,message});}
+                var signature=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(mapRevision+"\n"+string.Join('\n',nodes.Select(n=>$"{n.Uid}:{n.X.ToString("R",CultureInfo.InvariantCulture)}:{n.Z.ToString("R",CultureInfo.InvariantCulture)}")))));
+                if(gpsRevision!=signature||gpsPlan is null){gpsPlan=router.GameRoute(nodes,timeout.Token) with{Revision=signature};gpsRevision=signature;}
+                return Results.Json(new{available=true,empty=false,revision=signature,plan=gpsPlan,message="Маршрут из GPS игры"});
+            },timeout.Token);
+        }
+        catch(Exception e) when(e is InvalidOperationException or ArgumentException){return Results.Json(new{available=false,pending=false,message=e.Message});}
+        catch(OperationCanceledException){return Results.Json(new{available=false,pending=true,message="Чтение GPS прервано"});}
+        finally{gpsGate.Release();}
+    }
     public IResult PlacesResponse(HttpContext context)
     {
         if(context.Request.Query["profile"]!=ProfileId)return Results.Conflict(new {error="Профиль игры изменился"});

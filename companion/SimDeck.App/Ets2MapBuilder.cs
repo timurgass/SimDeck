@@ -17,8 +17,8 @@ internal static class Ets2MapBuilder
         var pois = new List<Ets2Poi>();var nodes = new List<Ets2NavNode>();var edges = new List<Ets2NavEdge>();
         var nodeIds = new Dictionary<string,int>();
         var boundaries=new Dictionary<ulong,List<(ulong Prefab,int[] Inputs,int[] Outputs)>>();
-        int Node(string id,float x,float z) { if(nodeIds.TryGetValue(id,out var value))return value;nodeIds[id]=nodes.Count;nodes.Add(new(x,z));return nodes.Count-1; }
-        int RoadNode(ulong uid,bool incoming,float x,float z)=>Node("road:"+uid+":"+incoming,x,z);
+        int Node(string id,float x,float z,string? uid=null) { if(nodeIds.TryGetValue(id,out var value))return value;nodeIds[id]=nodes.Count;nodes.Add(new(x,z,uid));return nodes.Count-1; }
+        int RoadNode(ulong uid,bool incoming,float x,float z)=>Node("road:"+uid+":"+incoming,x,z,uid.ToString());
         void Edge(int a,int b,float[] p,string kind="road",double speed=70) { if(p.All(float.IsFinite))edges.Add(new(a,b,p,kind,speed)); }
         void Link(int a,int b) { if(a!=b) {
             var p=new float[]{nodes[a].X,nodes[a].Z,nodes[b].X,nodes[b].Z};

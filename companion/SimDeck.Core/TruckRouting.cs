@@ -9,7 +9,7 @@ public sealed record TruckRoutePlan(float[] Points, double Metres, double Minute
     string Source = "simdeck", string? Revision = null, double[]? StopMetres = null);
 
 /// <summary>Directed routes through game road nodes and PPD navigation links, never through geometric crossings.</summary>
-public sealed class TruckRouting
+public sealed partial class TruckRouting
 {
     readonly Ets2RoadMap map;
     readonly Ets2NavEdge[] edges;
@@ -88,6 +88,10 @@ public sealed class TruckRouting
                 throw new InvalidOperationException("Нельзя соединить остановки без разворота: выберите доступный въезд");
             points.AddRange(leg.Points);minutes+=leg.Minutes;x=target.X;z=target.Z;stopMetres.Add(Length(points.ToArray()));
         }
+        return MakePlan(points,minutes,stops,request.Destination,stopMetres.Take(stops.Length).ToArray());
+    }
+    TruckRoutePlan MakePlan(List<float> points,double minutes,Ets2Poi[] stops,Ets2Poi destination,double[] stopMetres,string source="simdeck")
+    {
         var clean=new List<float>();for(var i=0;i<points.Count;i+=2)if(clean.Count==0||double.Hypot(clean[^2]-points[i],clean[^1]-points[i+1])>.05){clean.Add(points[i]);clean.Add(points[i+1]);}
         if(clean.Count>100_000)throw new InvalidOperationException("Маршрут слишком длинный");var p=clean.ToArray();var total=Length(p);var cumulative=Cumulative(p);
         var maneuvers=new List<TruckManeuver>();double last=-100;
@@ -101,7 +105,7 @@ public sealed class TruckRouting
         if(p.Length>0)maneuvers.Add(new(p.Length/2-1,total,"arrive"));
         var nearby=(map.Pois??[]).Where(v=>v.Kind is "fuel" or "rest" or "repair" or "weigh" or "ferry").Select(v=>{var a=Project(p,v.X,v.Z);return new TruckRouteStop(v,a.Along,a.Lateral);})
             .Where(v=>v.OffRouteMetres<=120).OrderBy(v=>v.AlongMetres).Take(100).ToArray();
-        return new(p,total,minutes,maneuvers.ToArray(),nearby,stops,request.Destination,StopMetres:stopMetres.Take(stops.Length).ToArray());
+        return new(p,total,minutes,maneuvers.ToArray(),nearby,stops,destination,source,StopMetres:stopMetres);
     }
     (List<float> Points,double Minutes) Leg(double x,double z,double tx,double tz,TruckRouteRequest req,double? heading,CancellationToken cancel)
     {

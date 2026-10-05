@@ -12,6 +12,20 @@ using System.Text.Json;
 using SimDeck.App;
 using SimDeck.Core;
 
+if(args.Length==3&&args[0]=="--truck-gps-read"){
+    using var reader=new TruckGameGpsReader();
+    var available=reader.TryRead(args[1],out var nodes);
+    File.WriteAllText(args[2],JsonSerializer.Serialize(new{available,reader.Status,nodes},new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    Console.WriteLine($"GPS available={available}, nodes={nodes.Length}, status={reader.Status}");return;
+}
+if(args.Length==4&&args[0]=="--truck-gps-plan"){
+    var opt=new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    var map=JsonSerializer.Deserialize<Ets2RoadMap>(File.ReadAllText(args[1]),opt)!;
+    using var reader=new TruckGameGpsReader();if(!reader.TryRead(args[2],out var nodes))throw new Exception(reader.Status);
+    var plan=new TruckRouting(map).GameRoute(nodes);
+    File.WriteAllText(args[3],JsonSerializer.Serialize(plan,opt));Console.WriteLine($"GPS nodes={nodes.Length}, points={plan.Points.Length/2}, source={plan.Source}");return;
+}
+
 if(args.Length==3 && args[0]=="--truck-map-verify") {
     var opt=new JsonSerializerOptions(JsonSerializerDefaults.Web);
     var geometry=JsonSerializer.Deserialize<Ets2RoadMap>(File.ReadAllText(args[1]),opt)!;
@@ -50,19 +64,25 @@ if(args.Length is 3 or 4 && args[0]=="--ets2-map-preview")
 {
     await using var preview=new CompanionHost(args[1],new RecordingInput(Path.Combine(args[1],"input-events.json")));
     preview.Store.Value.Port=29443;preview.Store.Value.UdpPort=24444;preview.SelectProfile(args.Length==4?args[3]:"ets2");
+    var gpsFixture=Environment.GetEnvironmentVariable("SIMDECK_GPS_QA_FIXTURE");
+    preview.Ets2Map.GpsCapture=()=>{
+        if(string.IsNullOrEmpty(gpsFixture))return(false,"GPS в изолированной проверке отключён",Array.Empty<TruckGpsNode>());
+        using var json=JsonDocument.Parse(File.ReadAllText(gpsFixture));
+        return(true,"Проверочный снимок GPS игры",json.RootElement.GetProperty("nodes").Deserialize<TruckGpsNode[]>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!);
+    };
     await preview.StartAsync(localOnly:true,pollGameMemory:false);await preview.StartBrowserAsync(28787,true);
     File.WriteAllText(Path.Combine(args[1],"browser-pin.txt"),preview.Browser!.Pairing.Open());
     var sample=JsonSerializer.Deserialize<Telemetry>(File.ReadAllText(args[2]),new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
     for(var i=0;i<3000 && !File.Exists(Path.Combine(args[1],"stop"));i++) { preview.Telemetry.Publish(sample);await Task.Delay(100); }
     return;
 }
-if(args.Length==3 && args[0]=="--ets2-live")
+if(args.Length is 3 or 4 && args[0]=="--ets2-live")
 {
     using var memory=System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting("Local\\SCSTelemetry",System.IO.MemoryMappedFiles.MemoryMappedFileRights.Read);
     using var view=memory.CreateViewAccessor(0,ScsTelemetryParser.SnapshotSize,System.IO.MemoryMappedFiles.MemoryMappedFileAccess.Read);
     var diagnosticBytes=new byte[ScsTelemetryParser.SnapshotSize];view.ReadArray(0,diagnosticBytes,0,diagnosticBytes.Length);
     var paused=diagnosticBytes[4]!=0;diagnosticBytes[4]=0; // Diagnostic only: never publish paused samples as live.
-    if(!ScsTelemetryParser.TryParse(diagnosticBytes,out _,out var frame)) throw new Exception("No truck data");
+    if(!ScsTelemetryParser.TryParse(diagnosticBytes,out _,out var frame,args.Length==4&&args[3]=="ats"?2u:1u)) throw new Exception("No truck data");
     File.WriteAllText(args[2],JsonSerializer.Serialize(frame,new JsonSerializerOptions(JsonSerializerDefaults.Web)));
     var n=frame!.Ets2Navigation!;
     var map=JsonSerializer.Deserialize<Ets2RoadMap>(File.ReadAllText(args[1]),new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
@@ -172,6 +192,7 @@ AccTelemetryTests.Run(Check);
 ScsTelemetryTests.Run(Check);
 Ets2MapTests.Run(Check);
 TruckRoutingTests.Run(Check);
+TruckGameGpsTests.Run(Check);
 TruckLandscapeTests.Run(Check);
 Fs25CatalogTests.Run(Check);
 Fs25SaveTests.Run(Check);

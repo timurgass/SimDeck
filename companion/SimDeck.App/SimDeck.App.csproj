@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF><AssemblyName>SimDeck</AssemblyName><Version>0.9.19</Version><ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets/SimDeck.ico</ApplicationIcon></PropertyGroup>
-  <ItemGroup><Resource Include="Assets/SimDeck.ico"/></ItemGroup>
+  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF><AssemblyName>SimDeck</AssemblyName><Version>0.9.20</Version><ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets/SimDeck.ico</ApplicationIcon></PropertyGroup>
+  <ItemGroup><Resource Include="Assets/SimDeck.ico"/><Content Include="../../tools/truck-gps/NOTICE.md" Link="third-party/truck-gps-NOTICE.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/></ItemGroup>
   <ItemGroup><ProjectReference Include="../SimDeck.Core/SimDeck.Core.csproj"/><ProjectReference Include="../../third_party/ts-map/TsMap/TsMap.csproj"/><FrameworkReference Include="Microsoft.AspNetCore.App"/><PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0"/></ItemGroup>
   <ItemGroup><EmbeddedResource Include="F1Preset.json" LogicalName="SimDeck.F1Preset.json"/></ItemGroup>
   <ItemGroup><EmbeddedResource Include="Browser/*" LogicalName="SimDeck.Browser.%(Filename)%(Extension)"/></ItemGroup>

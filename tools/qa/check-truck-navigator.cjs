@@ -13,6 +13,30 @@ const base=process.argv[2]||'http://127.0.0.1:28787',pin=fs.readFileSync(process
   await page.goto(base);if(!paired){await page.locator('#code').fill(pin);await page.locator('#pairForm button').click();paired=true;}
   await page.locator('.sdnav').waitFor({state:'visible'});
   await page.waitForFunction(()=>etsMapState.navigator?.map,{},{timeout:60000});
+  if(process.env.SIMDECK_GPS_QA_FIXTURE){
+   await page.evaluate(()=>etsMapState.navigator.useGameGps());
+   await page.waitForFunction(()=>etsMapState.navigator?.plan?.source==='game-gps');
+   const gps=await page.evaluate(()=>{const n=etsMapState.navigator;return{points:n.plan.points.length,revision:n.gameRevision,source:n.source.textContent};});
+   if(gps.points<10||!gps.revision||!gps.source.includes('Путь: GPS игры'))throw Error('Actual GPS snapshot did not become the displayed route');
+   await page.locator('.sdnav').screenshot({path:`${out}/navigator-game-gps-${width}.png`});
+   const transitions=await page.evaluate(async()=>{
+    const n=etsMapState.navigator,request=n.request,refresh=n.refresh,plan=n.plan;n.refresh=()=>{};
+    const poll=async j=>{n.request=async()=>j;n.gameAttempt=-Infinity;await n.refreshGameGps();};
+    try{
+     await poll({available:false,pending:true,message:'Игра перестраивает маршрут'});const retained=n.plan===plan&&n.message.includes('Последняя линия GPS');
+     await poll({available:true,empty:true});const cleared=!n.plan;
+     await poll({available:true,empty:false,revision:'qa-route-restored',plan});
+     let finish;n.request=()=>new Promise(resolve=>finish=resolve);n.gameAttempt=-Infinity;
+     const pending=n.refreshGameGps();n.useOwnRoute();finish({available:true,revision:'old-response',plan});await pending;
+     const own=!n.gameMode&&!n.plan&&JSON.parse(localStorage.getItem('simdeck.navigator.'+n.profile)).gameMode===false;
+     return retained&&cleared&&own;
+    }finally{n.request=request;n.refresh=refresh;}
+   });
+   if(!transitions)throw Error('GPS clearing, transient retention or delayed mode switch failed');
+   const guard=await page.evaluate(async()=>(await fetch('/truck-nav/game-route?profile=ets2')).status);
+   if(guard!==409)throw Error('Game GPS profile scope missing');
+   console.log('Game GPS mode, clear, pending and delayed switch passed at '+width);
+  }
   if(process.env.SIMDECK_LANDSCAPE_QA==='1'){
    await page.waitForFunction(()=>etsMapState.navigator?.landscape,{},{timeout:120000});
    const layer=await page.evaluate(()=>{const l=etsMapState.navigator.landscape;return{forest:l.forestPolygons,water:l.waterPolygons,width:l.day.naturalWidth,span:l.span};});

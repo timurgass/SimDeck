@@ -221,6 +221,7 @@ public sealed class CompanionHost : IAsyncDisposable
         bool NavigationAuthorized(HttpContext c) {var a=c.Request.Headers.Authorization.ToString();return Profile.Id is "ets2" or "ats" && a.StartsWith("Bearer ",StringComparison.Ordinal)&&Store.IsTrusted(a[7..]);}
         app.MapGet("/truck-nav/places",(HttpContext c)=>NavigationAuthorized(c)?Ets2Map.PlacesResponse(c):Results.StatusCode(401));
         app.MapGet("/truck-nav/landscape",(HttpContext c)=>NavigationAuthorized(c)?Ets2Map.LandscapeResponse(c):Results.StatusCode(401));
+        app.MapGet("/truck-nav/game-route",async(HttpContext c)=>NavigationAuthorized(c)?await Ets2Map.GameGpsResponse(c):Results.StatusCode(401));
         app.MapPost("/truck-nav/route",async(HttpContext c)=>NavigationAuthorized(c)?await Ets2Map.RouteResponse(c):Results.StatusCode(401));
         app.MapPost("/pair", async (HttpContext context) =>
         {

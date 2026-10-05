@@ -4,7 +4,7 @@ namespace SimDeck.Core;
 public sealed record Ets2Road(float[] P, float W = 10);
 public sealed record Ets2City(string Name, float X, float Z);
 public sealed record Ets2Poi(string Id, string Kind, string Name, float X, float Z);
-public sealed record Ets2NavNode(float X, float Z);
+public sealed record Ets2NavNode(float X, float Z, string? GameUid = null);
 public sealed record Ets2NavEdge(int From, int To, float[] P, string Kind = "road", double Speed = 70);
 public sealed record Ets2MapArea(float[] P, int Color = 0);
 public sealed record Ets2RoadMap(int Version, Ets2Road[] Roads, Ets2City[] Cities,
