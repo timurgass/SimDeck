@@ -7,6 +7,8 @@ window.WebSocket=class{readyState=1;constructor(){setTimeout(()=>{this.emit({typ
 },{profile:profiles.find(p=>p.id==='beamng-default')});
 await p.goto(process.argv[3]);await p.locator('#deck').waitFor({state:'visible'});const root=p.locator('#beamNgDamage');await root.waitFor({state:'visible'});await root.locator('[data-beam-zone]').first().waitFor({state:'visible'});
 if(await root.locator('[data-beam-zone]').count()!==6||await root.locator('[data-beam-wheel]').count()!==6)throw Error('Actual body and six-wheel geometry missing');if(!await root.innerText().then(t=>t.includes('45%')))throw Error('Body metric missing');
+if(await root.locator('rect[data-beam-zone],rect[data-beam-wheel],.vehicleWheel').count())throw Error('Box overlays or duplicate synthetic wheels returned');
+if(await root.locator('path[data-beam-zone]').count()!==6||await root.locator('path[data-beam-wheel]').count()!==6)throw Error('Shared panel and tyre contours missing');
 await root.locator('[data-beam-tab="Колёса"]').click({delay:350});if(!await root.innerText().then(t=>t.includes('Спущена')&&t.includes('350 °C')))throw Error('Tyre and brake diagnostics missing');
 await root.locator('[data-beam-tab="Узлы"]').click({delay:350});if(!await root.innerText().then(t=>t.includes('Утечка радиатора')&&t.includes('ЕСТЬ')&&t.includes('НЕТ')))throw Error('Fault states missing');
 await root.locator('[data-beam-tab="Детали"]').click({delay:350});if(!await root.innerText().then(t=>t.includes('12')&&t.includes('Front suspension')&&t.includes('75%')))throw Error('Part damage missing');

@@ -104,6 +104,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
     val atlas=vehicleAtlas(if(kind=="gt") "gt" else "road");val d=LocalProfileDesign.current;val s=roadSprite(kind)
     if(s==null) { Text("Нет схемы этого класса · без предположений о кузове",color=d.muted);return }
     val formulaZones=if(kind=="formula") rememberF1DamageZones() else emptyList()
+    val beamDrawing=if(beam!=null)rememberBeamNgDrawing(kind) else null
     Canvas(Modifier.fillMaxWidth().height(heightOverride ?: if(trailer!=null) 410.dp else 290.dp)) {
         val cx=size.width/2
         // Narrow phone columns must preserve the sprite ratio within their own bounds.
@@ -122,7 +123,7 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
                 if(w.powered==true || drive==true) drawRoundRect(d.accent.copy(alpha=.8f),Offset(wx-tw*.33f,wy-th*.33f),Size(tw*.66f,th*.66f),androidx.compose.ui.geometry.CornerRadius(4f),style=Stroke(1.5.dp.toPx()))
             }
         }
-        if(kind !in listOf("formula","gt")) wheelSet(wheels,h*.24f,h*.82f,width*.55f)
+        if(beam==null && kind !in listOf("formula","gt")) wheelSet(wheels,h*.24f,h*.82f,width*.55f)
         if(trailer!=null) {
             val ty=h*.48f;val th=size.height-ty
             wheelSet(trailer.wheels,ty+th*.72f,ty+th*.84f,th*.55f)
@@ -139,22 +140,25 @@ private fun DrawScope.sprite(bitmap:ImageBitmap,s:VehicleSprite,x:Float,y:Float,
                 }
             }
         }
-        if(beam!=null) {
-            listOf("FL","FR","ML","MR","RL","RR").forEachIndexed { i,key -> beam.body[key]?.let { value->
-                val row=i/2;val x=cx+bodyWidth*(if(i%2==0) -.32f else .01f);val y=h*(.08f+row*.28f)
-                val color=damageColor(value*100)
-                clipRect(x,y,x+bodyWidth*.31f,y+h*.25f) {
-                    // Repaint only the illustration's alpha silhouette, not boxes over it.
-                    drawImage(atlas,IntOffset(s.x,s.y),IntSize(s.w,s.h),IntOffset((cx-bodyWidth/2).toInt(),0),IntSize(bodyWidth.toInt().coerceAtLeast(1),h.toInt().coerceAtLeast(1)),alpha=if(value>.05) .55f else .12f,colorFilter=ColorFilter.tint(color),filterQuality=FilterQuality.High)
-                }
-            } }
+        if(beam!=null && beamDrawing!=null) {
+            // Shared curved panel contours preserve seats, engine and frame detail.
+            withTransform({translate(cx-bodyWidth/2,0f);scale(bodyWidth/1000f,h/1000f,pivot=Offset.Zero)}) {
+                beamDrawing.zones.forEach { zone->beam.body[zone.key]?.let { value->
+                    val color=damageColor(value*100)
+                    drawPath(zone.path,color.copy(alpha=if(value>.05) .18f else .015f))
+                    drawPath(zone.path,color.copy(alpha=if(value>.05) .85f else .28f),style=Stroke(5f))
+                } }
+            }
             if(wheels.isNotEmpty()) {
                 val min=wheels.minOf{it.z};val span=(wheels.maxOf{it.z}-min).coerceAtLeast(1.0);val half=wheels.maxOf{kotlin.math.abs(it.x)}.coerceAtLeast(.5)
                 beam.wheels.forEach { wd->wheels.getOrNull(wd.index)?.let { w->
-                    val color=when{wd.broken==true||wd.brakeDamaged==true->damageColor(100.0);wd.flat==true->damageColor(20.0);wd.broken==false->damageColor(0.0);else->d.muted}
-                    val wx=cx+(w.x/half*bodyWidth*.41).toFloat();val wy=h*.18f+((w.z-min)/span*h*.67f).toFloat();val tw=bodyWidth*.18f;val th=tw*1.7f
-                    drawRoundRect(color.copy(alpha=.35f),Offset(wx-tw/2,wy-th/2),Size(tw,th),androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
-                    drawRoundRect(color,Offset(wx-tw/2,wy-th/2),Size(tw,th),androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()),style=Stroke(2.dp.toPx()))
+                    val bad=wd.broken==true||wd.brakeDamaged==true||wd.flat==true
+                    if(wd.broken==null && wd.flat==null && wd.brakeDamaged==null)return@let
+                    val color=when{wd.broken==true||wd.brakeDamaged==true->damageColor(100.0);wd.flat==true->damageColor(20.0);else->damageColor(0.0)}
+                    val wx=cx+(w.x/half*bodyWidth*beamDrawing.side).toFloat();val wy=h*(beamDrawing.front+((w.z-min)/span*(beamDrawing.rear-beamDrawing.front)).toFloat());val tw=bodyWidth*beamDrawing.width;val th=h*beamDrawing.height
+                    val tyre=Path().apply{addRoundRect(androidx.compose.ui.geometry.RoundRect(wx-tw/2,wy-th/2,wx+tw/2,wy+th/2,androidx.compose.ui.geometry.CornerRadius(tw*.45f)))}
+                    drawPath(tyre,color.copy(alpha=if(bad) .20f else .035f))
+                    drawPath(tyre,color.copy(alpha=if(bad) .95f else .45f),style=Stroke(1.1.dp.toPx()))
                 } }
             }
         }
