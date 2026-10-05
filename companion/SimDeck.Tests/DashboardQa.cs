@@ -15,7 +15,7 @@ static class DashboardQa
         try {
         await using var host = new CompanionHost(directory, new RecordingInput(Path.Combine(directory,"input-events.json")));
         host.Store.Value.UdpPort = 34444;
-        await host.StartAsync();
+        await host.StartAsync(pollGameMemory:false);
         Console.WriteLine("Dashboard QA: simulated telemetry, recording backend; no game input.");
         for(var tick=0; tick<18000 && !File.Exists(Path.Combine(directory,"stop")); tick++) {
             var file = Path.Combine(directory,"profile.txt");

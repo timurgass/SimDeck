@@ -75,6 +75,7 @@ public sealed class CompanionHost : IAsyncDisposable
     UdpClient? f1Udp;
     F1TelemetryParser f1Parser = new();
     readonly AccSharedMemoryReader accReader = new();
+    readonly AccBroadcastClient accBroadcast = new();
     readonly ScsSharedMemoryReader scsReader = new();
     ulong lastScsTimestamp;
     long lastScsPacketAt;
@@ -160,6 +161,7 @@ public sealed class CompanionHost : IAsyncDisposable
             Store.Value.ActiveProfileId = id; ApplyBindings(); Store.Save();
             f1Parser = new(); lastExtendedPacket = 0; ReceivedPackets = InvalidPackets = 0;
             accReader.Reset(); lastAccPacket = int.MinValue; lastAccPacketAt = lastAccReconnect = 0;
+            accBroadcast.Reset();
             accDiagnostic = "Ожидание ACC Shared Memory. Запустите заезд и выйдите на трассу.";
             scsReader.Reset(); lastScsTimestamp = 0; lastScsPacketAt = 0;
             scsDiagnostic = "Ожидание SCS Telemetry. Установите плагин и перезапустите выбранную игру ETS2/ATS.";
@@ -429,6 +431,8 @@ public sealed class CompanionHost : IAsyncDisposable
                         if (IsEts2 && !readGameMemory) { Ets2Map.Ensure(); continue; }
                         if (IsAcc)
                         {
+                            if (!readGameMemory) continue;
+                            var race = accBroadcast.Snapshot(accReader.PlayerId);
                             if (accReader.TryRead(out var packet, out var frame, out var error))
                             {
                                 if (packet != lastAccPacket)
@@ -436,8 +440,9 @@ public sealed class CompanionHost : IAsyncDisposable
                                     lastAccPacket = packet;
                                     lastAccPacketAt = Environment.TickCount64;
                                     Interlocked.Increment(ref ReceivedPackets);
-                                    Telemetry.Publish(frame!);
-                                    accDiagnostic = $"ACC Shared Memory: принято {ReceivedPackets} кадров.";
+                                    race = race with { Drivers = race.Drivers.Select(d => d with { Player = d.Index == accReader.PlayerId }).ToArray() };
+                                    Telemetry.Publish(frame! with { Acc = frame.Acc! with { Race = race } });
+                                    accDiagnostic = $"ACC Shared Memory: принято {ReceivedPackets} кадров. {accBroadcast.Status}";
                                 }
                                 else if (lastAccPacketAt > 0 && Environment.TickCount64 - lastAccPacketAt > 3000 && Environment.TickCount64 - lastAccReconnect > 2000)
                                 {
@@ -626,6 +631,7 @@ public sealed class CompanionHost : IAsyncDisposable
         udp?.Dispose();
         f1Udp?.Dispose();
         accReader.Dispose();
+        accBroadcast.Dispose();
         scsReader.Dispose();
         discovery?.Dispose();
         if (app is not null) { await app.StopAsync(); await app.DisposeAsync(); }

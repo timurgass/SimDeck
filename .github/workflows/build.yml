@@ -14,10 +14,17 @@ jobs:
       - run: python -m pip install lupa==2.8
       - run: python tools/qa/generate-fs25-registry.py --check
       - run: python tools/qa/check-vehicle-mods.py
+      - name: Check ACC Broadcasting installer
+        shell: pwsh
+        run: ./tools/qa/check-acc-broadcast.ps1
       - run: dotnet run --project companion/SimDeck.Tests/SimDeck.Tests.csproj -c Release
       - run: dotnet publish companion/SimDeck.App/SimDeck.App.csproj -c Release -r win-x64 --self-contained true -o artifacts/Companion
       - run: dotnet publish tools/scs-landscape/SimDeck.ScsLandscape.csproj -c Release -r win-x64 --self-contained true -o artifacts/Companion/scs-landscape
       - run: python tools/scs-landscape/package-source.py --output artifacts/Companion/scs-landscape/source
+      - name: Bundle ACC Broadcasting setup
+        shell: pwsh
+        run: |
+          Copy-Item -LiteralPath tools/acc-broadcast -Destination artifacts/Companion/acc-broadcast -Recurse
       - name: Bundle USB bridge
         shell: pwsh
         run: |

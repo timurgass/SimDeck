@@ -50,6 +50,8 @@ public sealed class BrowserHost(CompanionHost host) : IAsyncDisposable
         });
         app.UseWebSockets();
         app.MapGet("/", () => Asset("index.html", "text/html; charset=utf-8"));
+        app.MapGet("/acc-race.js", () => Asset("acc-race.js", "text/javascript; charset=utf-8"));
+        app.MapGet("/acc-race.css", () => Asset("acc-race.css", "text/css; charset=utf-8"));
         app.MapGet("/app.js", () => Asset("app.js", "text/javascript; charset=utf-8"));
         app.MapGet("/fs25.js", () => Asset("fs25.js", "text/javascript; charset=utf-8"));
         app.MapGet("/fs25-prices.js", () => Asset("fs25-prices.js", "text/javascript; charset=utf-8"));

@@ -74,7 +74,7 @@ internal fun phoneDesign(id:String):ProfileDesign {
                         "acc" -> {PhoneAccCondition(state);PhoneGrid(state,model,listOf("accTcDown" to "TC −","accTcUp" to "TC +","accAbsDown" to "ABS −","accAbsUp" to "ABS +"))}
                         else -> {PhoneVehicle(state,detail=true);PhoneWear(state)}
                     }
-                    "map" -> if(isScsTruck(state.profileId)) {TruckNavigator(state,model);PhoneGrid(state,model,listOf("etsMap" to "Карта в игре"))} else PhoneF1Map(state)
+                    "map" -> if(isScsTruck(state.profileId)) {TruckNavigator(state,model);PhoneGrid(state,model,listOf("etsMap" to "Карта в игре"))} else if(state.profileId=="acc") AccRaceScreen(state) else PhoneF1Map(state)
                     "fields" -> Fs25Fields(state)
                     "prices" -> Fs25PricesPanel(state)
                     "pit" -> when(state.profileId) {
@@ -87,6 +87,7 @@ internal fun phoneDesign(id:String):ProfileDesign {
                     "cargo" -> PhoneGrid(state,model,state.controls.filter {it.group in setOf("Груз","Прицеп","Оборудование")}.map {it.id to it.label})
                     "more" -> if(page==null) {
                         Text("ВСЕ РАЗДЕЛЫ",fontWeight=FontWeight.Bold)
+                        if(state.profileId=="acc") OutlinedButton(onClick={navigate("pit")},modifier=Modifier.fillMaxWidth()) {Text("Пит-стоп и MFD")}
                         if(state.profileId.startsWith("f1-")) {
                             OutlinedButton(onClick={model.releaseAll();selected="pit"},modifier=Modifier.fillMaxWidth()) {Text("Пит-стоп · шины и крыло")}
                             OutlinedButton(onClick={model.releaseAll();page="@engineer"},modifier=Modifier.fillMaxWidth()) {Text("Запросы инженеру")}

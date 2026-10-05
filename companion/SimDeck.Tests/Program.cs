@@ -12,6 +12,20 @@ using System.Text.Json;
 using SimDeck.App;
 using SimDeck.Core;
 
+if(args.Length==2&&args[0]=="--acc-live") {
+    Directory.CreateDirectory(args[1]);
+    await using var probe=new CompanionHost(args[1],new RecordingInput(Path.Combine(args[1],"input-events.json")));
+    probe.Store.Value.Port=39443;probe.Store.Value.UdpPort=34444;probe.SelectProfile("acc");
+    await probe.StartAsync(localOnly:true);
+    for(var i=0;i<1800&&!File.Exists(Path.Combine(args[1],"stop"));i++) {
+        var current=probe.Telemetry.Read();
+        File.WriteAllText(Path.Combine(args[1],"latest.json"),JsonSerializer.Serialize(new{current.Data,current.Age,probe.TelemetryDiagnostic},new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        if(i%25==0)Console.WriteLine($"ACC age={current.Age} cars={current.Data?.Acc?.Race?.Drivers.Length??0} points={current.Data?.Acc?.Race?.Points.Length??0} player={current.Data?.Acc?.Race?.Drivers.Count(d=>d.Player)??0}");
+        await Task.Delay(200);
+    }
+    return;
+}
+
 if(args.Length==2&&args[0]=="--truck-map-view"){
     using var reader=new TruckGameGpsReader();
     var gps=reader.TryRead(args[1],out _,out var points);var available=reader.TryMapView(out var view,out var unchanged);
@@ -195,6 +209,7 @@ await ProfileTests.Run(Check, args.Length > 0 ? args[0] : Path.Combine(Path.GetT
 F1DetailTests.Run(Check);
 F1RaceTests.Run(Check);
 AccTelemetryTests.Run(Check);
+AccRaceTests.Run(Check);
 ScsTelemetryTests.Run(Check);
 Ets2MapTests.Run(Check);
 TruckRoutingTests.Run(Check);

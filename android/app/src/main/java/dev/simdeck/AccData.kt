@@ -7,7 +7,7 @@ data class AccWheelData(val pressure: Double, val coreTemperature: Double, val b
 
 data class AccData(val wheels: List<AccWheelData>, val airTemperature: Double, val roadTemperature: Double,
     val waterTemperature: Double, val brakeBias: Double, val pitLimiter: Boolean,
-    val ignition: Boolean, val starter: Boolean, val engineRunning: Boolean) {
+    val ignition: Boolean, val starter: Boolean, val engineRunning: Boolean, val race: AccRaceData? = null) {
     companion object {
         private fun JSONObject.number(key: String): Double? = optDouble(key, Double.NaN).takeIf { it.isFinite() }
         fun parse(o: JSONObject?): AccData? {
@@ -23,7 +23,7 @@ data class AccData(val wheels: List<AccWheelData>, val airTemperature: Double, v
             }
             return AccData(wheels, o.number("airTemperature") ?: return null, o.number("roadTemperature") ?: return null,
                 o.number("waterTemperature") ?: return null, o.number("brakeBias") ?: return null,
-                o.optBoolean("pitLimiter"), o.optBoolean("ignition"), o.optBoolean("starter"), o.optBoolean("engineRunning"))
+                o.optBoolean("pitLimiter"), o.optBoolean("ignition"), o.optBoolean("starter"), o.optBoolean("engineRunning"), AccRaceData.parse(o.optJSONObject("race")))
         }
     }
 }

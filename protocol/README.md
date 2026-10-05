@@ -39,6 +39,16 @@ When the selected profile is `acc`, Companion reads the local `acpmf_physics` an
 
 `data.acc.wheels` contains four records in FL, FR, RL, RR order with `pressure` in PSI, `coreTemperature` and `brakeTemperature` in °C, `wear` and `suspensionDamage` in percent, plus ACC's pad and disc life values. `data.acc` also carries air, road and water temperature, brake bias percent and engine switch states. Confirmed `accPitLimiter`, `accIgnition` and `accStarter` values are repeated in `actionStates` so all clients use the normal latched-button rendering.
 
+## ACC race data (0.9.24, optional)
+
+`data.acc.race` supplements driving Shared Memory with local Kunos Broadcasting v4 data. Registration requests a 200-ms interval; only entry-list and track requests are sent. The connection password stays on the PC. This addition does not change protocol major 1 or existing input actions.
+
+Race fields include `track`, `trackId`, `trackLength` (metres), `sessionType`, `phase`, nullable `remainingSeconds`, `fresh`, `replay`, `bins: 256`, `points` and `drivers`. Each point contains `bin`, `x`, `z`; Broadcasting's two horizontal world coordinates are mapped into X/Z. Points are learned from moving cars on track and retained across stale samples. Clients connect nearby ordered bins only, rather than closing missing sections.
+
+Each driver has `index`, `name`, `shortName`, `team`, `number`, `model`, `cup`, `position`, `cupPosition`, `lap`, `spline` (0–1), `x`, `z`, `location`, nullable `bestLapMs`, `lastLapMs`, `gapAheadMs`, `gapLeaderMs`, `player` and `fresh`. At most 100 cars and 256 track points are accepted. `cup` identifies Pro/Pro-Am/Am/Silver/National, not the GT3/GT4 vehicle class. `player` comes from Shared Memory's `playerCarID`, independently of the spectator's focused car.
+
+Gaps are passage-time estimates from recent samples in an active race; clients show ≈ and never present them as official timing. They remain null without sufficient history or in pits. Broadcasting samples expire independently after 1.5 seconds and cannot refresh the driving telemetry clock. Stale race data preserves the last map with an explicit label; normal input availability depends on the active game and enabled input, not map freshness.
+
 ## Safari / browser controller (0.7.1)
 
 The browser UI is served over local HTTP on port 8787. Pairing uses `POST /pair` with a six-digit code and creates an HttpOnly same-site session cookie valid for at most eight hours or until Companion exits. `/status` returns 401 without a valid cookie. The control channel is plain `ws://<local-host>:8787/ws`; it is intended only for a trusted home network.

@@ -8,7 +8,7 @@ public sealed record AccWheel(double Pressure, double CoreTemperature, double Br
 
 public sealed record AccDetails(AccWheel[] Wheels, double AirTemperature, double RoadTemperature,
     double WaterTemperature, double BrakeBias, bool PitLimiter, bool Ignition,
-    bool Starter, bool EngineRunning);
+    bool Starter, bool EngineRunning, AccRace? Race = null);
 
 public static class AccTelemetryParser
 {
