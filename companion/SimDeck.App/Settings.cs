@@ -74,7 +74,7 @@ public sealed class SettingsStore
             {
                 var index = Value.Profiles.FindIndex(existing => existing.Id == profile.Id);
                 if (index < 0) Value.Profiles.Add(profile);
-                else if(profile.Id=="snowrunner" && Value.ProfileCatalogVersion<11)
+                else if(profile.Id=="snowrunner" && Value.ProfileCatalogVersion<12)
                 {
                     Backup("before-snowrunner-bindings");
                     Value.Profiles[index]=SnowRunnerProfile.Upgrade(Value.Profiles[index]);

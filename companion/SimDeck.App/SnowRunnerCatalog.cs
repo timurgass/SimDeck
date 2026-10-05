@@ -12,6 +12,8 @@ public sealed class SnowRunnerCatalog
 {
     public sealed record Truck(string Id, string Name, string Kind, string Suspension, VehicleWheel[] Wheels);
     readonly List<Truck> trucks = [];
+    readonly Dictionary<string,string[]?> gearboxes = new();
+    public string[]? Gears(string name) => gearboxes.GetValueOrDefault(name);
     public IReadOnlyList<Truck> Trucks => trucks;
     public Truck? Resolve(string suspension, int wheelCount)
     {
@@ -34,6 +36,28 @@ public sealed class SnowRunnerCatalog
         if (zip.Entries.FirstOrDefault(e=>e.FullName.Replace('\\','/')=="[strings]/strings_english.str") is { } strings)
             foreach (Match m in Regex.Matches(Text(strings), "(?m)^([A-Z0-9_]+)\\s+\"([^\"\\r\\n]*)\""))
                 names[m.Groups[1].Value] = VehicleKinds.Clean(m.Groups[2].Value);
+        foreach(var entry in zip.Entries.Where(e=>Regex.IsMatch(e.FullName.Replace('\\','/'),@"/classes/gearboxes/[^/]+\.xml$")))
+        {
+            try
+            {
+                var document=XDocument.Parse("<source>"+Regex.Replace(Text(entry),@"<\?xml[^>]*\?>","")+"</source>");
+                foreach(var box in document.Descendants("Gearbox"))
+                {
+                    var name=(string?)box.Attribute("Name");var p=box.Element("GameData")?.Element("GearboxParams");
+                    if(string.IsNullOrWhiteSpace(name) || p is null)continue;
+                    var gears=new List<string>{"A","N","R"};var valid=true;
+                    foreach(var (attribute,label) in new[]{("IsHighGearExists","H"),("IsLowerGearExists","L"),("IsLowerPlusGearExists","L+"),("IsLowerMinusGearExists","L-")})
+                    {
+                        if(!bool.TryParse((string?)p.Attribute(attribute),out var exists)){valid=false;break;}
+                        if(exists)gears.Add(label);
+                    }
+                    if(!valid)continue;
+                    if(catalog.gearboxes.TryGetValue(name,out var previous) && (previous is null || !previous.SequenceEqual(gears)))catalog.gearboxes[name]=null;
+                    else catalog.gearboxes[name]=gears.ToArray();
+                }
+            }
+            catch(System.Xml.XmlException) { }
+        }
         foreach (var entry in zip.Entries.Where(e => Regex.IsMatch(e.FullName.Replace('\\','/'), @"/classes/trucks/[^/]+\.xml$")))
         {
             try

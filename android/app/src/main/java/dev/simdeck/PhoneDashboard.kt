@@ -66,7 +66,7 @@ internal fun phoneDesign(id:String):ProfileDesign {
                     for((id,label) in listOf("fs25Back" to "Назад в игре","fs25Pause" to "Пауза времени")) state.controls.firstOrNull {it.id==id}?.let {a->Control(label,a.key,a.id,false,state,model,Modifier.weight(1f),heightDp=64,tile=true)}
                 }
                 when(selected) {
-                    "drive" -> {PhoneReadout(state);PhoneVehicle(state);if(state.profileId=="snowrunner")SnowRunnerStates(state,model);PhoneGrid(state,model,phoneShortcuts(state.profileId),height=86)
+                    "drive" -> {PhoneReadout(state);PhoneVehicle(state);if(state.profileId=="snowrunner"){SnowRunnerStates(state,model);SnowRunnerGearSelector(state,model)};PhoneGrid(state,model,phoneShortcuts(state.profileId),height=86)
                         if(state.profileId.startsWith("f1-")) OutlinedButton(onClick={navigate("pit")},modifier=Modifier.fillMaxWidth().heightIn(min=52.dp)) {Text("Выбор шин и настройка пит-стопа")}
                         if(isScsTruck(state.profileId)) PhoneGrid(state,model,listOf("etsCruiseDown" to "Круиз −","etsCruiseUp" to "Круиз +")) }
                     "condition" -> when(state.profileId) {

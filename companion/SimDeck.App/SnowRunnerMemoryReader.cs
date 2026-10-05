@@ -89,9 +89,10 @@ public sealed class SnowRunnerMemoryReader : IDisposable
             var suspension=String(truck+0xd10);var definition=catalog.Resolve(suspension,count);
             var wheels=definition?.Wheels ?? Enumerable.Range(0,count).Select(i=>new VehicleWheel(i%2==0?-1:1,i/2)).ToArray();
             var vehicle=new VehicleInfo(definition?.Id??"unknown",definition?.Name??"Машина SnowRunner",definition?.Kind??"unknown",wheels,[],Wear:components.ToDictionary(c=>c.Id,c=>c.DamageFraction));
+            var gears=catalog.Gears(String(truck+0x9c0));
             if(Ptr(control+8)!=truck) { Status="Смена машины SnowRunner…";return false; }
             frame=new(double.Hypot(vx,vz),0,0,Math.Clamp(fuel/capacity,0,1),0,0,0,FuelLiters:fuel,ActionStates:states,Vehicle:vehicle,
-                SnowRunner:new(SupportedBuild,capacity,components.ToArray()));
+                SnowRunner:new(SupportedBuild,capacity,components.ToArray(),AvailableGears:gears));
             Status=$"SnowRunner · {vehicle.Name} · {count} колёс · чтение 5 раз/с";return true;
         }
         catch(Exception ex) when(ex is InvalidDataException or IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or InvalidOperationException)

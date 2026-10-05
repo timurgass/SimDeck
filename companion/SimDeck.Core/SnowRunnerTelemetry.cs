@@ -9,7 +9,7 @@ public sealed record SnowRunnerComponent(string Id, string Name, int Damage, int
 // Null states stay unknown. This is a read-only game snapshot, never a history of button presses.
 public sealed record SnowRunnerDetails(string Build, double FuelCapacity,
     SnowRunnerComponent[] Components, string? GearLabel = null,
-    bool? AwdAvailable = null, bool? DifferentialAvailable = null);
+    bool? AwdAvailable = null, bool? DifferentialAvailable = null, string[]? AvailableGears = null);
 
 public static class SnowRunnerTelemetry
 {

@@ -20,7 +20,7 @@ public static class SnowRunnerProfile
         ["snowTasks"]="Exploration.PlayerProfile",["snowGearLow"]="Exploration.SetGearLow2",
         ["snowGearLowMinus"]="Exploration.SetGearLow1",["snowGearLowPlus"]="Exploration.SetGearLow3",
         ["snowGearAuto"]="Exploration.SetGearAuto",["snowGearHigh"]="Exploration.SetGearHigh",
-        ["snowGearReverse"]="Exploration.SetGearReverse"
+        ["snowGearReverse"]="Exploration.SetGearReverse",["snowGearNeutral"]="Exploration.SetGearNeutral"
     };
     public static GameProfile Default() => new("snowrunner","SnowRunner","SnowRunner",
     [
@@ -39,6 +39,7 @@ public static class SnowRunnerProfile
         A("snowGearAuto","Коробка","АВТОМАТ","NumPad5","Автоматическая коробка"),
         A("snowGearHigh","Коробка","H","NumPad8","Высокая передача; требует подходящую коробку"),
         A("snowGearReverse","Коробка","R","NumPad2","Задняя передача"),
+        A("snowGearNeutral","Коробка","N","NumPad6","Нейтральная передача; назначьте NumPad6 в игре"),
         A("snowFunctions","Функции","ФУНКЦИИ","V","Открыть / закрыть меню техники"),
         A("snowQuickWinch","Функции","БЫСТРАЯ ЛЕБЁДКА","F","Подсоединить лебёдку к ближайшей точке",group:"Лебёдка"),
         A("snowWinch","Функции","ТЯНУТЬ ЛЕБЁДКУ","F","Удерживайте: тянуть установленную лебёдку","hold","Лебёдка"),

@@ -244,9 +244,14 @@ try {
   Entry("[media]\\classes\\trucks\\test.xml",xml);
   Entry("[media]/classes/trucks/variant1.xml",xml.Replace("unique","ambiguous"));
   Entry("[media]/classes/trucks/variant2.xml",xml.Replace("unique","ambiguous"));
+  string Box(string name,bool extra)=>$"<Gearbox Name='{name}'><GameData><GearboxParams IsHighGearExists='{extra.ToString().ToLowerInvariant()}' IsLowerGearExists='true' IsLowerPlusGearExists='{extra.ToString().ToLowerInvariant()}' IsLowerMinusGearExists='{extra.ToString().ToLowerInvariant()}'/></GameData></Gearbox>";
+  Entry("[media]\\classes\\gearboxes\\test.xml","<GearboxVariants>"+Box("stock",false)+Box("offroad",true)+Box("conflicting",false)+"<Gearbox Name='incomplete'><GameData><GearboxParams IsHighGearExists='true'/></GameData></Gearbox></GearboxVariants>");
+  Entry("[media]/_dlc/test/classes/gearboxes/test.xml","<GearboxVariants>"+Box("stock",false)+Box("conflicting",true)+"</GearboxVariants>");
  }
  var cat=SnowRunnerCatalog.Load(snowCatalogDir);var match=cat.Resolve("unique",4);
  Check(match?.Name=="Test truck"&&match.Wheels[0].X==-1&&match.Wheels[1].X==1&&match.Wheels[0].Z==-3&&cat.Resolve("unique",6)==null&&cat.Resolve("ambiguous",4)==null,"SnowRunner reads Windows ZIP paths and axle geometry, and refuses ambiguous identities");
+ Check(cat.Gears("stock")?.SequenceEqual(new[]{"A","N","R","L"})==true && cat.Gears("offroad")?.SequenceEqual(new[]{"A","N","R","H","L","L+","L-"})==true,"SnowRunner reads installed gearbox capabilities, retaining matching DLC definitions");
+ Check(cat.Gears("missing")==null && cat.Gears("incomplete")==null && cat.Gears("conflicting")==null,"SnowRunner unknown, incomplete and conflicting gearboxes stay unknown");
 } finally {Directory.Delete(snowCatalogDir,true);}
 Check(UsbBridge.ParseDevices("List of devices attached\nusb-tablet\tdevice product:test\nnet:5555\tdevice\n").SequenceEqual(new[] { new UsbDevice("usb-tablet", "device") }), "USB discovery excludes network debugging endpoints");
 Check(UsbBridge.ParseDevices("first\tunauthorized\nsecond\toffline\n* daemon started successfully *\n").Select(d => d.State).SequenceEqual(new[] { "unauthorized", "offline" }), "USB discovery preserves authorization and offline status without daemon chatter");

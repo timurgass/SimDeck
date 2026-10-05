@@ -2,7 +2,7 @@ namespace SimDeck.App;
 
 public static class AdditionalProfiles
 {
-    public const int CatalogVersion = 11;
+    public const int CatalogVersion = 12;
 
     public static IReadOnlyList<GameProfile> All() =>
     [

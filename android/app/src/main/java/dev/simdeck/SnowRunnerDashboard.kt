@@ -1,13 +1,20 @@
 package dev.simdeck
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -21,22 +28,23 @@ import androidx.compose.ui.unit.sp
  BoxWithConstraints {
   if(maxWidth>=650.dp) Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {
    Column(Modifier.weight(1.15f)){SnowRunnerScene(state)}
-   Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)){SnowRunnerStates(state,model);SnowRunnerCondition(state)}
-  } else Column(verticalArrangement=Arrangement.spacedBy(12.dp)){SnowRunnerScene(state);SnowRunnerStates(state,model);SnowRunnerCondition(state)}
+   Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)){SnowRunnerStates(state,model);SnowRunnerGearSelector(state,model);SnowRunnerCondition(state)}
+  } else Column(verticalArrangement=Arrangement.spacedBy(12.dp)){SnowRunnerScene(state);SnowRunnerStates(state,model);SnowRunnerGearSelector(state,model);SnowRunnerCondition(state)}
  }
  ReferenceButtons(state,model,listOf("snowQuickWinch" to "Лебёдка","snowPackCargo" to "Груз","snowMap" to "Карта","snowFunctions" to "Функции"),4)
 }
 @Composable internal fun SnowRunnerScene(state:DeckState) {
+ val compact=LocalConfiguration.current.screenWidthDp>=650 && LocalConfiguration.current.screenHeightDp<750
  val d=LocalProfileDesign.current;val t=state.telemetry;val v=t?.vehicle ?: state.lastVehicle
  var manual by rememberSaveable {mutableIntStateOf(6)}
  val wheels=v?.wheels?.takeIf{it.isNotEmpty()} ?: List(manual){i->VehicleWheel(if(i%2==0)-1.0 else 1.0,(i/2).toDouble(),null)}
  val kind=v?.kind?.takeIf{it in setOf("suv","truck","pickup","van")} ?: if(wheels.size==4)"suv" else "truck"
- DesignCard {
+ DesignCard(if(compact)6 else 12,if(compact)12 else 17) {
   Text("ТЕХНИКА И ТРАНСМИССИЯ",fontSize=20.sp,lineHeight=25.sp,fontWeight=FontWeight.Black)
   Text(v?.name ?: "Выберите схему машины",fontSize=20.sp,lineHeight=25.sp,color=d.accent,fontWeight=FontWeight.Bold)
   Text(if(v!=null)"АВТО · ${wheels.size} колёс · ${v.axleCount ?: wheels.size/2} оси" else "Ручная схема · данные машины пока не получены",color=d.muted,fontSize=12.sp)
   if(v==null)Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf(4,6,8,10).forEach{n->FilterChip(selected=manual==n,onClick={manual=n},label={Text("$n колёс")})}}
-  SnowRunnerDrawing(kind,wheels,t?.actionStates?.get("snowAwd"),t?.actionStates?.get("snowDifferential"))
+  SnowRunnerDrawing(kind,wheels,t?.actionStates?.get("snowAwd"),t?.actionStates?.get("snowDifferential"),if(compact)190 else 310)
   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
    Column {Text("СКОРОСТЬ",fontSize=11.sp,color=d.muted);Text(t?.let{"%.0f км/ч".format(it.speedMps*3.6)} ?: "—",fontSize=25.sp,fontWeight=FontWeight.Bold)}
    Column(horizontalAlignment=Alignment.End){Text("ТОПЛИВО",fontSize=11.sp,color=d.muted);Text(t?.snowRunner?.let{snow->t.fuelLiters?.let{"%.0f / %.0f л".format(it,snow.fuelCapacity)}} ?: "—",fontSize=25.sp,fontWeight=FontWeight.Bold)}
@@ -45,19 +53,48 @@ import androidx.compose.ui.unit.sp
  }
 }
 @Composable internal fun SnowRunnerStates(state:DeckState,model:DeckModel) {
- val d=LocalProfileDesign.current
  Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-  listOf("snowAwd" to "ПОЛНЫЙ ПРИВОД","snowDifferential" to "БЛОКИРОВКА").forEach { (id,label)->
-   Column(Modifier.weight(1f)){DesignCard(8,12){
-    val enabled=state.telemetry?.actionStates?.get(id)
-    ProfileActionIcon(id,if(enabled==true)d.accent else d.muted)
-    Text(label,fontWeight=FontWeight.Bold,fontSize=13.sp,lineHeight=17.sp)
-    Text(when(enabled){true->"ВКЛЮЧЕНО";false->"ВЫКЛЮЧЕНО";null->"НЕИЗВЕСТНО"},fontWeight=FontWeight.Black,fontSize=17.sp,color=if(enabled==true)d.accent else d.muted)
-    ReferenceButtons(state,model,listOf(id to "Переключить"),1)
-   }}
+  listOf("snowDifferential" to "БЛОКИРОВКА","snowAwd" to "ПОЛНЫЙ ПРИВОД").forEach { (id,label)->
+   val a=state.controls.firstOrNull{it.id==id}
+   if(a!=null)Control(label,a.key,id,false,state,model,Modifier.weight(1f),heightDp=76)
   }
  }
- Text("Переключаемая блокировка работает на L. Доступность зависит от оборудования машины.",fontSize=11.sp,lineHeight=15.sp,color=d.muted)
+}
+@Composable internal fun SnowRunnerGearSelector(state:DeckState,model:DeckModel) {
+ val compact=LocalConfiguration.current.screenWidthDp>=650 && LocalConfiguration.current.screenHeightDp<750
+ val d=LocalProfileDesign.current
+ val gears=state.telemetry?.snowRunner?.availableGears
+ DesignCard(8,12) {
+  Text("КОРОБКА ПЕРЕДАЧ",fontSize=17.sp,fontWeight=FontWeight.Black)
+  BoxWithConstraints(Modifier.fillMaxWidth().height(if(compact)212.dp else 252.dp)) {
+   val diameter=minOf(if(compact)58.dp else 72.dp,maxWidth*.23f)
+   fun available(label:String)=gears==null || label in gears
+   Canvas(Modifier.matchParentSize()) {
+    val c=d.line;val stroke=3.dp.toPx()
+    fun rail(x1:Float,y1:Float,x2:Float,y2:Float)=drawLine(c,Offset(size.width*x1,size.height*y1),Offset(size.width*x2,size.height*y2),stroke)
+    if(available("L"))rail(.14f,.5f,.5f,.5f)
+    if(available("N"))rail(.5f,.5f,.86f,.5f)
+    if(available("H"))rail(.5f,.14f,.5f,.5f)
+    if(available("R"))rail(.5f,.5f,.5f,.86f)
+    if(available("L+"))rail(.14f,.14f,.14f,.5f)
+    if(available("L-"))rail(.14f,.5f,.14f,.86f)
+   }
+   val positions=listOf(Triple("snowGearLowPlus","L+",.14f to .14f),Triple("snowGearHigh","H",.5f to .14f),
+    Triple("snowGearLow","L",.14f to .5f),Triple("snowGearAuto","A",.5f to .5f),Triple("snowGearNeutral","N",.86f to .5f),
+    Triple("snowGearLowMinus","L−",.14f to .86f),Triple("snowGearReverse","R",.5f to .86f))
+   for((id,label,point) in positions.filter{available(it.second.replace('−','-'))}) {
+    val a=state.controls.firstOrNull{it.id==id};val enabled=a!=null && controlsAvailable(state)
+    var down by remember(id){mutableStateOf(false)}
+    Box(Modifier.offset(x=maxWidth*point.first-diameter/2,y=maxHeight*point.second-diameter/2).size(diameter)
+     .background(if(down)d.accent else d.panelAlt,CircleShape).border(if(down)2.dp else 1.dp,if(down)d.accent else d.line,CircleShape)
+     .semantics {role=Role.Button;contentDescription="Передача $label, ${a?.key ?: "назначение отсутствует"}";if(!enabled)disabled();onClick {if(enabled){model.press(id,false);true}else false}}
+     .pointerInput(enabled,id){if(enabled)detectTapGestures(onPress={down=true;try{if(tryAwaitRelease())model.press(id,false)}finally{down=false}})},contentAlignment=Alignment.Center) {
+     Text(label,fontSize=if(label.length>1)24.sp else 30.sp,fontWeight=FontWeight.Black,color=if(down)d.background else if(enabled)d.accent else d.muted)
+    }
+   }
+  }
+  Text(if(gears==null)"Набор передач пока неизвестен. Блокировка переключается на L." else "Передачи установленной коробки · блокировка переключается на L.",fontSize=11.sp,lineHeight=15.sp,color=d.muted)
+ }
 }
 @Composable internal fun SnowRunnerCondition(state:DeckState) {
  val d=LocalProfileDesign.current;val components=state.telemetry?.snowRunner?.components.orEmpty()
@@ -74,10 +111,10 @@ import androidx.compose.ui.unit.sp
 }
 
 // Replace the stock sprite's tyres with one set using actual axle spacing. No duplicated boxes.
-@Composable internal fun SnowRunnerDrawing(kind:String,wheels:List<VehicleWheel>,awd:Boolean?,diff:Boolean?) {
+@Composable internal fun SnowRunnerDrawing(kind:String,wheels:List<VehicleWheel>,awd:Boolean?,diff:Boolean?,height:Int=310) {
  val atlas=vehicleAtlas("road");val d=LocalProfileDesign.current
  val s=when(kind){"suv"->VehicleSprite("road",523,6,209,412);"pickup"->VehicleSprite("road",905,9,223,394);"van"->VehicleSprite("road",124,418,225,409);else->VehicleSprite("road",917,418,199,410)}
- Canvas(Modifier.fillMaxWidth().heightIn(min=200.dp,max=340.dp).height(310.dp)) {
+ Canvas(Modifier.fillMaxWidth().height(height.dp)) {
   val h=minOf(size.height,size.width*s.h/s.w);val bw=h*s.w/s.h;val left=(size.width-bw)/2;val cx=size.width/2
   val clip=Path().apply{addRect(androidx.compose.ui.geometry.Rect(left,0f,left+bw,h*.18f));addRect(androidx.compose.ui.geometry.Rect(left+bw*.17f,0f,left+bw*.83f,h));addRect(androidx.compose.ui.geometry.Rect(left,h*.91f,left+bw,h))}
   clipPath(clip){sprite(atlas,s,left,0f,bw,h)}
