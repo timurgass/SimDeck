@@ -58,10 +58,37 @@ const base=process.argv[2]||'http://127.0.0.1:28787',pin=fs.readFileSync(process
    console.log('Game GPS mode, clear, pending and delayed switch passed at '+width);
   }
   if(process.env.SIMDECK_LANDSCAPE_QA==='1'){
+   await page.evaluate(()=>etsMapState.navigator.useGameGps());
+   await page.waitForFunction(()=>etsMapState.navigator.plan?.source==='game-gps'&&!etsMapState.navigator.gameBusy);
    await page.waitForFunction(()=>etsMapState.navigator?.landscape,{},{timeout:120000});
    const layer=await page.evaluate(()=>{const l=etsMapState.navigator.landscape;return{forest:l.forestPolygons,water:l.waterPolygons,width:l.day.naturalWidth,span:l.span};});
    if(!layer.forest||!layer.water||layer.width!==2048)throw Error('Actual game forest/water layer missing');
    console.log('Real forest/water layer at '+width+': '+JSON.stringify(layer));
+   const plan=await page.evaluate(()=>etsMapState.navigator.plan?.destination.id);
+   for(const [style,title] of [['roads','Схема'],['terrain','Местность'],['satellite','Спутниковый вид']]){
+    await page.getByRole('button',{name:'Слои карты',exact:true}).click();
+    await page.getByRole('button',{name:'Вид карты: '+title,exact:true}).click();
+    if(await page.getByRole('button',{name:'Вид карты: '+title,exact:true}).getAttribute('aria-pressed')!=='true')throw Error('Map style selection not shown');
+    await page.getByRole('button',{name:'Закрыть панель',exact:true}).click();
+    if(style!=='roads')await page.waitForFunction(style=>etsMapState.navigator.landscape?.style===style,style,{timeout:120000});
+    const ok=await page.evaluate(({style,plan})=>{const n=etsMapState.navigator,saved=JSON.parse(localStorage.getItem('simdeck.navigator.'+n.profile));return n.mapStyle===style&&saved.mapStyle===style&&n.plan?.destination.id===plan;},{style,plan});
+    if(!ok)throw Error('Map style reset GPS route or was not saved');
+    await page.locator('.sdnav').screenshot({path:`${out}/navigator-${style}-${width}.png`});
+    if(style==='satellite'){
+     const wasDay=await page.evaluate(()=>etsMapState.navigator.day);
+     if(!wasDay)await page.getByRole('button',{name:'День / ночь',exact:true}).click();
+     const readable=await page.evaluate(()=>{const n=etsMapState.navigator;return n.day&&/247,\s*248,\s*239/.test(getComputedStyle(n.root.querySelector('.nav-maneuver')).backgroundImage)&&getComputedStyle(n.themeButton).color==='rgb(32, 52, 62)';});
+     if(!readable)throw Error('Day instruments or tool contrast missing');
+     await page.locator('.sdnav').screenshot({path:`${out}/navigator-satellite-day-${width}.png`});
+     if(!wasDay)await page.getByRole('button',{name:'День / ночь',exact:true}).click();
+    }
+   }
+   const restored=await page.evaluate(()=>{const n=etsMapState.navigator,parent=document.createElement('div');document.body.append(parent);const another=new SimDeckNavigator.Navigator(parent,{profile:n.profile,request:n.options.request});try{return another.mapStyle==='satellite';}finally{another.destroy();parent.remove();}});
+   if(!restored)throw Error('Map style not restored when reopening navigator');
+   await page.waitForFunction(()=>!etsMapState.navigator.landscapeBusy);
+   const late=await page.evaluate(async()=>{const n=etsMapState.navigator,request=n.request,refresh=n.refresh,surface=n.landscape;n.refresh=()=>{};n.landscape=null;n.landscapeCache.clear();n.landscapeAttempt=-Infinity;let complete;n.request=path=>path.includes('/landscape?')?new Promise(resolve=>complete=resolve):request.call(n,path);try{n.mapStyle='satellite';const pending=refresh.call(n);while(!complete)await new Promise(r=>setTimeout(r,10));n.setMapStyle('roads');complete(surface);await pending;return n.mapStyle==='roads'&&!n.landscape;}finally{n.request=request;n.refresh=refresh;n.setMapStyle('terrain');n.closePanel();}});
+   if(!late)throw Error('Delayed satellite response changed selected road view');
+   console.log('All map styles, route retention, persistence and delayed response passed at '+width);
   }
   await page.evaluate(()=>etsMapState.navigator.cancel());
   const nav=()=>etsMapState.navigator;
@@ -122,8 +149,8 @@ const base=process.argv[2]||'http://127.0.0.1:28787',pin=fs.readFileSync(process
   await page.waitForTimeout(700);
   if(!await page.locator('.nav-results').textContent().then(s=>s.includes('Ничего не найдено')))throw Error('Search result feedback missing');
   // Switch API scope without changing the active ATS profile.
-  const blocked=await page.evaluate(async()=>({wrong:(await fetch('/truck-nav/places?profile=ets2')).status,cross:(await fetch('/truck-nav/route?profile=ats',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,landscapeWrong:(await fetch('/truck-nav/landscape?profile=ets2&x=0&z=0&span=800')).status,landscapeBad:(await fetch('/truck-nav/landscape?profile=ats&x=NaN&z=0&span=800')).status}));
-  if(blocked.wrong!==409||blocked.cross!==400||blocked.landscapeWrong!==409||blocked.landscapeBad!==400)throw Error('Profile/malformed request guard missing');
+  const blocked=await page.evaluate(async()=>({wrong:(await fetch('/truck-nav/places?profile=ets2')).status,cross:(await fetch('/truck-nav/route?profile=ats',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,landscapeWrong:(await fetch('/truck-nav/landscape?profile=ets2&x=0&z=0&span=800')).status,landscapeBad:(await fetch('/truck-nav/landscape?profile=ats&x=NaN&z=0&span=800')).status,styleBad:(await fetch('/truck-nav/landscape?profile=ats&x=0&z=0&span=800&style=../satellite')).status}));
+  if(blocked.wrong!==409||blocked.cross!==400||blocked.landscapeWrong!==409||blocked.landscapeBad!==400||blocked.styleBad!==400)throw Error('Profile/malformed request guard missing');
   if(errors.length)throw Error(errors.join('\n'));
   results.push({width,...initial,waypoint,overflow,errors});await page.close();
  }

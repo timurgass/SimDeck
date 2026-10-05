@@ -13,5 +13,7 @@ internal static class TruckLandscapeTests
         check(!(region with{ForestPolygons=101}).IsValid()&&!(region with{Polygons=500001}).IsValid(),"Landscape bounds extracted geometry counts");
         check(!(region with{DayImage="https://example.invalid/private.png"}).IsValid(),"Landscape never permits remote image URLs through the local layer");
         check(!(region with{NightImage="data:image/png;base64,"+new string('a',4000000)}).IsValid(),"Landscape bounds image transfer size");
+        check((region with{Version=2,Style="satellite"}).IsValid()&&(region with{Version=2}).IsValid(),"Landscape accepts both locally rendered styles");
+        check(!(region with{Version=1,Style="satellite"}).IsValid()&&!(region with{Version=2,Style="../satellite"}).IsValid()&&!(region with{Version=3}).IsValid(),"Landscape rejects unsupported styles and format versions");
     }
 }

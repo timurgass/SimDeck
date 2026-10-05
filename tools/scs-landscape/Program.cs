@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 // Separate, read-only extractor. Communicates with Companion through JSON files.
 using System.Globalization;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Numerics;
 using System.Text;
 using System.Text.Json;
@@ -11,20 +9,21 @@ using TruckLib;
 using TruckLib.ScsMap;
 using TsMap.FileSystem;
 
-if(args.Length!=5) { Console.Error.WriteLine("Usage: SimDeck.ScsLandscape gameDirectory x z span output.json"); return 2; }
+if(args.Length is not (5 or 6)) { Console.Error.WriteLine("Usage: SimDeck.ScsLandscape gameDirectory x z span output.json [terrain|satellite]"); return 2; }
 try {
     float Number(int i)=>float.Parse(args[i],CultureInfo.InvariantCulture);
     var x=Number(1);var z=Number(2);var span=Number(3);
     if(!float.IsFinite(x)||!float.IsFinite(z)||Math.Abs(x)>1_000_000||Math.Abs(z)>1_000_000||!float.IsFinite(span)||span is <800 or >24000)throw new ArgumentException("Invalid viewport");
     if(!File.Exists(Path.Combine(args[0],"base_map.scs")))throw new ArgumentException("Game not found");
-    var output=Extractor.Extract(args[0],x,z,span);
+    var style=args.Length==6?args[5]:"terrain";if(style is not ("terrain" or "satellite"))throw new ArgumentException("Invalid map style");
+    var output=Extractor.Extract(args[0],x,z,span,style);
     File.WriteAllText(args[4]+".tmp",JsonSerializer.Serialize(output,new JsonSerializerOptions(JsonSerializerDefaults.Web)));
     File.Move(args[4]+".tmp",args[4],true);
     Console.WriteLine($"{output.Polygons} surface polygons; {output.ForestPolygons} forest polygons; {output.WaterPolygons} water polygons");return 0;
 }catch(Exception e){Console.Error.WriteLine(e.GetType().Name+": "+e.Message);return 1;}
 
 record Area(float[] P,string Kind);
-record Landscape(int Version,float X,float Z,float Span,string DayImage,string NightImage,int Polygons,int ForestPolygons,int WaterPolygons,int ForestSchemes,int Skipped);
+record Landscape(int Version,float X,float Z,float Span,string DayImage,string NightImage,int Polygons,int ForestPolygons,int WaterPolygons,int ForestSchemes,int Skipped,string Style);
 sealed class Archives : IFileSystem {
     static string Clean(string p)=>p.Replace('\\','/').Trim('/');
     public char DirectorySeparator=>'/';
@@ -41,7 +40,7 @@ static class Extractor {
     static readonly Regex Units=new(@"\b(?:vegetation_data|vegetation_model|material_def|road_look)\s*:\s*([\w.]+)\s*\{([^{}]*)\}",RegexOptions.Singleline|RegexOptions.Compiled);
     static readonly Regex Trees=new(@"tree|forest|pine|spruce|fir_|oak|aspen|birch|redwood|palm|willow|boxelder|maple|cedar|cypress|beech|poplar|eucalyptus",RegexOptions.IgnoreCase|RegexOptions.Compiled);
     static string Text(string s,string key)=>Regex.Match(s,@"\b"+key+@"\s*:\s*""([^""]*)""").Groups[1].Value;
-    internal static Landscape Extract(string root,float x,float z,float span) {
+    internal static Landscape Extract(string root,float x,float z,float span,string style) {
         UberFileSystem.Instance.AddSourceDirectory(root);var files=new Archives();
         var defs=new Dictionary<string,string>();
         foreach(var p in files.GetFiles("def/world").Where(p=>p.Contains("vegetation")||p.Contains("terrain_material")||p.Contains("road_look")))
@@ -59,7 +58,8 @@ static class Extractor {
             if(text.Contains("asphalt")||text.Contains("concrete")||text.Contains("sidewalk")||text.Contains("paving"))return "urban";
             if(text.Contains("sand")||text.Contains("desert"))return "sand";
             if(text.Contains("rock")||text.Contains("stone")||text.Contains("cliff"))return "rock";
-            if(text.Contains("grass")||text.Contains("meadow")||text.Contains("crop")||text.Contains("field"))return "grass";
+            if(text.Contains("crop")||text.Contains("field")||text.Contains("farmland"))return "field";
+            if(text.Contains("grass")||text.Contains("meadow"))return "grass";
             return "ground";
         }
         var sectors=new List<SectorCoordinate>();
@@ -130,29 +130,6 @@ static class Extractor {
             if(surfaces.Count+trees.Count>500000)throw new InvalidDataException("Landscape exceeds polygon limit");
         }
         var areas=surfaces.Concat(trees).ToArray();
-        return new(1,x,z,span,Raster(areas,x,z,span,true),Raster(areas,x,z,span,false),areas.Length,trees.Count,surfaces.Count(a=>a.Kind=="water"),forest.Count,skipped);
-    }
-    static string Raster(Area[] areas,float x,float z,float span,bool day) {
-        // A bounded raster transfers once per region. Frequent telemetry frames
-        // only move the vehicle marker; they never resend or rebuild this layer.
-        const int size=2048;using var bitmap=new Bitmap(size,size,PixelFormat.Format32bppArgb);
-        using(var g=Graphics.FromImage(bitmap)) {
-            g.SmoothingMode=SmoothingMode.None;g.Clear(Color.Transparent);
-            var colors=day?new[]{"#c3c8aa","#c2d0a4","#cecbbd","#d8c79c","#9fab9e","#749279","#91bdc7"}:new[]{"#303b34","#354e3b","#344149","#504b3a","#414b47","#234936","#214c63"};
-            var kinds=new[]{"ground","grass","urban","sand","rock","forest","water"};
-            using var trees=new Bitmap(28,28,PixelFormat.Format32bppArgb);
-            using(var tg=Graphics.FromImage(trees)) {tg.Clear(ColorTranslator.FromHtml(colors[5]));using var leaf=new SolidBrush(ColorTranslator.FromHtml(day?"#4f735b":"#306046"));using var shade=new SolidBrush(ColorTranslator.FromHtml(day?"#62846a":"#183f2e"));tg.FillEllipse(shade,2,3,13,14);tg.FillEllipse(leaf,1,2,10,11);tg.FillEllipse(shade,15,16,12,12);tg.FillEllipse(leaf,14,15,10,10);}
-            using var pattern=new TextureBrush(trees,WrapMode.Tile);
-            // Water remains above neighbouring ground masks. Roads and routes
-            // are drawn separately by the interactive navigator.
-            for(var kind=0;kind<kinds.Length;kind++) {
-                using var solid=new SolidBrush(ColorTranslator.FromHtml(colors[kind]));
-                foreach(var area in areas.Where(a=>a.Kind==kinds[kind])) {
-                    var points=new PointF[area.P.Length/2];for(var i=0;i<points.Length;i++)points[i]=new((area.P[2*i]-x+span/2)*size/span,(area.P[2*i+1]-z+span/2)*size/span);
-                    g.FillPolygon(kind==5?pattern:solid,points,FillMode.Winding);
-                }
-            }
-        }
-        using var stream=new MemoryStream();bitmap.Save(stream,ImageFormat.Png);return "data:image/png;base64,"+Convert.ToBase64String(stream.ToArray());
+        return new(2,x,z,span,LandscapeRaster.Render(areas,x,z,span,true,style),LandscapeRaster.Render(areas,x,z,span,false,style),areas.Length,trees.Count,surfaces.Count(a=>a.Kind=="water"),forest.Count,skipped,style);
     }
 }

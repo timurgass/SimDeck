@@ -19,3 +19,7 @@ the extractor runtime as well. License text accompanies the executable.
 build configuration and corresponding source archives of all five TruckLib
 packages at the exact commits listed in `source/dependencies.json`. These sources
 are packaged by `package-source.py` after publish. They contain no game assets.
+
+## Map appearance (0.9.23)
+
+`LandscapeRaster.cs` creates original procedural canopy, crop, paving, sand, rock and water textures. It downloads no imagery and redistributes no extracted game textures. Game files provide area boundaries and material categories; fine texture details are illustrative. Texture placement is anchored in game-world coordinates. The renderer is GPL-2.0-only, like this separate extractor.
